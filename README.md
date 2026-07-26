@@ -18,30 +18,29 @@
 
 ---
 
-## AI 工作流框架（可复用）
+## AI 工作流框架（独立仓库）
 
-`framework/` 目录包含从本项目中提炼的完整 AI 辅助开发工程体系，可直接部署到任何游戏项目：
+本项目使用的 AI 游戏开发工作流框架已提炼为独立仓库，长期迭代维护：
 
-```
-framework/
-├── rules/          # 20条规则（防幻觉/6阶段流程/权限矩阵/上下文管理...）
-├── agents/         # 8个Agent配置（三权分立架构）
-├── scripts/        # 6个Python自动化校验脚本
-├── templates/      # GDD/TDD/PDD/memory/AGENTS 模板
-└── data-layer/     # CSV动态架构模板（_schema.csv + _foreign_keys.csv）
-```
+### [→ ai-game-dev-framework](https://github.com/lykyyy/ai-game-dev-framework)
 
-[→ 框架详细文档](framework/README.md)
+| 组件 | 说明 |
+|------|------|
+| `rules/` | 20条规则（防幻觉/6阶段流程/权限矩阵/上下文管理...） |
+| `agents/` | 8个Agent配置（三权分立架构） |
+| `scripts/` | 6个Python自动化校验脚本 |
+| `templates/` | GDD/TDD/PDD/AGENTS 模板 |
+| `data-layer/` | CSV动态架构模板（_schema.csv + _foreign_keys.csv） |
 
-### 快速部署
+### 在新项目中使用
 
 ```bash
-# 复制规则到新项目
-cp -r framework/rules/* 新项目/.trae/rules/
-cp -r framework/agents/* 新项目/docs/_agent-configs/
-cp -r framework/scripts/* 新项目/scripts/validation/
-cp -r framework/templates/* 新项目/docs/
-cp -r framework/data-layer/* 新项目/data/csv/
+git clone https://github.com/lykyyy/ai-game-dev-framework.git
+cp -r ai-game-dev-framework/rules 新项目/.trae/rules/
+cp -r ai-game-dev-framework/agents 新项目/docs/_agent-configs/
+cp -r ai-game-dev-framework/scripts 新项目/scripts/validation/
+cp -r ai-game-dev-framework/templates 新项目/docs/
+cp -r ai-game-dev-framework/data-layer 新项目/data/csv/
 ```
 
 ---
@@ -50,7 +49,6 @@ cp -r framework/data-layer/* 新项目/data/csv/
 
 ```
 card-adventurer/
-├── framework/              # ★ 可复用AI工作流框架
 ├── AGENTS.md               # 总纲（8Agent + 规则索引）
 ├── .trae/rules/            # 20条自动注入规则
 ├── .changelog.md           # 项目级变更日志

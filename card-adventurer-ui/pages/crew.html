@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>船员管理 - 卡牌冒险者</title>
+    <style id="theme-vars">
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Pirata+One&family=Noto+Serif+SC:wght@400;600;700;900&family=MedievalSharp&display=swap');
+
+:root {
+  /* === 色彩系统 === */
+  /* 主色调 - 欺诈之地赤陶/琥珀红 */
+  --color-primary: #c4573a;
+  --color-primary-hover: #d96b4c;
+  --color-primary-dark: #9a3f28;
+  --color-primary-glow: rgba(196, 87, 58, 0.4);
+
+  /* 背景色 - 深紫黑星空 */
+  --color-bg: #1a1520;
+  --color-bg-deep: #120e18;
+  --color-bg-surface: #2a2338;
+  --color-bg-elevated: #352d45;
+  --color-bg-panel: #2d2540;
+  --color-bg-overlay: rgba(10, 8, 16, 0.85);
+
+  /* 边框色 */
+  --color-border: #4a3f5c;
+  --color-border-light: #5e5272;
+  --color-border-dark: #2d2538;
+  --color-border-gold: #a08040;
+
+  /* 文字色 */
+  --color-text: #e8e0f0;
+  --color-text-secondary: #a89cc0;
+  --color-text-muted: #6e6088;
+  --color-text-gold: #f0c860;
+  --color-text-dark: #1a1520;
+
+  /* 职业色 */
+  --color-warrior: #d4523a;
+  --color-warrior-bg: rgba(212, 82, 58, 0.15);
+  --color-rogue: #4ecdc4;
+  --color-rogue-bg: rgba(78, 205, 196, 0.15);
+  --color-mage: #9b7fd4;
+  --color-mage-bg: rgba(155, 127, 212, 0.15);
+  --color-priest: #f0c040;
+  --color-priest-bg: rgba(240, 192, 64, 0.15);
+
+  /* 状态色 */
+  --color-success: #5a9e3a;
+  --color-success-bg: rgba(90, 158, 58, 0.15);
+  --color-warning: #d49030;
+  --color-warning-bg: rgba(212, 144, 48, 0.15);
+  --color-danger: #c03848;
+  --color-danger-bg: rgba(192, 56, 72, 0.15);
+  --color-info: #5890c8;
+  --color-info-bg: rgba(88, 144, 200, 0.15);
+
+  /* 稀有度色 */
+  --color-common: #8a8090;
+  --color-uncommon: #4a90d4;
+  --color-rare: #9b50d4;
+  --color-legendary: #d4a020;
+
+  /* 燃素虹彩 */
+  --gradient-phlogiston: linear-gradient(135deg, #c4573a, #d49030, #f0c040, #4ecdc4, #5890c8, #9b7fd4);
+
+  /* === 字体系统 === */
+  --font-display: 'Cinzel', 'Noto Serif SC', serif;
+  --font-pirate: 'Pirata One', 'Noto Serif SC', serif;
+  --font-body: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --font-medieval: 'MedievalSharp', 'Courier New', monospace;
+
+  /* === 尺寸系统 === */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-card: 8px;
+  --radius-panel: 6px;
+  --radius-btn: 4px;
+
+  /* === 阴影 === */
+  --shadow-panel: 0 4px 20px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-card-hover: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 20px var(--color-primary-glow);
+  --shadow-btn: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-glow-gold: 0 0 20px rgba(240, 200, 96, 0.4);
+  --shadow-glow-primary: 0 0 20px var(--color-primary-glow);
+
+  /* === 边框装饰 === */
+  --border-rivet: 2px solid var(--color-border);
+  --border-panel: 3px solid var(--color-border-dark);
+  --border-panel-inner: 1px solid var(--color-border-light);
+  --border-gold: 2px solid var(--color-border-gold);
+
+  /* === 动画 === */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.25s ease;
+  --transition-slow: 0.4s ease;
+}
+
+/* === 全局重置 === */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.5;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* === 页面容器 === */
+.page-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-bg-deep);
+}
+
+/* === 背景图层 === */
+.bg-layer {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+}
+
+.bg-layer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(26, 21, 32, 0.3) 0%,
+    rgba(26, 21, 32, 0.1) 40%,
+    rgba(26, 21, 32, 0.7) 100%
+  );
+}
+
+/* === 手绘面板样式 === */
+.panel {
+  background: var(--color-bg-panel);
+  border: var(--border-panel);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-panel);
+  position: relative;
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: var(--border-panel-inner);
+  border-radius: calc(var(--radius-panel) - 2px);
+  pointer-events: none;
+}
+
+/* 面板铆钉装饰 */
+.panel-rivets::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  border: 1px solid rgba(94, 82, 114, 0.3);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.panel-header {
+  padding: 12px 20px;
+  border-bottom: 2px solid var(--color-border-dark);
+  background: linear-gradient(180deg, rgba(196, 87, 58, 0.15) 0%, transparent 100%);
+  position: relative;
+}
+
+.panel-header::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+}
+
+.panel-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-gold);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.panel-body {
+  padding: 16px 20px;
+}
+
+/* === 按钮样式 === */
+.btn {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 12px 28px;
+  border: 3px solid var(--color-border-dark);
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-btn);
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: calc(var(--radius-btn) - 1px);
+  pointer-events: none;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: var(--color-text);
+  border-color: #6a2a18;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(180deg, var(--color-primary-hover) 0%, var(--color-primary) 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow-primary);
+}
+
+.btn-secondary {
+  background: linear-gradient(180deg, var(--color-bg-elevated) 0%, var(--color-bg-surface) 100%);
+  color: var(--color-text);
+  border-color: var(--color-border-dark);
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(180deg, var(--color-border) 0%, var(--color-bg-elevated) 100%);
+  transform: translateY(-2px);
+}
+
+.btn-gold {
+  background: linear-gradient(180deg, #e8b838 0%, #c89820 100%);
+  color: var(--color-text-dark);
+  border-color: #8a6810;
+}
+
+.btn-gold:hover {
+  background: linear-gradient(180deg, #f0c848 0%, #d8a828 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow-gold);
+}
+
+.btn-danger {
+  background: linear-gradient(180deg, var(--color-danger) 0%, #902838 100%);
+  color: var(--color-text);
+  border-color: #5a1820;
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+}
+
+.btn-lg {
+  padding: 16px 40px;
+  font-size: 1.2rem;
+}
+
+/* === 卡牌样式 === */
+.card {
+  width: 140px;
+  height: 200px;
+  background: var(--color-bg-surface);
+  border: 3px solid var(--color-border);
+  border-radius: var(--radius-card);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+}
+
+.card:hover {
+  transform: translateY(-12px) scale(1.05);
+  box-shadow: var(--shadow-card-hover);
+  z-index: 10;
+}
+
+.card-warrior { border-color: var(--color-warrior); }
+.card-warrior:hover { box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 20px rgba(212,82,58,0.5); }
+.card-rogue { border-color: var(--color-rogue); }
+.card-rogue:hover { box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 20px rgba(78,205,196,0.5); }
+.card-mage { border-color: var(--color-mage); }
+.card-mage:hover { box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 20px rgba(155,127,212,0.5); }
+.card-priest { border-color: var(--color-priest); }
+.card-priest:hover { box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 20px rgba(240,192,64,0.5); }
+
+.card-common { border-color: var(--color-common); }
+.card-uncommon { border-color: var(--color-uncommon); }
+.card-rare { border-color: var(--color-rare); box-shadow: 0 0 15px rgba(155,80,212,0.3); }
+.card-legendary {
+  border-color: var(--color-legendary);
+  box-shadow: 0 0 20px rgba(212,160,32,0.4);
+  background: linear-gradient(135deg, #3a2a10, var(--color-bg-surface), #3a2a10);
+}
+
+.card-cost {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 32px;
+  height: 32px;
+  background: radial-gradient(circle, #f0c860 0%, #c89820 60%, #8a6810 100%);
+  border: 2px solid #5a4010;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-medieval);
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--color-text-dark);
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.3);
+}
+
+.card-art {
+  height: 90px;
+  background: linear-gradient(180deg, #1a1520 0%, #2a2338 100%);
+  border-bottom: 2px solid var(--color-border-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.5) 100%);
+}
+
+.card-name {
+  font-family: var(--font-pirate);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 6px 4px 2px;
+  color: var(--color-text);
+  border-bottom: 1px solid rgba(74,63,92,0.5);
+}
+
+.card-type {
+  font-size: 0.65rem;
+  text-align: center;
+  padding: 2px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: rgba(0,0,0,0.3);
+}
+
+.card-text {
+  font-size: 0.7rem;
+  padding: 4px 6px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  line-height: 1.3;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* === 资源/状态条 === */
+.resource-bar {
+  height: 20px;
+  background: var(--color-bg-deep);
+  border: 2px solid var(--color-border-dark);
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.resource-bar-fill {
+  height: 100%;
+  border-radius: 1px;
+  transition: width var(--transition-slow);
+  position: relative;
+}
+
+.resource-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  height: 6px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent);
+  border-radius: 2px;
+}
+
+.resource-bar-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  z-index: 1;
+}
+
+.bar-hp { background: linear-gradient(90deg, #3a8a2a, #5abe3a); }
+.bar-shield { background: linear-gradient(90deg, #2a5a9a, #4a8ad4); }
+.bar-energy { background: linear-gradient(90deg, #8a5a2a, #d4a030); }
+.bar-mana { background: linear-gradient(90deg, #5a3a8a, #9b50d4); }
+.bar-rage { background: linear-gradient(90deg, #8a2a2a, #d44040); }
+.bar-combo { background: linear-gradient(90deg, #2a7a6a, #4ecdc4); }
+
+/* === 资源图标/宝石 === */
+.gem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 0.8rem;
+  border: 2px solid;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.3);
+}
+
+.gem-energy {
+  background: radial-gradient(circle, #f0c860, #c89820);
+  border-color: #5a4010;
+  color: var(--color-text-dark);
+  font-family: var(--font-medieval);
+}
+
+/* === 地图节点 === */
+.map-node {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid var(--color-border);
+  background: var(--color-bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  position: relative;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.map-node-current {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.map-node-visited {
+  opacity: 0.5;
+  border-color: var(--color-border);
+}
+
+.map-node-available {
+  border-color: var(--color-success);
+  box-shadow: 0 0 10px rgba(90,158,58,0.4);
+}
+
+.map-node-locked {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px var(--color-primary-glow); }
+  50% { box-shadow: 0 0 35px var(--color-primary-glow), 0 0 60px rgba(196,87,58,0.2); }
+}
+
+/* === 战斗单位 === */
+.combat-unit {
+  background: var(--color-bg-panel);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 8px;
+  position: relative;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.combat-unit-enemy {
+  border-color: var(--color-danger);
+}
+
+.combat-unit-player {
+  border-color: var(--color-primary);
+}
+
+.unit-portrait {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border-gold);
+  background: var(--color-bg-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto;
+}
+
+.unit-name {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  text-align: center;
+  color: var(--color-text-gold);
+}
+
+.unit-intent {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--color-warning);
+  border: 2px solid #8a5a10;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: var(--color-text-dark);
+}
+
+/* === 状态效果徽章 === */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  border: 1px solid;
+}
+
+.status-buff {
+  background: var(--color-success-bg);
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.status-debuff {
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+/* === 进度条样式 === */
+.progress-track {
+  height: 8px;
+  background: var(--color-bg-deep);
+  border-radius: 4px;
+  border: 1px solid var(--color-border-dark);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width var(--transition-slow);
+}
+
+/* === 工具类 === */
+.text-gold { color: var(--color-text-gold); }
+.text-primary { color: var(--color-primary); }
+.text-muted { color: var(--color-text-muted); }
+.text-warrior { color: var(--color-warrior); }
+.text-rogue { color: var(--color-rogue); }
+.text-mage { color: var(--color-mage); }
+.text-priest { color: var(--color-priest); }
+
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.gap-sm { gap: 8px; }
+.gap-md { gap: 16px; }
+.gap-lg { gap: 24px; }
+
+.text-center { text-align: center; }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+
+.font-display { font-family: var(--font-display); }
+.font-pirate { font-family: var(--font-pirate); }
+.font-medieval { font-family: var(--font-medieval); }
+
+/* === 星空粒子动画 === */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #fff;
+  border-radius: 50%;
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+/* === 装饰角饰 === */
+.corner-ornament {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--color-border-gold);
+  opacity: 0.6;
+}
+
+.corner-ornament-tl { top: 8px; left: 8px; border-right: none; border-bottom: none; }
+.corner-ornament-tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }
+.corner-ornament-bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }
+.corner-ornament-br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
+
+/* === 滚动条 === */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-deep);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-light);
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-primary: var(--color-primary);
+    --color-border: var(--color-border);
+  }
+  @layer base {
+    body { background: var(--color-background); color: var(--color-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body>
+  <div class="page-container">
+    <!-- 星空背景 -->
+    <div class="starfield">
+      <div class="nebula nebula-1"></div>
+      <div class="nebula nebula-2"></div>
+      <div class="nebula nebula-3"></div>
+      <!-- 生成约80颗星星 -->
+      <div class="star" style="top:5%;left:10%;animation-delay:0s;"></div>
+      <div class="star star-large" style="top:8%;left:25%;animation-delay:0.3s;"></div>
+      <div class="star" style="top:12%;left:40%;animation-delay:0.6s;"></div>
+      <div class="star star-gold" style="top:3%;left:55%;animation-delay:0.9s;"></div>
+      <div class="star" style="top:15%;left:70%;animation-delay:1.2s;"></div>
+      <div class="star star-large" style="top:7%;left:85%;animation-delay:1.5s;"></div>
+      <div class="star" style="top:20%;left:15%;animation-delay:1.8s;"></div>
+      <div class="star" style="top:25%;left:35%;animation-delay:0.2s;"></div>
+      <div class="star star-gold" style="top:18%;left:60%;animation-delay:0.5s;"></div>
+      <div class="star" style="top:30%;left:80%;animation-delay:0.8s;"></div>
+      <div class="star" style="top:35%;left:5%;animation-delay:1.1s;"></div>
+      <div class="star star-large" style="top:28%;left:50%;animation-delay:1.4s;"></div>
+      <div class="star" style="top:40%;left:90%;animation-delay:1.7s;"></div>
+      <div class="star" style="top:45%;left:22%;animation-delay:2.0s;"></div>
+      <div class="star star-gold" style="top:38%;left:72%;animation-delay:0.4s;"></div>
+      <div class="star" style="top:50%;left:45%;animation-delay:0.7s;"></div>
+      <div class="star star-large" style="top:55%;left:65%;animation-delay:1.0s;"></div>
+      <div class="star" style="top:48%;left:8%;animation-delay:1.3s;"></div>
+      <div class="star" style="top:60%;left:30%;animation-delay:1.6s;"></div>
+      <div class="star" style="top:65%;left:55%;animation-delay:1.9s;"></div>
+      <div class="star star-gold" style="top:58%;left:82%;animation-delay:0.1s;"></div>
+      <div class="star" style="top:70%;left:12%;animation-delay:0.3s;"></div>
+      <div class="star star-large" style="top:72%;left:42%;animation-delay:0.6s;"></div>
+      <div class="star" style="top:68%;left:75%;animation-delay:0.9s;"></div>
+      <div class="star" style="top:75%;left:92%;animation-delay:1.2s;"></div>
+      <div class="star" style="top:80%;left:20%;animation-delay:1.5s;"></div>
+      <div class="star star-gold" style="top:78%;left:52%;animation-delay:1.8s;"></div>
+      <div class="star star-large" style="top:85%;left:68%;animation-delay:2.1s;"></div>
+      <div class="star" style="top:82%;left:38%;animation-delay:0.2s;"></div>
+      <div class="star" style="top:88%;left:8%;animation-delay:0.5s;"></div>
+      <div class="star" style="top:90%;left:58%;animation-delay:0.8s;"></div>
+      <div class="star" style="top:92%;left:85%;animation-delay:1.1s;"></div>
+      <div class="star" style="top:10%;left:95%;animation-delay:1.4s;"></div>
+      <div class="star" style="top:22%;left:48%;animation-delay:1.7s;"></div>
+      <div class="star star-large" style="top:33%;left:88%;animation-delay:2.0s;"></div>
+      <div class="star star-gold" style="top:42%;left:15%;animation-delay:0.4s;"></div>
+      <div class="star" style="top:52%;left:38%;animation-delay:0.7s;"></div>
+      <div class="star" style="top:62%;left:95%;animation-delay:1.0s;"></div>
+      <div class="star" style="top:73%;left:2%;animation-delay:1.3s;"></div>
+      <div class="star star-large" style="top:87%;left:28%;animation-delay:1.6s;"></div>
+      <div class="star" style="top:14%;left:78%;animation-delay:1.9s;"></div>
+      <div class="star" style="top:27%;left:3%;animation-delay:0.1s;"></div>
+      <div class="star star-gold" style="top:43%;left:62%;animation-delay:0.5s;"></div>
+      <div class="star" style="top:53%;left:18%;animation-delay:0.8s;"></div>
+      <div class="star" style="top:63%;left:48%;animation-delay:1.1s;"></div>
+      <div class="star star-large" style="top:77%;left:88%;animation-delay:1.4s;"></div>
+      <div class="star" style="top:37%;left:32%;animation-delay:1.7s;"></div>
+      <div class="star" style="top:83%;left:62%;animation-delay:2.0s;"></div>
+      <div class="star" style="top:95%;left:42%;animation-delay:0.3s;"></div>
+      <div class="star star-gold" style="top:6%;left:48%;animation-delay:0.6s;"></div>
+      <div class="star" style="top:16%;left:5%;animation-delay:0.9s;"></div>
+      <div class="star" style="top:26%;left:68%;animation-delay:1.2s;"></div>
+      <div class="star star-large" style="top:36%;left:52%;animation-delay:1.5s;"></div>
+      <div class="star" style="top:46%;left:78%;animation-delay:1.8s;"></div>
+      <div class="star" style="top:56%;left:2%;animation-delay:2.1s;"></div>
+      <div class="star star-gold" style="top:66%;left:35%;animation-delay:0.2s;"></div>
+      <div class="star" style="top:76%;left:58%;animation-delay:0.4s;"></div>
+      <div class="star" style="top:86%;left:15%;animation-delay:0.7s;"></div>
+      <div class="star" style="top:93%;left:75%;animation-delay:1.0s;"></div>
+      <div class="star star-large" style="top:23%;left:92%;animation-delay:1.3s;"></div>
+      <div class="star" style="top:32%;left:18%;animation-delay:1.6s;"></div>
+      <div class="star" style="top:44%;left:42%;animation-delay:1.9s;"></div>
+      <div class="star star-gold" style="top:54%;left:72%;animation-delay:0.1s;"></div>
+      <div class="star" style="top:64%;left:22%;animation-delay:0.5s;"></div>
+      <div class="star" style="top:74%;left:45%;animation-delay:0.8s;"></div>
+      <div class="star star-large" style="top:84%;left:78%;animation-delay:1.1s;"></div>
+      <div class="star" style="top:94%;left:12%;animation-delay:1.4s;"></div>
+      <div class="star" style="top:11%;left:32%;animation-delay:1.7s;"></div>
+      <div class="star" style="top:21%;left:58%;animation-delay:2.0s;"></div>
+      <div class="star star-gold" style="top:31%;left:12%;animation-delay:0.3s;"></div>
+      <div class="star" style="top:41%;left:85%;animation-delay:0.6s;"></div>
+      <div class="star" style="top:51%;left:28%;animation-delay:0.9s;"></div>
+      <div class="star star-large" style="top:61%;left:62%;animation-delay:1.2s;"></div>
+      <div class="star" style="top:71%;left:18%;animation-delay:1.5s;"></div>
+      <div class="star" style="top:81%;left:48%;animation-delay:1.8s;"></div>
+      <div class="star" style="top:91%;left:88%;animation-delay:2.1s;"></div>
+      <div class="star star-gold" style="top:4%;left:72%;animation-delay:0.7s;"></div>
+      <div class="star" style="top:19%;left:42%;animation-delay:1.0s;"></div>
+      <div class="star" style="top:29%;left:75%;animation-delay:1.3s;"></div>
+      <div class="star star-large" style="top:39%;left:25%;animation-delay:1.6s;"></div>
+      <div class="star" style="top:49%;left:58%;animation-delay:1.9s;"></div>
+      <div class="star" style="top:59%;left:85%;animation-delay:0.2s;"></div>
+      <div class="star" style="top:69%;left:8%;animation-delay:0.5s;"></div>
+      <div class="star star-gold" style="top:79%;left:35%;animation-delay:0.8s;"></div>
+      <div class="star" style="top:89%;left:65%;animation-delay:1.1s;"></div>
+    </div>
+
+    <!-- 顶部标题栏 -->
+    <div class="top-bar">
+      <div class="corner-ornament corner-tl"></div>
+      <div class="corner-ornament corner-tr"></div>
+      <div class="corner-ornament corner-bl"></div>
+      <div class="corner-ornament corner-br"></div>
+      <div class="top-bar-left">
+        <h1 class="page-title">船员管理</h1>
+        <div class="crew-count">船员编制 <span>3</span>/5</div>
+      </div>
+      <div class="top-bar-right">
+        <button class="btn btn-secondary btn-sm btn-back" data-dom-id="btn-back">&larr; 返回</button>
+      </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+      <!-- 左侧岗位分配面板 -->
+      <div class="left-panel">
+        <div class="positions-panel">
+          <div class="corner-ornament corner-tl"></div>
+          <div class="corner-ornament corner-tr"></div>
+          <div class="corner-ornament corner-bl"></div>
+          <div class="corner-ornament corner-br"></div>
+          <div class="positions-header">
+            <h2>岗位分配</h2>
+          </div>
+          <div class="positions-body">
+
+            <!-- 岗位1：星桥（已分配-雷娜） -->
+            <div class="position-card occupied">
+              <div class="position-icon">&#127759;</div>
+              <div class="position-info">
+                <div class="position-name">星桥</div>
+                <div class="position-role">船长 / 领航</div>
+              </div>
+              <div class="assigned-crew">
+                <div class="crew-avatar">&#128105;&#8205;&#9992;&#65039;</div>
+                <div class="crew-details">
+                  <div class="crew-name">雷娜&middot;星风</div>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="crew-rating">&#9733;&#9733;&#9733;</div>
+                    <div class="crew-stats">
+                      <span class="stat"><span class="stat-icon">&#129516;</span>领航 <span class="stat-value">90</span></span>
+                      <span class="stat"><span class="stat-icon">&#9876;</span>战斗 <span class="stat-value">60</span></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="status-tag status-on-duty">在岗</div>
+            </div>
+
+            <!-- 岗位2：燃素炉（已分配-格鲁姆） -->
+            <div class="position-card occupied">
+              <div class="position-icon">&#128293;</div>
+              <div class="position-info">
+                <div class="position-name">燃素炉</div>
+                <div class="position-role">工程师</div>
+              </div>
+              <div class="assigned-crew">
+                <div class="crew-avatar">&#129494;</div>
+                <div class="crew-details">
+                  <div class="crew-name">铁手格鲁姆</div>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="crew-rating">&#9733;&#9733;</div>
+                    <div class="crew-stats">
+                      <span class="stat"><span class="stat-icon">&#9881;</span>工程 <span class="stat-value">85</span></span>
+                      <span class="stat"><span class="stat-icon">&#128295;</span>维修 <span class="stat-value">75</span></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="status-tag status-on-duty">在岗</div>
+            </div>
+
+            <!-- 岗位3：魔导炮（已分配-塞拉） -->
+            <div class="position-card occupied">
+              <div class="position-icon">&#128299;</div>
+              <div class="position-info">
+                <div class="position-name">魔导炮</div>
+                <div class="position-role">炮手</div>
+              </div>
+              <div class="assigned-crew">
+                <div class="crew-avatar">&#129495;</div>
+                <div class="crew-details">
+                  <div class="crew-name">暗影塞拉</div>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="crew-rating">&#9733;&#9733;</div>
+                    <div class="crew-stats">
+                      <span class="stat"><span class="stat-icon">&#127919;</span>射击 <span class="stat-value">88</span></span>
+                      <span class="stat"><span class="stat-icon">&#128171;</span>闪避 <span class="stat-value">70</span></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="status-tag status-on-duty">在岗</div>
+            </div>
+
+            <!-- 岗位4：晶壁护盾（空缺） -->
+            <div class="position-card vacant">
+              <div class="position-icon">&#128737;</div>
+              <div class="position-info">
+                <div class="position-name">晶壁护盾</div>
+                <div class="position-role">盾手</div>
+              </div>
+              <div class="vacant-hint">此岗位无人值守，飞船防御力下降</div>
+              <div class="status-tag status-vacant">无人</div>
+              <button class="btn btn-danger btn-sm">分配船员</button>
+            </div>
+
+            <!-- 岗位5：星图仪（空缺） -->
+            <div class="position-card vacant">
+              <div class="position-icon">&#128506;</div>
+              <div class="position-info">
+                <div class="position-name">星图仪</div>
+                <div class="position-role">导航员 / 学者</div>
+              </div>
+              <div class="vacant-hint">缺少学者，星图解读效率降低</div>
+              <div class="status-tag status-vacant">无人</div>
+              <button class="btn btn-danger btn-sm">分配船员</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧候选船员面板 -->
+      <div class="right-panel">
+        <div class="candidates-panel">
+          <div class="corner-ornament corner-tl"></div>
+          <div class="corner-ornament corner-tr"></div>
+          <div class="corner-ornament corner-bl"></div>
+          <div class="corner-ornament corner-br"></div>
+          <div class="candidates-header">
+            <h2>待命中的船员</h2>
+          </div>
+          <div class="candidates-body">
+
+            <!-- 候选1：老奎恩（战士色边框-老船长） -->
+            <div class="candidate-card card-warrior">
+              <div class="candidate-top">
+                <div class="candidate-avatar">&#129493;</div>
+                <div class="candidate-info">
+                  <div class="candidate-name-row">
+                    <div class="candidate-name">老奎恩</div>
+                    <div class="candidate-rating">&#9733;&#9733;</div>
+                  </div>
+                  <div class="candidate-desc">退休老船长 &middot; 人类</div>
+                </div>
+              </div>
+              <div class="candidate-stats">
+                <div class="stat-row">
+                  <span class="stat-label">领航</span>
+                  <div class="stat-bar"><div class="stat-bar-fill" style="width:75%;"></div></div>
+                  <span class="stat-num">75</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">战斗</span>
+                  <div class="stat-bar"><div class="stat-bar-fill" style="width:50%;"></div></div>
+                  <span class="stat-num">50</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">维修</span>
+                  <div class="stat-bar"><div class="stat-bar-fill" style="width:60%;"></div></div>
+                  <span class="stat-num">60</span>
+                </div>
+              </div>
+              <div class="candidate-skill">
+                <span class="skill-name">老手：</span>航行事件 -10% 危险
+              </div>
+              <div class="candidate-footer">
+                <span class="candidate-status">可分配</span>
+                <button class="btn btn-gold btn-sm">任命</button>
+              </div>
+            </div>
+
+            <!-- 候选2：水晶露娜（法师色边框-星界学者） -->
+            <div class="candidate-card card-mage">
+              <div class="candidate-top">
+                <div class="candidate-avatar">&#128302;</div>
+                <div class="candidate-info">
+                  <div class="candidate-name-row">
+                    <div class="candidate-name">水晶露娜</div>
+                    <div class="candidate-rating">&#9733;&#9733;&#9733;</div>
+                  </div>
+                  <div class="candidate-desc">星界学者 &middot; 高等精灵</div>
+                </div>
+              </div>
+              <div class="candidate-stats">
+                <div class="stat-row">
+                  <span class="stat-label">知识</span>
+                  <div class="stat-bar"><div class="stat-bar-fill" style="width:95%;"></div></div>
+                  <span class="stat-num">95</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">魔法</span>
+                  <div class="stat-bar"><div class="stat-bar-fill" style="width:80%;"></div></div>
+                  <span class="stat-num">80</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">战斗</span>
+                  <div class="stat-bar"><div class="stat-bar-fill" style="width:30%;"></div></div>
+                  <span class="stat-num">30</span>
+                </div>
+              </div>
+              <div class="candidate-skill">
+                <span class="skill-name">占星：</span>预知下一层地图布局
+              </div>
+              <div class="candidate-footer">
+                <span class="candidate-status">可分配</span>
+                <button class="btn btn-gold btn-sm">任命</button>
+              </div>
+            </div>
+
+            <!-- 候选3：铜齿鲍勃（盗贼色边框-机械学徒） -->
+            <div class="candidate-card card-rogue">
+              <div class="candidate-top">
+                <div class="candidate-avatar">&#9881;</div>
+                <div class="candidate-info">
+                  <div class="candidate-name-row">
+                    <div class="candidate-name">铜齿鲍勃</div>
+                    <div class="candidate-rating">&#9733;</div>
+                  </div>
+                  <div class="candidate-desc">机械学徒 &middot; 侏儒</div>
+                </div>
+              </div>
+              <div class="candidate-stats">
+                <div class="stat-row">
+                  <span class="stat-label">工程</span>
+                  <div class="stat-bar"><div class="stat-bar-fill" style="width:55%;"></div></div>
+                  <span class="stat-num">55</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">维修</span>
+                  <div class="stat-bar"><div class="stat-bar-fill" style="width:60%;"></div></div>
+                  <span class="stat-num">60</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">战斗</span>
+                  <div class="stat-bar"><div class="stat-bar-fill" style="width:40%;"></div></div>
+                  <span class="stat-num">40</span>
+                </div>
+              </div>
+              <div class="candidate-skill">
+                <span class="skill-name">学徒：</span>飞船升级费用 -10%
+              </div>
+              <div class="candidate-footer">
+                <span class="candidate-status">可分配</span>
+                <button class="btn btn-gold btn-sm">任命</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部状态栏 -->
+    <div class="bottom-bar">
+      <div class="corner-ornament corner-tl"></div>
+      <div class="corner-ornament corner-tr"></div>
+      <div class="corner-ornament corner-bl"></div>
+      <div class="corner-ornament corner-br"></div>
+      <div class="stats-summary">
+        <span>现役 <span class="highlight">3</span> 人</span>
+        <div class="stat-divider"></div>
+        <span>待命中 <span class="highlight">3</span> 人</span>
+        <div class="stat-divider"></div>
+        <span>岗位空缺 <span class="danger">2</span> 个</span>
+      </div>
+      <div class="morale-section">
+        <span class="morale-label">船员士气</span>
+        <div class="morale-bar-container">
+          <div class="morale-bar-fill"></div>
+        </div>
+        <span class="morale-value">85%</span>
+      </div>
+    </div>
+  </div>
+
+    <style>
+    /* ===== 页面布局 ===== */
+    .page-container {
+      display: flex;
+      flex-direction: column;
+      background: var(--color-bg-deep);
+    }
+
+    /* ===== 星空背景 ===== */
+    .starfield {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: #fff;
+      border-radius: 50%;
+      animation: twinkle 3s ease-in-out infinite;
+    }
+
+    .star-large {
+      width: 3px;
+      height: 3px;
+      box-shadow: 0 0 4px rgba(240, 200, 96, 0.6);
+    }
+
+    .star-gold {
+      background: var(--color-text-gold);
+      box-shadow: 0 0 6px rgba(240, 200, 96, 0.5);
+    }
+
+    /* 星云装饰 */
+    .nebula {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.12;
+      pointer-events: none;
+    }
+
+    .nebula-1 {
+      width: 500px;
+      height: 500px;
+      background: var(--color-mage);
+      top: -100px;
+      right: 100px;
+    }
+
+    .nebula-2 {
+      width: 400px;
+      height: 400px;
+      background: var(--color-primary);
+      bottom: -100px;
+      left: -50px;
+    }
+
+    .nebula-3 {
+      width: 300px;
+      height: 300px;
+      background: var(--color-rogue);
+      top: 40%;
+      left: 40%;
+    }
+
+    /* ===== 顶部标题栏 ===== */
+    .top-bar {
+      height: 72px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      margin: 10px 12px 0;
+      border-radius: var(--radius-panel);
+      background: linear-gradient(180deg, rgba(45, 37, 64, 0.94) 0%, rgba(35, 28, 50, 0.94) 100%);
+      border: 2px solid var(--color-border-dark);
+      box-shadow: var(--shadow-panel);
+      position: relative;
+    }
+
+    .top-bar::before {
+      content: '';
+      position: absolute;
+      inset: 2px;
+      border: 1px solid rgba(94, 82, 114, 0.3);
+      border-radius: calc(var(--radius-panel) - 2px);
+      pointer-events: none;
+    }
+
+    .top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .page-title {
+      font-family: var(--font-display);
+      font-size: 1.7rem;
+      font-weight: 900;
+      color: var(--color-text-gold);
+      letter-spacing: 4px;
+      text-shadow: 0 0 16px rgba(240, 200, 96, 0.4), 0 2px 4px rgba(0,0,0,0.8);
+    }
+
+    .crew-count {
+      font-family: var(--font-pirate);
+      font-size: 1rem;
+      color: var(--color-text-secondary);
+      padding: 4px 14px;
+      border: 1px solid var(--color-border);
+      border-radius: 20px;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .crew-count span {
+      color: var(--color-text-gold);
+      font-weight: 700;
+    }
+
+    /* ===== 主内容区 ===== */
+    .main-content {
+      flex: 1;
+      display: flex;
+      gap: 24px;
+      padding: 20px;
+      z-index: 5;
+      overflow: hidden;
+    }
+
+    /* ===== 左侧岗位分配面板 ===== */
+    .left-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .positions-panel {
+      flex: 1;
+      background: var(--color-bg-panel);
+      border: var(--border-panel);
+      border-radius: var(--radius-panel);
+      box-shadow: var(--shadow-panel);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .positions-panel::before {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border: var(--border-panel-inner);
+      border-radius: calc(var(--radius-panel) - 2px);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .positions-header {
+      padding: 14px 24px;
+      border-bottom: 2px solid var(--color-border-dark);
+      background: linear-gradient(180deg, rgba(196, 87, 58, 0.12) 0%, transparent 100%);
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .positions-header::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 25%;
+      right: 25%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+    }
+
+    .positions-header h2 {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--color-text-gold);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .positions-body {
+      flex: 1;
+      padding: 16px 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ===== 岗位卡片 ===== */
+    .position-card {
+      background: var(--color-bg-surface);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-card);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: all var(--transition-base);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .position-card::before {
+      content: '';
+      position: absolute;
+      inset: 1px;
+      border-radius: calc(var(--radius-card) - 2px);
+      pointer-events: none;
+    }
+
+    .position-card:hover {
+      border-color: var(--color-border-light);
+      transform: translateX(4px);
+      box-shadow: -4px 4px 16px rgba(0,0,0,0.3);
+    }
+
+    .position-card.occupied {
+      border-color: var(--color-success);
+      background: linear-gradient(90deg, rgba(90, 158, 58, 0.08) 0%, var(--color-bg-surface) 30%);
+    }
+
+    .position-card.occupied:hover {
+      border-color: #6abe4a;
+      box-shadow: -4px 4px 16px rgba(0,0,0,0.3), 0 0 12px rgba(90,158,58,0.2);
+    }
+
+    .position-card.vacant {
+      border-color: var(--color-danger);
+      background: linear-gradient(90deg, rgba(192, 56, 72, 0.08) 0%, var(--color-bg-surface) 30%);
+      border-style: dashed;
+    }
+
+    .position-card.vacant:hover {
+      border-color: #d44858;
+      box-shadow: -4px 4px 16px rgba(0,0,0,0.3), 0 0 12px rgba(192,56,72,0.2);
+    }
+
+    /* 岗位图标区 */
+    .position-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      background: var(--color-bg-deep);
+      border: 2px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .position-card.occupied .position-icon {
+      border-color: var(--color-success);
+      box-shadow: 0 0 8px rgba(90,158,58,0.3);
+    }
+
+    .position-card.vacant .position-icon {
+      border-color: var(--color-danger);
+      opacity: 0.7;
+    }
+
+    /* 岗位信息 */
+    .position-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .position-name {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-text);
+      letter-spacing: 1px;
+    }
+
+    .position-role {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+    }
+
+    /* 已分配船员信息 */
+    .assigned-crew {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 2;
+      min-width: 0;
+    }
+
+    .crew-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid var(--color-border-gold);
+      background: var(--color-bg-deep);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+
+    .crew-details {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .crew-name {
+      font-family: var(--font-pirate);
+      font-size: 0.95rem;
+      color: var(--color-text-gold);
+      font-weight: 600;
+    }
+
+    .crew-stats {
+      display: flex;
+      gap: 10px;
+      font-size: 0.7rem;
+      color: var(--color-text-secondary);
+    }
+
+    .crew-stats .stat {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .stat-icon {
+      font-size: 0.65rem;
+      opacity: 0.7;
+    }
+
+    .stat-value {
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    /* 星级 */
+    .crew-rating {
+      display: flex;
+      gap: 1px;
+      font-size: 0.65rem;
+      color: var(--color-text-gold);
+      text-shadow: 0 0 4px rgba(240,200,96,0.5);
+    }
+
+    /* 状态标签 */
+    .status-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .status-on-duty {
+      background: var(--color-success-bg);
+      border: 1px solid var(--color-success);
+      color: var(--color-success);
+    }
+
+    .status-on-duty::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--color-success);
+      border-radius: 50%;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    .status-vacant {
+      background: var(--color-danger-bg);
+      border: 1px solid var(--color-danger);
+      color: var(--color-danger);
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--color-success); }
+      50% { opacity: 0.5; box-shadow: none; }
+    }
+
+    /* 空缺提示 */
+    .vacant-hint {
+      flex: 2;
+      display: flex;
+      align-items: center;
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+      font-style: italic;
+    }
+
+    /* ===== 右侧候选船员面板 ===== */
+    .right-panel {
+      width: 350px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .candidates-panel {
+      flex: 1;
+      background: var(--color-bg-panel);
+      border: var(--border-panel);
+      border-radius: var(--radius-panel);
+      box-shadow: var(--shadow-panel);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .candidates-panel::before {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border: var(--border-panel-inner);
+      border-radius: calc(var(--radius-panel) - 2px);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .candidates-header {
+      padding: 14px 20px;
+      border-bottom: 2px solid var(--color-border-dark);
+      background: linear-gradient(180deg, rgba(240, 200, 96, 0.1) 0%, transparent 100%);
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .candidates-header::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 25%;
+      right: 25%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--color-text-gold), transparent);
+    }
+
+    .candidates-header h2 {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--color-text-gold);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .candidates-body {
+      flex: 1;
+      padding: 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ===== 候选船员卡片 ===== */
+    .candidate-card {
+      background: var(--color-bg-surface);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-card);
+      padding: 12px;
+      transition: all var(--transition-base);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .candidate-card::before {
+      content: '';
+      position: absolute;
+      inset: 1px;
+      border-radius: calc(var(--radius-card) - 2px);
+      pointer-events: none;
+    }
+
+    .candidate-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-card-hover);
+    }
+
+    .candidate-card.card-warrior {
+      border-color: var(--color-warrior);
+    }
+    .candidate-card.card-warrior:hover {
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5), 0 0 16px rgba(212,82,58,0.4);
+    }
+
+    .candidate-card.card-mage {
+      border-color: var(--color-mage);
+    }
+    .candidate-card.card-mage:hover {
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5), 0 0 16px rgba(155,127,212,0.4);
+    }
+
+    .candidate-card.card-rogue {
+      border-color: var(--color-rogue);
+    }
+    .candidate-card.card-rogue:hover {
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5), 0 0 16px rgba(78,205,196,0.4);
+    }
+
+    .candidate-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .candidate-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px solid var(--color-border-gold);
+      background: var(--color-bg-deep);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+
+    .candidate-card.card-warrior .candidate-avatar {
+      border-color: var(--color-warrior);
+      box-shadow: 0 0 8px rgba(212,82,58,0.3);
+    }
+
+    .candidate-card.card-mage .candidate-avatar {
+      border-color: var(--color-mage);
+      box-shadow: 0 0 8px rgba(155,127,212,0.3);
+    }
+
+    .candidate-card.card-rogue .candidate-avatar {
+      border-color: var(--color-rogue);
+      box-shadow: 0 0 8px rgba(78,205,196,0.3);
+    }
+
+    .candidate-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .candidate-name-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+
+    .candidate-name {
+      font-family: var(--font-pirate);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-text-gold);
+    }
+
+    .candidate-rating {
+      display: flex;
+      gap: 1px;
+      font-size: 0.7rem;
+      color: var(--color-text-gold);
+      text-shadow: 0 0 4px rgba(240,200,96,0.5);
+    }
+
+    .candidate-desc {
+      font-size: 0.7rem;
+      color: var(--color-text-muted);
+      margin-bottom: 6px;
+    }
+
+    /* 属性条 */
+    .candidate-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-label {
+      font-size: 0.65rem;
+      color: var(--color-text-secondary);
+      width: 32px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .stat-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--color-bg-deep);
+      border-radius: 3px;
+      overflow: hidden;
+      border: 1px solid var(--color-border-dark);
+    }
+
+    .stat-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width var(--transition-slow);
+    }
+
+    .candidate-card.card-warrior .stat-bar-fill {
+      background: linear-gradient(90deg, var(--color-warrior), #e87050);
+    }
+
+    .candidate-card.card-mage .stat-bar-fill {
+      background: linear-gradient(90deg, var(--color-mage), #b898f0);
+    }
+
+    .candidate-card.card-rogue .stat-bar-fill {
+      background: linear-gradient(90deg, var(--color-rogue), #6ee8df);
+    }
+
+    .stat-num {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--color-text);
+      width: 22px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* 技能描述 */
+    .candidate-skill {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--color-border-dark);
+      border-radius: var(--radius-sm);
+      padding: 6px 8px;
+      margin-bottom: 8px;
+      font-size: 0.7rem;
+      color: var(--color-text-secondary);
+      line-height: 1.3;
+    }
+
+    .candidate-skill .skill-name {
+      color: var(--color-text-gold);
+      font-weight: 700;
+    }
+
+    /* 卡片底部 */
+    .candidate-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .candidate-status {
+      font-size: 0.7rem;
+      color: var(--color-success);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .candidate-status::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      background: var(--color-success);
+      border-radius: 50%;
+    }
+
+    /* ===== 底部状态栏 ===== */
+    .bottom-bar {
+      height: 64px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      margin: 0 12px 10px;
+      border-radius: var(--radius-panel);
+      background: linear-gradient(180deg, rgba(45, 37, 64, 0.94) 0%, rgba(35, 28, 50, 0.94) 100%);
+      border: 2px solid var(--color-border-dark);
+      box-shadow: var(--shadow-panel);
+      position: relative;
+    }
+
+    .bottom-bar::before {
+      content: '';
+      position: absolute;
+      inset: 2px;
+      border: 1px solid rgba(94, 82, 114, 0.3);
+      border-radius: calc(var(--radius-panel) - 2px);
+      pointer-events: none;
+    }
+
+    .stats-summary {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      font-family: var(--font-pirate);
+      font-size: 0.95rem;
+      color: var(--color-text-secondary);
+    }
+
+    .stats-summary .highlight {
+      color: var(--color-text-gold);
+      font-weight: 700;
+    }
+
+    .stats-summary .danger {
+      color: var(--color-danger);
+      font-weight: 700;
+    }
+
+    .stat-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--color-border);
+    }
+
+    /* 士气条 */
+    .morale-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .morale-label {
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      color: var(--color-text-gold);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .morale-bar-container {
+      width: 260px;
+      height: 18px;
+      background: var(--color-bg-deep);
+      border: 2px solid var(--color-border-dark);
+      border-radius: 3px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .morale-bar-fill {
+      height: 100%;
+      width: 85%;
+      background: linear-gradient(90deg, #c89820, #f0c860, #e8b838);
+      border-radius: 1px;
+      position: relative;
+      box-shadow: 0 0 10px rgba(240,200,96,0.4);
+    }
+
+    .morale-bar-fill::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      right: 2px;
+      height: 5px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.3), transparent);
+      border-radius: 2px;
+    }
+
+    .morale-value {
+      font-family: var(--font-pirate);
+      font-size: 0.9rem;
+      color: var(--color-text-gold);
+      font-weight: 700;
+      min-width: 36px;
+    }
+
+    /* ===== 角饰 ===== */
+    .corner-ornament {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--color-border-gold);
+      opacity: 0.5;
+      z-index: 2;
+    }
+
+    .corner-tl { top: 6px; left: 6px; border-right: none; border-bottom: none; }
+    .corner-tr { top: 6px; right: 6px; border-left: none; border-bottom: none; }
+    .corner-bl { bottom: 6px; left: 6px; border-right: none; border-top: none; }
+    .corner-br { bottom: 6px; right: 6px; border-left: none; border-top: none; }
+
+    /* ===== 按钮样式微调 ===== */
+    .btn-back {
+      font-family: var(--font-display);
+    }
+  </style>
+</body>
+</html>

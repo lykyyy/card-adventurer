@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星域地图 - 卡牌冒险者</title>
+    <style id="theme-vars">
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Pirata+One&family=Noto+Serif+SC:wght@400;600;700;900&family=MedievalSharp&display=swap');
+
+:root {
+  /* === 色彩系统 === */
+  /* 主色调 - 欺诈之地赤陶/琥珀红 */
+  --color-primary: #c4573a;
+  --color-primary-hover: #d96b4c;
+  --color-primary-dark: #9a3f28;
+  --color-primary-glow: rgba(196, 87, 58, 0.4);
+
+  /* 背景色 - 深紫黑星空 */
+  --color-bg: #1a1520;
+  --color-bg-deep: #120e18;
+  --color-bg-surface: #2a2338;
+  --color-bg-elevated: #352d45;
+  --color-bg-panel: #2d2540;
+  --color-bg-overlay: rgba(10, 8, 16, 0.85);
+
+  /* 边框色 */
+  --color-border: #4a3f5c;
+  --color-border-light: #5e5272;
+  --color-border-dark: #2d2538;
+  --color-border-gold: #a08040;
+
+  /* 文字色 */
+  --color-text: #e8e0f0;
+  --color-text-secondary: #a89cc0;
+  --color-text-muted: #6e6088;
+  --color-text-gold: #f0c860;
+  --color-text-dark: #1a1520;
+
+  /* 职业色 */
+  --color-warrior: #d4523a;
+  --color-warrior-bg: rgba(212, 82, 58, 0.15);
+  --color-rogue: #4ecdc4;
+  --color-rogue-bg: rgba(78, 205, 196, 0.15);
+  --color-mage: #9b7fd4;
+  --color-mage-bg: rgba(155, 127, 212, 0.15);
+  --color-priest: #f0c040;
+  --color-priest-bg: rgba(240, 192, 64, 0.15);
+
+  /* 状态色 */
+  --color-success: #5a9e3a;
+  --color-success-bg: rgba(90, 158, 58, 0.15);
+  --color-warning: #d49030;
+  --color-warning-bg: rgba(212, 144, 48, 0.15);
+  --color-danger: #c03848;
+  --color-danger-bg: rgba(192, 56, 72, 0.15);
+  --color-info: #5890c8;
+  --color-info-bg: rgba(88, 144, 200, 0.15);
+
+  /* 稀有度色 */
+  --color-common: #8a8090;
+  --color-uncommon: #4a90d4;
+  --color-rare: #9b50d4;
+  --color-legendary: #d4a020;
+
+  /* 燃素虹彩 */
+  --gradient-phlogiston: linear-gradient(135deg, #c4573a, #d49030, #f0c040, #4ecdc4, #5890c8, #9b7fd4);
+
+  /* === 字体系统 === */
+  --font-display: 'Cinzel', 'Noto Serif SC', serif;
+  --font-pirate: 'Pirata One', 'Noto Serif SC', serif;
+  --font-body: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --font-medieval: 'MedievalSharp', 'Courier New', monospace;
+
+  /* === 尺寸系统 === */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-card: 8px;
+  --radius-panel: 6px;
+  --radius-btn: 4px;
+
+  /* === 阴影 === */
+  --shadow-panel: 0 4px 20px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-card-hover: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 20px var(--color-primary-glow);
+  --shadow-btn: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-glow-gold: 0 0 20px rgba(240, 200, 96, 0.4);
+  --shadow-glow-primary: 0 0 20px var(--color-primary-glow);
+
+  /* === 边框装饰 === */
+  --border-rivet: 2px solid var(--color-border);
+  --border-panel: 3px solid var(--color-border-dark);
+  --border-panel-inner: 1px solid var(--color-border-light);
+  --border-gold: 2px solid var(--color-border-gold);
+
+  /* === 动画 === */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.25s ease;
+  --transition-slow: 0.4s ease;
+}
+
+/* === 全局重置 === */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.5;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* === 页面容器 === */
+.page-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-bg-deep);
+}
+
+/* === 背景图层 === */
+.bg-layer {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+}
+
+.bg-layer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(26, 21, 32, 0.3) 0%,
+    rgba(26, 21, 32, 0.1) 40%,
+    rgba(26, 21, 32, 0.7) 100%
+  );
+}
+
+/* === 手绘面板样式 === */
+.panel {
+  background: var(--color-bg-panel);
+  border: var(--border-panel);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-panel);
+  position: relative;
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: var(--border-panel-inner);
+  border-radius: calc(var(--radius-panel) - 2px);
+  pointer-events: none;
+}
+
+/* 面板铆钉装饰 */
+.panel-rivets::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  border: 1px solid rgba(94, 82, 114, 0.3);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.panel-header {
+  padding: 12px 20px;
+  border-bottom: 2px solid var(--color-border-dark);
+  background: linear-gradient(180deg, rgba(196, 87, 58, 0.15) 0%, transparent 100%);
+  position: relative;
+}
+
+.panel-header::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+}
+
+.panel-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-gold);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.panel-body {
+  padding: 16px 20px;
+}
+
+/* === 按钮样式 === */
+.btn {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 12px 28px;
+  border: 3px solid var(--color-border-dark);
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-btn);
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: calc(var(--radius-btn) - 1px);
+  pointer-events: none;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: var(--color-text);
+  border-color: #6a2a18;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(180deg, var(--color-primary-hover) 0%, var(--color-primary) 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow-primary);
+}
+
+.btn-secondary {
+  background: linear-gradient(180deg, var(--color-bg-elevated) 0%, var(--color-bg-surface) 100%);
+  color: var(--color-text);
+  border-color: var(--color-border-dark);
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(180deg, var(--color-border) 0%, var(--color-bg-elevated) 100%);
+  transform: translateY(-2px);
+}
+
+.btn-gold {
+  background: linear-gradient(180deg, #e8b838 0%, #c89820 100%);
+  color: var(--color-text-dark);
+  border-color: #8a6810;
+}
+
+.btn-gold:hover {
+  background: linear-gradient(180deg, #f0c848 0%, #d8a828 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow-gold);
+}
+
+.btn-danger {
+  background: linear-gradient(180deg, var(--color-danger) 0%, #902838 100%);
+  color: var(--color-text);
+  border-color: #5a1820;
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+}
+
+.btn-lg {
+  padding: 16px 40px;
+  font-size: 1.2rem;
+}
+
+/* === 卡牌样式 === */
+.card {
+  width: 140px;
+  height: 200px;
+  background: var(--color-bg-surface);
+  border: 3px solid var(--color-border);
+  border-radius: var(--radius-card);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+}
+
+.card:hover {
+  transform: translateY(-12px) scale(1.05);
+  box-shadow: var(--shadow-card-hover);
+  z-index: 10;
+}
+
+.card-warrior { border-color: var(--color-warrior); }
+.card-warrior:hover { box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 20px rgba(212,82,58,0.5); }
+.card-rogue { border-color: var(--color-rogue); }
+.card-rogue:hover { box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 20px rgba(78,205,196,0.5); }
+.card-mage { border-color: var(--color-mage); }
+.card-mage:hover { box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 20px rgba(155,127,212,0.5); }
+.card-priest { border-color: var(--color-priest); }
+.card-priest:hover { box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 20px rgba(240,192,64,0.5); }
+
+.card-common { border-color: var(--color-common); }
+.card-uncommon { border-color: var(--color-uncommon); }
+.card-rare { border-color: var(--color-rare); box-shadow: 0 0 15px rgba(155,80,212,0.3); }
+.card-legendary {
+  border-color: var(--color-legendary);
+  box-shadow: 0 0 20px rgba(212,160,32,0.4);
+  background: linear-gradient(135deg, #3a2a10, var(--color-bg-surface), #3a2a10);
+}
+
+.card-cost {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 32px;
+  height: 32px;
+  background: radial-gradient(circle, #f0c860 0%, #c89820 60%, #8a6810 100%);
+  border: 2px solid #5a4010;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-medieval);
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--color-text-dark);
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.3);
+}
+
+.card-art {
+  height: 90px;
+  background: linear-gradient(180deg, #1a1520 0%, #2a2338 100%);
+  border-bottom: 2px solid var(--color-border-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.5) 100%);
+}
+
+.card-name {
+  font-family: var(--font-pirate);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 6px 4px 2px;
+  color: var(--color-text);
+  border-bottom: 1px solid rgba(74,63,92,0.5);
+}
+
+.card-type {
+  font-size: 0.65rem;
+  text-align: center;
+  padding: 2px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: rgba(0,0,0,0.3);
+}
+
+.card-text {
+  font-size: 0.7rem;
+  padding: 4px 6px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  line-height: 1.3;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* === 资源/状态条 === */
+.resource-bar {
+  height: 20px;
+  background: var(--color-bg-deep);
+  border: 2px solid var(--color-border-dark);
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.resource-bar-fill {
+  height: 100%;
+  border-radius: 1px;
+  transition: width var(--transition-slow);
+  position: relative;
+}
+
+.resource-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  height: 6px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent);
+  border-radius: 2px;
+}
+
+.resource-bar-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  z-index: 1;
+}
+
+.bar-hp { background: linear-gradient(90deg, #3a8a2a, #5abe3a); }
+.bar-shield { background: linear-gradient(90deg, #2a5a9a, #4a8ad4); }
+.bar-energy { background: linear-gradient(90deg, #8a5a2a, #d4a030); }
+.bar-mana { background: linear-gradient(90deg, #5a3a8a, #9b50d4); }
+.bar-rage { background: linear-gradient(90deg, #8a2a2a, #d44040); }
+.bar-combo { background: linear-gradient(90deg, #2a7a6a, #4ecdc4); }
+
+/* === 资源图标/宝石 === */
+.gem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 0.8rem;
+  border: 2px solid;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.3);
+}
+
+.gem-energy {
+  background: radial-gradient(circle, #f0c860, #c89820);
+  border-color: #5a4010;
+  color: var(--color-text-dark);
+  font-family: var(--font-medieval);
+}
+
+/* === 地图节点 === */
+.map-node {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid var(--color-border);
+  background: var(--color-bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  position: relative;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.map-node-current {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.map-node-visited {
+  opacity: 0.5;
+  border-color: var(--color-border);
+}
+
+.map-node-available {
+  border-color: var(--color-success);
+  box-shadow: 0 0 10px rgba(90,158,58,0.4);
+}
+
+.map-node-locked {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px var(--color-primary-glow); }
+  50% { box-shadow: 0 0 35px var(--color-primary-glow), 0 0 60px rgba(196,87,58,0.2); }
+}
+
+/* === 战斗单位 === */
+.combat-unit {
+  background: var(--color-bg-panel);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 8px;
+  position: relative;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.combat-unit-enemy {
+  border-color: var(--color-danger);
+}
+
+.combat-unit-player {
+  border-color: var(--color-primary);
+}
+
+.unit-portrait {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border-gold);
+  background: var(--color-bg-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto;
+}
+
+.unit-name {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  text-align: center;
+  color: var(--color-text-gold);
+}
+
+.unit-intent {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--color-warning);
+  border: 2px solid #8a5a10;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: var(--color-text-dark);
+}
+
+/* === 状态效果徽章 === */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  border: 1px solid;
+}
+
+.status-buff {
+  background: var(--color-success-bg);
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.status-debuff {
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+/* === 进度条样式 === */
+.progress-track {
+  height: 8px;
+  background: var(--color-bg-deep);
+  border-radius: 4px;
+  border: 1px solid var(--color-border-dark);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width var(--transition-slow);
+}
+
+/* === 工具类 === */
+.text-gold { color: var(--color-text-gold); }
+.text-primary { color: var(--color-primary); }
+.text-muted { color: var(--color-text-muted); }
+.text-warrior { color: var(--color-warrior); }
+.text-rogue { color: var(--color-rogue); }
+.text-mage { color: var(--color-mage); }
+.text-priest { color: var(--color-priest); }
+
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.gap-sm { gap: 8px; }
+.gap-md { gap: 16px; }
+.gap-lg { gap: 24px; }
+
+.text-center { text-align: center; }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+
+.font-display { font-family: var(--font-display); }
+.font-pirate { font-family: var(--font-pirate); }
+.font-medieval { font-family: var(--font-medieval); }
+
+/* === 星空粒子动画 === */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #fff;
+  border-radius: 50%;
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+/* === 装饰角饰 === */
+.corner-ornament {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--color-border-gold);
+  opacity: 0.6;
+}
+
+.corner-ornament-tl { top: 8px; left: 8px; border-right: none; border-bottom: none; }
+.corner-ornament-tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }
+.corner-ornament-bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }
+.corner-ornament-br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
+
+/* === 滚动条 === */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-deep);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-light);
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-primary: var(--color-primary);
+    --color-border: var(--color-border);
+  }
+  @layer base {
+    body { background: var(--color-background); color: var(--color-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body>
+  <div class="page-container">
+    <!-- 背景图层 -->
+    <div class="bg-layer" style="background-image: url('../assets/bg-star-map.jpg');"></div>
+
+    <!-- 装饰星星 -->
+    <div class="map-star" style="top:15%;left:20%;animation-delay:0s;"></div>
+    <div class="map-star" style="top:25%;left:45%;animation-delay:0.5s;"></div>
+    <div class="map-star" style="top:10%;left:70%;animation-delay:1s;"></div>
+    <div class="map-star" style="top:60%;left:15%;animation-delay:1.5s;"></div>
+    <div class="map-star" style="top:75%;left:50%;animation-delay:2s;"></div>
+    <div class="map-star" style="top:35%;left:88%;animation-delay:0.8s;"></div>
+    <div class="map-star" style="top:85%;left:30%;animation-delay:1.3s;"></div>
+    <div class="map-star" style="top:45%;left:65%;animation-delay:2.2s;"></div>
+
+    <!-- ===== 顶部信息栏 ===== -->
+    <div class="top-bar panel">
+      <div class="top-bar-left">
+        <div class="region-name">灰晶星域 · 第一层</div>
+        <div class="voyage-progress">航程 <span>3/8</span></div>
+      </div>
+      <div class="top-bar-right">
+        <div class="resource-item">
+          <span class="res-icon">💰</span>
+          <span>金币</span>
+          <span class="res-value">150</span>
+        </div>
+        <div class="resource-item">
+          <span class="res-icon">🔥</span>
+          <span>燃素</span>
+          <span class="res-value">45</span>
+        </div>
+        <div class="resource-item">
+          <span class="res-icon">⚙</span>
+          <span>零件</span>
+          <span class="res-value">23</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 中央内容区 ===== -->
+    <div class="main-content">
+      <!-- 地图区域 -->
+      <div class="map-area">
+        <!-- SVG 连线 (z-index:1，节点在z-index:2以上会覆盖路径端点) -->
+        <svg class="map-paths" viewBox="0 0 1000 700" preserveAspectRatio="none">
+          <!-- 已走过路径：起点→第2层（赤陶色实线，发光） -->
+          <path class="path-traveled" d="M 100,350 C 180,350 240,217 330,217" />
+          <path class="path-traveled" d="M 100,350 C 180,350 240,483 330,483" />
+
+          <!-- 可选路径：第2层→第3层（绿色明亮，脉冲动画） -->
+          <path class="path-available" d="M 330,217 C 420,217 470,140 580,140" />
+          <path class="path-available" d="M 330,217 C 420,250 480,320 580,350" />
+          <path class="path-available" d="M 330,483 C 420,450 480,380 580,350" />
+          <path class="path-available" d="M 330,483 C 420,483 470,560 580,560" />
+
+          <!-- 锁定路径：第3层→BOSS（灰色虚线，半透明） -->
+          <path class="path-locked" d="M 580,140 C 680,170 750,280 850,350" />
+          <path class="path-locked" d="M 580,350 C 680,350 760,350 850,350" />
+          <path class="path-locked" d="M 580,560 C 680,530 750,420 850,350" />
+        </svg>
+
+        <!-- 罗盘装饰 -->
+        <svg class="compass-rose" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="45" fill="none" stroke="#a08040" stroke-width="1"/>
+          <circle cx="50" cy="50" r="35" fill="none" stroke="#a08040" stroke-width="0.5"/>
+          <polygon points="50,8 53,50 50,92 47,50" fill="#a08040" opacity="0.6"/>
+          <polygon points="8,50 50,47 92,50 50,53" fill="#a08040" opacity="0.6"/>
+          <polygon points="20,20 50,47 80,80 50,53" fill="none" stroke="#a08040" stroke-width="0.5"/>
+          <polygon points="80,20 53,50 20,80 47,50" fill="none" stroke="#a08040" stroke-width="0.5"/>
+          <circle cx="50" cy="50" r="4" fill="#a08040"/>
+          <text x="50" y="16" text-anchor="middle" fill="#a08040" font-size="8" font-family="serif">N</text>
+        </svg>
+
+        <!-- 节点 -->
+        <div class="map-nodes">
+          <!-- 第1层：当前位置 -->
+          <div class="node-wrapper node-pos-1">
+            <div class="map-node map-node-current">⚔</div>
+            <div class="node-label">海盗伏击</div>
+          </div>
+
+          <!-- 飞船标记 -->
+          <div class="ship-marker">🚢</div>
+
+          <!-- 第2层：可选节点 -->
+          <div class="node-wrapper node-pos-2a">
+            <div class="map-node map-node-available">🏪</div>
+            <div class="node-label">流浪商人</div>
+          </div>
+          <div class="node-wrapper node-pos-2b">
+            <div class="map-node map-node-available">❓</div>
+            <div class="node-label">未知信号</div>
+          </div>
+
+          <!-- 第3层：锁定节点 -->
+          <div class="node-wrapper node-pos-3a">
+            <div class="map-node map-node-locked map-node-elite">🔥</div>
+            <div class="node-label">燃素风暴</div>
+          </div>
+          <div class="node-wrapper node-pos-3b">
+            <div class="map-node map-node-locked">⚔</div>
+            <div class="node-label">虚空掠食者</div>
+          </div>
+          <div class="node-wrapper node-pos-3c">
+            <div class="map-node map-node-locked">💤</div>
+            <div class="node-label">星港休整</div>
+          </div>
+
+          <!-- 第4层：BOSS -->
+          <div class="node-wrapper node-pos-4">
+            <div class="map-node map-node-locked node-boss">👑</div>
+            <div class="node-label">晶骸巨龙</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 右侧飞船HUD ===== -->
+      <div class="ship-hud panel panel-rivets">
+        <div class="rivet rivet-tl"></div>
+        <div class="rivet rivet-tr"></div>
+        <div class="rivet rivet-bl"></div>
+        <div class="rivet rivet-br"></div>
+
+        <div class="hud-title">飞船状态</div>
+
+        <!-- 船体耐久 -->
+        <div class="hud-stat">
+          <div class="hud-stat-header">
+            <span class="hud-stat-name">⛵ 船体耐久</span>
+            <span class="hud-stat-value">45/60</span>
+          </div>
+          <div class="hud-bar">
+            <div class="hud-bar-fill bar-hp" style="width: 75%;"></div>
+          </div>
+        </div>
+
+        <!-- 护盾强度 -->
+        <div class="hud-stat">
+          <div class="hud-stat-header">
+            <span class="hud-stat-name">🛡 护盾强度</span>
+            <span class="hud-stat-value">20/30</span>
+          </div>
+          <div class="hud-bar">
+            <div class="hud-bar-fill bar-shield" style="width: 67%;"></div>
+          </div>
+        </div>
+
+        <!-- 魔舵能源 -->
+        <div class="hud-stat">
+          <div class="hud-stat-header">
+            <span class="hud-stat-name">✨ 魔舵能源</span>
+            <span class="hud-stat-value">3/5</span>
+          </div>
+          <div class="hud-bar">
+            <div class="hud-bar-fill bar-energy" style="width: 60%;"></div>
+          </div>
+        </div>
+
+        <div class="hud-divider"></div>
+
+        <!-- 装备列表 -->
+        <div class="hud-equipment-title">舰载装备</div>
+        <div class="equip-list">
+          <div class="equip-item">
+            <span class="equip-icon">🔫</span>
+            <div class="equip-info">
+              <span class="equip-name">魔导炮 MK.II</span>
+              <span class="equip-detail">伤害:15 · 射程:远</span>
+            </div>
+          </div>
+          <div class="equip-item">
+            <span class="equip-icon">🛡</span>
+            <div class="equip-info">
+              <span class="equip-name">晶壁护盾 MK.I</span>
+              <span class="equip-detail">护盾+10 · 燃素-2/回合</span>
+            </div>
+          </div>
+          <div class="equip-item">
+            <span class="equip-icon">⛵</span>
+            <div class="equip-info">
+              <span class="equip-name">风帆引擎 MK.II</span>
+              <span class="equip-detail">机动+2 · 闪避率+8%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-footer">
+          <button class="btn btn-secondary btn-sm" data-dom-id="btn-starport">进入星港</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 底部迷你状态栏 ===== -->
+    <div class="bottom-bar panel">
+      <div class="route-hint">
+        <span class="hint-icon">🧭</span>
+        <span class="hint-text">当前航线：<span class="hint-highlight">灰晶星域 → 选择下一航点</span></span>
+      </div>
+      <div class="buff-bar">
+        <span class="buff-label">状态：</span>
+        <div class="buff-list">
+          <span class="buff-chip buff">💨 满帆 +15%闪避</span>
+          <span class="buff-chip debuff">🔥 燃素泄漏 -3燃素/回合</span>
+          <span class="buff-chip neutral">🎴 卡牌赏金 额外抽牌</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <style>
+    /* ===== 页面整体布局 ===== */
+    .page-container {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 半透明遮罩加深 */
+    .bg-layer::after {
+      background: linear-gradient(
+        to bottom,
+        rgba(26, 21, 32, 0.45) 0%,
+        rgba(26, 21, 32, 0.25) 40%,
+        rgba(26, 21, 32, 0.65) 100%
+      );
+    }
+
+    /* ===== 顶部信息栏 ===== */
+    .top-bar {
+      height: 70px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      margin: 10px 12px 0;
+      border-radius: var(--radius-panel);
+      background: linear-gradient(180deg, rgba(45, 37, 64, 0.92) 0%, rgba(35, 28, 50, 0.92) 100%);
+    }
+
+    .top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .region-name {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--color-text-gold);
+      letter-spacing: 3px;
+      text-shadow: 0 0 12px rgba(240, 200, 96, 0.3);
+    }
+
+    .voyage-progress {
+      font-family: var(--font-pirate);
+      font-size: 1rem;
+      color: var(--color-text-secondary);
+      padding: 4px 14px;
+      border: 1px solid var(--color-border);
+      border-radius: 20px;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .voyage-progress span {
+      color: var(--color-primary);
+      font-weight: 700;
+    }
+
+    .top-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .resource-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-pirate);
+      font-size: 1.05rem;
+      color: var(--color-text);
+      padding: 6px 14px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--color-border-dark);
+      border-radius: var(--radius-md);
+    }
+
+    .resource-item .res-icon {
+      font-size: 1.2rem;
+    }
+
+    .resource-item .res-value {
+      font-weight: 700;
+      color: var(--color-text-gold);
+      min-width: 36px;
+      text-align: right;
+    }
+
+    /* ===== 中央内容区 ===== */
+    .main-content {
+      flex: 1;
+      display: flex;
+      position: relative;
+      z-index: 5;
+      padding: 8px 12px 0;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    /* ===== 地图区域 ===== */
+    .map-area {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+    }
+
+    /* SVG连线层 */
+    .map-paths {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .map-paths path {
+      fill: none;
+      stroke: var(--color-primary);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-dasharray: 8 4;
+      opacity: 0.5;
+    }
+
+    .map-paths path.path-traveled {
+      opacity: 0.8;
+      stroke-dasharray: none;
+      filter: drop-shadow(0 0 3px var(--color-primary-glow));
+    }
+
+    .map-paths path.path-available {
+      opacity: 0.9;
+      stroke-dasharray: none;
+      stroke: var(--color-success);
+      filter: drop-shadow(0 0 4px rgba(90, 158, 58, 0.5));
+      animation: path-pulse 2s ease-in-out infinite;
+    }
+
+    .map-paths path.path-locked {
+      opacity: 0.2;
+      stroke-dasharray: 6 6;
+    }
+
+    @keyframes path-pulse {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+
+    /* 节点容器 */
+    .map-nodes {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+    }
+
+    /* 单个节点包装 - 绝对定位，与SVG坐标(1000x700 viewBox)按百分比对齐 */
+    .node-wrapper {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      width: 56px;
+      height: 56px;
+    }
+
+    /* 节点位置（百分比对应SVG viewBox 0-1000 x 0-700） */
+    .node-pos-1 { left: 10%; top: 50%; }          /* L1 当前: (100,350) */
+    .node-pos-2a { left: 33%; top: 31%; }         /* L2 商店: (330,217) */
+    .node-pos-2b { left: 33%; top: 69%; }         /* L2 事件: (330,483) */
+    .node-pos-3a { left: 58%; top: 20%; }         /* L3 精英: (580,140) */
+    .node-pos-3b { left: 58%; top: 50%; }         /* L3 战斗: (580,350) */
+    .node-pos-3c { left: 58%; top: 80%; }         /* L3 休息: (580,560) */
+    .node-pos-4 { left: 85%; top: 50%; }          /* L4 BOSS: (850,350) */
+
+    .map-node {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 3px solid var(--color-border);
+      background: radial-gradient(circle at 35% 35%, #4a3f5c, #2a2338 70%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all var(--transition-base);
+      position: relative;
+      z-index: 3;
+    }
+
+    /* 手绘外圈装饰 */
+    .map-node::before {
+      content: '';
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      border: 2px solid rgba(196, 87, 58, 0.3);
+      opacity: 0;
+      transition: all var(--transition-base);
+    }
+
+    .map-node:hover::before {
+      opacity: 1;
+      inset: -7px;
+    }
+
+    .map-node-current {
+      border-color: var(--color-primary);
+      background: radial-gradient(circle at 35% 35%, #d96b4c, #9a3f28 70%);
+      box-shadow: 0 0 20px var(--color-primary-glow);
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    .map-node-current::after {
+      content: '';
+      position: absolute;
+      inset: -10px;
+      border-radius: 50%;
+      border: 2px dashed var(--color-primary);
+      animation: node-spin 15s linear infinite;
+      opacity: 0.5;
+    }
+
+    @keyframes node-spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .map-node-available {
+      border-color: var(--color-success);
+      background: radial-gradient(circle at 35% 35%, #5a9e3a, #3a6a20 70%);
+      box-shadow: 0 0 12px rgba(90, 158, 58, 0.5);
+    }
+
+    .map-node-available:hover {
+      transform: scale(1.15);
+      box-shadow: 0 0 25px rgba(90, 158, 58, 0.7);
+    }
+
+    .map-node-locked {
+      opacity: 0.35;
+      cursor: not-allowed;
+      filter: grayscale(0.5);
+    }
+
+    .map-node-locked.node-boss {
+      border-color: var(--color-legendary);
+      background: radial-gradient(circle at 35% 35%, #d4a020, #8a6810 70%);
+      box-shadow: 0 0 10px rgba(212, 160, 32, 0.3);
+    }
+
+    .map-node-elite {
+      border-color: var(--color-danger);
+      background: radial-gradient(circle at 35% 35%, #c03848, #802030 70%);
+    }
+
+    .node-label {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font-pirate);
+      font-size: 0.75rem;
+      color: var(--color-text-secondary);
+      white-space: nowrap;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+      background: rgba(0, 0, 0, 0.6);
+      padding: 2px 8px;
+      border-radius: 3px;
+      z-index: 4;
+    }
+
+    .map-node-available + .node-label {
+      color: var(--color-success);
+    }
+
+    .map-node-current + .node-label {
+      color: var(--color-primary);
+    }
+
+    .node-boss + .node-label {
+      color: var(--color-text-gold);
+      font-weight: 700;
+    }
+
+    /* 飞船图标 */
+    .ship-marker {
+      position: absolute;
+      font-size: 2rem;
+      z-index: 5;
+      animation: ship-float 3s ease-in-out infinite;
+      filter: drop-shadow(0 0 8px rgba(240, 200, 96, 0.6));
+      left: calc(10% + 45px);
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    @keyframes ship-float {
+      0%, 100% { transform: translate(-50%, -50%) translateX(0) rotate(-5deg); }
+      50% { transform: translate(-50%, -55%) translateX(4px) rotate(-2deg); }
+    }
+
+    /* 地图装饰星星 */
+    .map-star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: #fff;
+      border-radius: 50%;
+      animation: twinkle 3s ease-in-out infinite;
+    }
+
+    /* 罗盘装饰 */
+    .compass-rose {
+      position: absolute;
+      right: 280px;
+      bottom: 60px;
+      width: 80px;
+      height: 80px;
+      opacity: 0.15;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* ===== 右侧飞船HUD ===== */
+    .ship-hud {
+      width: 260px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 14px;
+      background:
+        linear-gradient(180deg, rgba(58, 45, 35, 0.95) 0%, rgba(40, 30, 25, 0.95) 100%);
+      border-color: #5a4a30;
+      position: relative;
+    }
+
+    .ship-hud::before {
+      border-color: rgba(160, 128, 64, 0.3);
+    }
+
+    /* 铆钉装饰 */
+    .ship-hud .rivet {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: radial-gradient(circle at 35% 35%, #8a7a5a, #4a3a20);
+      border-radius: 50%;
+      border: 1px solid #2a1a08;
+      box-shadow: inset 0 1px 2px rgba(255,255,255,0.15);
+    }
+
+    .rivet-tl { top: 6px; left: 6px; }
+    .rivet-tr { top: 6px; right: 6px; }
+    .rivet-bl { bottom: 6px; left: 6px; }
+    .rivet-br { bottom: 6px; right: 6px; }
+
+    .hud-title {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--color-text-gold);
+      text-align: center;
+      letter-spacing: 2px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(160, 128, 64, 0.3);
+      position: relative;
+    }
+
+    .hud-title::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 25%;
+      right: 25%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--color-border-gold), transparent);
+    }
+
+    /* HUD状态条 */
+    .hud-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .hud-stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .hud-stat-name {
+      color: var(--color-text-secondary);
+      font-family: var(--font-pirate);
+    }
+
+    .hud-stat-value {
+      color: var(--color-text);
+      font-family: var(--font-medieval);
+    }
+
+    .hud-bar {
+      height: 16px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 2px solid #3a2a18;
+      border-radius: 3px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hud-bar-fill {
+      height: 100%;
+      border-radius: 1px;
+      position: relative;
+      transition: width var(--transition-slow);
+    }
+
+    .hud-bar-fill::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      right: 2px;
+      height: 4px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.25), transparent);
+      border-radius: 2px;
+    }
+
+    .hud-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(160, 128, 64, 0.4), transparent);
+      margin: 4px 0;
+    }
+
+    /* 装备列表 */
+    .hud-equipment-title {
+      font-family: var(--font-pirate);
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .equip-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .equip-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(90, 74, 48, 0.4);
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      transition: all var(--transition-fast);
+    }
+
+    .equip-item:hover {
+      background: rgba(0, 0, 0, 0.5);
+      border-color: rgba(160, 128, 64, 0.5);
+    }
+
+    .equip-icon {
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .equip-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .equip-name {
+      color: var(--color-text);
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+
+    .equip-detail {
+      color: var(--color-text-muted);
+      font-size: 0.65rem;
+    }
+
+    /* HUD底部按钮 */
+    .hud-footer {
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid rgba(160, 128, 64, 0.3);
+    }
+
+    .hud-footer .btn {
+      width: 100%;
+      text-align: center;
+    }
+
+    /* ===== 底部迷你状态栏 ===== */
+    .bottom-bar {
+      height: 50px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      margin: 0 12px 10px;
+      border-radius: var(--radius-panel);
+      background: linear-gradient(180deg, rgba(45, 37, 64, 0.9) 0%, rgba(35, 28, 50, 0.9) 100%);
+      gap: 16px;
+    }
+
+    .route-hint {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+    }
+
+    .route-hint .hint-icon {
+      font-size: 1.1rem;
+    }
+
+    .route-hint .hint-text {
+      font-family: var(--font-pirate);
+    }
+
+    .route-hint .hint-highlight {
+      color: var(--color-success);
+      font-weight: 700;
+    }
+
+    .buff-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .buff-label {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      font-family: var(--font-pirate);
+      letter-spacing: 1px;
+    }
+
+    .buff-list {
+      display: flex;
+      gap: 6px;
+    }
+
+    .buff-chip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border: 1px solid;
+    }
+
+    .buff-chip.buff {
+      background: var(--color-success-bg);
+      border-color: var(--color-success);
+      color: var(--color-success);
+    }
+
+    .buff-chip.debuff {
+      background: var(--color-danger-bg);
+      border-color: var(--color-danger);
+      color: var(--color-danger);
+    }
+
+    .buff-chip.neutral {
+      background: rgba(88, 144, 200, 0.15);
+      border-color: var(--color-info);
+      color: var(--color-info);
+    }
+  </style>
+</body>
+</html>

@@ -1,0 +1,1985 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卡牌冒险者 — 角色创建</title>
+    <style id="theme-vars">
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Pirata+One&family=Noto+Serif+SC:wght@400;600;700;900&family=MedievalSharp&display=swap');
+
+:root {
+  /* === 色彩系统 === */
+  /* 主色调 - 欺诈之地赤陶/琥珀红 */
+  --color-primary: #c4573a;
+  --color-primary-hover: #d96b4c;
+  --color-primary-dark: #9a3f28;
+  --color-primary-glow: rgba(196, 87, 58, 0.4);
+
+  /* 背景色 - 深紫黑星空 */
+  --color-bg: #1a1520;
+  --color-bg-deep: #120e18;
+  --color-bg-surface: #2a2338;
+  --color-bg-elevated: #352d45;
+  --color-bg-panel: #2d2540;
+  --color-bg-overlay: rgba(10, 8, 16, 0.85);
+
+  /* 边框色 */
+  --color-border: #4a3f5c;
+  --color-border-light: #5e5272;
+  --color-border-dark: #2d2538;
+  --color-border-gold: #a08040;
+
+  /* 文字色 */
+  --color-text: #e8e0f0;
+  --color-text-secondary: #a89cc0;
+  --color-text-muted: #6e6088;
+  --color-text-gold: #f0c860;
+  --color-text-dark: #1a1520;
+
+  /* 职业色 */
+  --color-warrior: #d4523a;
+  --color-warrior-bg: rgba(212, 82, 58, 0.15);
+  --color-rogue: #4ecdc4;
+  --color-rogue-bg: rgba(78, 205, 196, 0.15);
+  --color-mage: #9b7fd4;
+  --color-mage-bg: rgba(155, 127, 212, 0.15);
+  --color-priest: #f0c040;
+  --color-priest-bg: rgba(240, 192, 64, 0.15);
+
+  /* 状态色 */
+  --color-success: #5a9e3a;
+  --color-success-bg: rgba(90, 158, 58, 0.15);
+  --color-warning: #d49030;
+  --color-warning-bg: rgba(212, 144, 48, 0.15);
+  --color-danger: #c03848;
+  --color-danger-bg: rgba(192, 56, 72, 0.15);
+  --color-info: #5890c8;
+  --color-info-bg: rgba(88, 144, 200, 0.15);
+
+  /* 稀有度色 */
+  --color-common: #8a8090;
+  --color-uncommon: #4a90d4;
+  --color-rare: #9b50d4;
+  --color-legendary: #d4a020;
+
+  /* 燃素虹彩 */
+  --gradient-phlogiston: linear-gradient(135deg, #c4573a, #d49030, #f0c040, #4ecdc4, #5890c8, #9b7fd4);
+
+  /* === 字体系统 === */
+  --font-display: 'Cinzel', 'Noto Serif SC', serif;
+  --font-pirate: 'Pirata One', 'Noto Serif SC', serif;
+  --font-body: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --font-medieval: 'MedievalSharp', 'Courier New', monospace;
+
+  /* === 尺寸系统 === */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-card: 8px;
+  --radius-panel: 6px;
+  --radius-btn: 4px;
+
+  /* === 阴影 === */
+  --shadow-panel: 0 4px 20px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-card-hover: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 20px var(--color-primary-glow);
+  --shadow-btn: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-glow-gold: 0 0 20px rgba(240, 200, 96, 0.4);
+  --shadow-glow-primary: 0 0 20px var(--color-primary-glow);
+
+  /* === 边框装饰 === */
+  --border-rivet: 2px solid var(--color-border);
+  --border-panel: 3px solid var(--color-border-dark);
+  --border-panel-inner: 1px solid var(--color-border-light);
+  --border-gold: 2px solid var(--color-border-gold);
+
+  /* === 动画 === */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.25s ease;
+  --transition-slow: 0.4s ease;
+}
+
+/* === 全局重置 === */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.5;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* === 页面容器 === */
+.page-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-bg-deep);
+}
+
+/* === 背景图层 === */
+.bg-layer {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+}
+
+.bg-layer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(26, 21, 32, 0.3) 0%,
+    rgba(26, 21, 32, 0.1) 40%,
+    rgba(26, 21, 32, 0.7) 100%
+  );
+}
+
+/* === 手绘面板样式 === */
+.panel {
+  background: var(--color-bg-panel);
+  border: var(--border-panel);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-panel);
+  position: relative;
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: var(--border-panel-inner);
+  border-radius: calc(var(--radius-panel) - 2px);
+  pointer-events: none;
+}
+
+/* 面板铆钉装饰 */
+.panel-rivets::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  border: 1px solid rgba(94, 82, 114, 0.3);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.panel-header {
+  padding: 12px 20px;
+  border-bottom: 2px solid var(--color-border-dark);
+  background: linear-gradient(180deg, rgba(196, 87, 58, 0.15) 0%, transparent 100%);
+  position: relative;
+}
+
+.panel-header::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+}
+
+.panel-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-gold);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.panel-body {
+  padding: 16px 20px;
+}
+
+/* === 按钮样式 === */
+.btn {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 12px 28px;
+  border: 3px solid var(--color-border-dark);
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-btn);
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: calc(var(--radius-btn) - 1px);
+  pointer-events: none;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: var(--color-text);
+  border-color: #6a2a18;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(180deg, var(--color-primary-hover) 0%, var(--color-primary) 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow-primary);
+}
+
+.btn-secondary {
+  background: linear-gradient(180deg, var(--color-bg-elevated) 0%, var(--color-bg-surface) 100%);
+  color: var(--color-text);
+  border-color: var(--color-border-dark);
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(180deg, var(--color-border) 0%, var(--color-bg-elevated) 100%);
+  transform: translateY(-2px);
+}
+
+.btn-gold {
+  background: linear-gradient(180deg, #e8b838 0%, #c89820 100%);
+  color: var(--color-text-dark);
+  border-color: #8a6810;
+}
+
+.btn-gold:hover {
+  background: linear-gradient(180deg, #f0c848 0%, #d8a828 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow-gold);
+}
+
+.btn-danger {
+  background: linear-gradient(180deg, var(--color-danger) 0%, #902838 100%);
+  color: var(--color-text);
+  border-color: #5a1820;
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+}
+
+.btn-lg {
+  padding: 16px 40px;
+  font-size: 1.2rem;
+}
+
+/* === 卡牌样式 === */
+.card {
+  width: 140px;
+  height: 200px;
+  background: var(--color-bg-surface);
+  border: 3px solid var(--color-border);
+  border-radius: var(--radius-card);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+}
+
+.card:hover {
+  transform: translateY(-12px) scale(1.05);
+  box-shadow: var(--shadow-card-hover);
+  z-index: 10;
+}
+
+.card-warrior { border-color: var(--color-warrior); }
+.card-warrior:hover { box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 20px rgba(212,82,58,0.5); }
+.card-rogue { border-color: var(--color-rogue); }
+.card-rogue:hover { box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 20px rgba(78,205,196,0.5); }
+.card-mage { border-color: var(--color-mage); }
+.card-mage:hover { box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 20px rgba(155,127,212,0.5); }
+.card-priest { border-color: var(--color-priest); }
+.card-priest:hover { box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 20px rgba(240,192,64,0.5); }
+
+.card-common { border-color: var(--color-common); }
+.card-uncommon { border-color: var(--color-uncommon); }
+.card-rare { border-color: var(--color-rare); box-shadow: 0 0 15px rgba(155,80,212,0.3); }
+.card-legendary {
+  border-color: var(--color-legendary);
+  box-shadow: 0 0 20px rgba(212,160,32,0.4);
+  background: linear-gradient(135deg, #3a2a10, var(--color-bg-surface), #3a2a10);
+}
+
+.card-cost {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 32px;
+  height: 32px;
+  background: radial-gradient(circle, #f0c860 0%, #c89820 60%, #8a6810 100%);
+  border: 2px solid #5a4010;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-medieval);
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--color-text-dark);
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.3);
+}
+
+.card-art {
+  height: 90px;
+  background: linear-gradient(180deg, #1a1520 0%, #2a2338 100%);
+  border-bottom: 2px solid var(--color-border-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.5) 100%);
+}
+
+.card-name {
+  font-family: var(--font-pirate);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 6px 4px 2px;
+  color: var(--color-text);
+  border-bottom: 1px solid rgba(74,63,92,0.5);
+}
+
+.card-type {
+  font-size: 0.65rem;
+  text-align: center;
+  padding: 2px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: rgba(0,0,0,0.3);
+}
+
+.card-text {
+  font-size: 0.7rem;
+  padding: 4px 6px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  line-height: 1.3;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* === 资源/状态条 === */
+.resource-bar {
+  height: 20px;
+  background: var(--color-bg-deep);
+  border: 2px solid var(--color-border-dark);
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.resource-bar-fill {
+  height: 100%;
+  border-radius: 1px;
+  transition: width var(--transition-slow);
+  position: relative;
+}
+
+.resource-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  height: 6px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent);
+  border-radius: 2px;
+}
+
+.resource-bar-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  z-index: 1;
+}
+
+.bar-hp { background: linear-gradient(90deg, #3a8a2a, #5abe3a); }
+.bar-shield { background: linear-gradient(90deg, #2a5a9a, #4a8ad4); }
+.bar-energy { background: linear-gradient(90deg, #8a5a2a, #d4a030); }
+.bar-mana { background: linear-gradient(90deg, #5a3a8a, #9b50d4); }
+.bar-rage { background: linear-gradient(90deg, #8a2a2a, #d44040); }
+.bar-combo { background: linear-gradient(90deg, #2a7a6a, #4ecdc4); }
+
+/* === 资源图标/宝石 === */
+.gem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 0.8rem;
+  border: 2px solid;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.3);
+}
+
+.gem-energy {
+  background: radial-gradient(circle, #f0c860, #c89820);
+  border-color: #5a4010;
+  color: var(--color-text-dark);
+  font-family: var(--font-medieval);
+}
+
+/* === 地图节点 === */
+.map-node {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid var(--color-border);
+  background: var(--color-bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  position: relative;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.map-node-current {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.map-node-visited {
+  opacity: 0.5;
+  border-color: var(--color-border);
+}
+
+.map-node-available {
+  border-color: var(--color-success);
+  box-shadow: 0 0 10px rgba(90,158,58,0.4);
+}
+
+.map-node-locked {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px var(--color-primary-glow); }
+  50% { box-shadow: 0 0 35px var(--color-primary-glow), 0 0 60px rgba(196,87,58,0.2); }
+}
+
+/* === 战斗单位 === */
+.combat-unit {
+  background: var(--color-bg-panel);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 8px;
+  position: relative;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.combat-unit-enemy {
+  border-color: var(--color-danger);
+}
+
+.combat-unit-player {
+  border-color: var(--color-primary);
+}
+
+.unit-portrait {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border-gold);
+  background: var(--color-bg-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto;
+}
+
+.unit-name {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  text-align: center;
+  color: var(--color-text-gold);
+}
+
+.unit-intent {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--color-warning);
+  border: 2px solid #8a5a10;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: var(--color-text-dark);
+}
+
+/* === 状态效果徽章 === */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  border: 1px solid;
+}
+
+.status-buff {
+  background: var(--color-success-bg);
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.status-debuff {
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+/* === 进度条样式 === */
+.progress-track {
+  height: 8px;
+  background: var(--color-bg-deep);
+  border-radius: 4px;
+  border: 1px solid var(--color-border-dark);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width var(--transition-slow);
+}
+
+/* === 工具类 === */
+.text-gold { color: var(--color-text-gold); }
+.text-primary { color: var(--color-primary); }
+.text-muted { color: var(--color-text-muted); }
+.text-warrior { color: var(--color-warrior); }
+.text-rogue { color: var(--color-rogue); }
+.text-mage { color: var(--color-mage); }
+.text-priest { color: var(--color-priest); }
+
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.gap-sm { gap: 8px; }
+.gap-md { gap: 16px; }
+.gap-lg { gap: 24px; }
+
+.text-center { text-align: center; }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+
+.font-display { font-family: var(--font-display); }
+.font-pirate { font-family: var(--font-pirate); }
+.font-medieval { font-family: var(--font-medieval); }
+
+/* === 星空粒子动画 === */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #fff;
+  border-radius: 50%;
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+/* === 装饰角饰 === */
+.corner-ornament {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--color-border-gold);
+  opacity: 0.6;
+}
+
+.corner-ornament-tl { top: 8px; left: 8px; border-right: none; border-bottom: none; }
+.corner-ornament-tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }
+.corner-ornament-bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }
+.corner-ornament-br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
+
+/* === 滚动条 === */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-deep);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-light);
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-primary: var(--color-primary);
+    --color-border: var(--color-border);
+  }
+  @layer base {
+    body { background: var(--color-background); color: var(--color-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body>
+  <div class="char-create-page">
+
+    <!-- ===== 星空背景 ===== -->
+    <div class="starfield">
+      <!-- 几颗明亮大星 -->
+      <div class="star-bright" style="top:8%; left:15%; animation-delay:0s;"></div>
+      <div class="star-bright" style="top:22%; left:78%; animation-delay:1.2s;"></div>
+      <div class="star-bright" style="top:55%; left:8%; animation-delay:0.6s;"></div>
+      <div class="star-bright" style="top:70%; left:88%; animation-delay:2s;"></div>
+      <div class="star-bright" style="top:35%; left:45%; animation-delay:0.3s; width:2px; height:2px;"></div>
+      <div class="star-bright" style="top:82%; left:30%; animation-delay:1.8s; width:2px; height:2px;"></div>
+      <div class="star-bright" style="top:12%; left:60%; animation-delay:0.9s; width:2px; height:2px;"></div>
+      <!-- 装饰罗盘水印 -->
+      <div class="compass-watermark"></div>
+    </div>
+
+    <!-- ===== 顶部：7步进度条 ===== -->
+    <div class="progress-section">
+      <div class="progress-bar-wrapper">
+        <div class="progress-connector-track">
+          <div class="progress-connector-fill"></div>
+        </div>
+        <div class="step-list">
+          <!-- Step 1: 种族（已完成） -->
+          <div class="step-item completed">
+            <div class="step-node"><span class="step-number"></span></div>
+            <div class="step-label">种族</div>
+          </div>
+          <!-- Step 2: 出身（已完成） -->
+          <div class="step-item completed">
+            <div class="step-node"><span class="step-number"></span></div>
+            <div class="step-label">出身</div>
+          </div>
+          <!-- Step 3: 职业（当前） -->
+          <div class="step-item current">
+            <div class="step-node"><span class="step-number">3</span></div>
+            <div class="step-label">职业</div>
+          </div>
+          <!-- Step 4: 成长（未完成） -->
+          <div class="step-item pending">
+            <div class="step-node"><span class="step-number">4</span></div>
+            <div class="step-label">成长</div>
+          </div>
+          <!-- Step 5: 技能（未完成） -->
+          <div class="step-item pending">
+            <div class="step-node"><span class="step-number">5</span></div>
+            <div class="step-label">技能</div>
+          </div>
+          <!-- Step 6: 属性（未完成） -->
+          <div class="step-item pending">
+            <div class="step-node"><span class="step-number">6</span></div>
+            <div class="step-label">属性</div>
+          </div>
+          <!-- Step 7: 确认（未完成） -->
+          <div class="step-item pending">
+            <div class="step-node"><span class="step-number">7</span></div>
+            <div class="step-label">确认</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 中央区域 ===== -->
+    <div class="main-content">
+
+      <!-- --- 左侧：身份卡预览 --- -->
+      <div class="identity-card">
+        <span class="id-corner id-corner-tl"></span>
+        <span class="id-corner id-corner-tr"></span>
+        <span class="id-corner id-corner-bl"></span>
+        <span class="id-corner id-corner-br"></span>
+
+        <!-- 立绘区 -->
+        <div class="portrait-area">
+          <div class="portrait-frame"></div>
+          <div class="portrait-icon">🧙‍♂️</div>
+          <div class="portrait-class-tag">MAGE 法师</div>
+        </div>
+
+        <!-- 身份卡正文 -->
+        <div class="id-body">
+          <!-- 名称输入 -->
+          <div class="name-input-row">
+            <span class="name-label">角色名称</span>
+            <input type="text" class="name-input" value="星界冒险者" spellcheck="false">
+          </div>
+
+          <!-- 基础信息 -->
+          <div class="id-info-row">
+            <div class="id-info-item">
+              <span class="id-info-label">种族</span>
+              <span class="id-info-value">人类</span>
+            </div>
+            <div class="id-info-item">
+              <span class="id-info-label">出身</span>
+              <span class="id-info-value">流民</span>
+            </div>
+            <div class="id-info-item">
+              <span class="id-info-label">职业</span>
+              <span class="id-info-value mage">法师</span>
+            </div>
+          </div>
+
+          <!-- 6属性（两列） -->
+          <div class="attr-grid">
+            <div class="attr-item">
+              <span class="attr-name">力量</span>
+              <div class="attr-values">
+                <span class="attr-score">8</span>
+                <span class="attr-mod neg">-1</span>
+              </div>
+            </div>
+            <div class="attr-item">
+              <span class="attr-name">敏捷</span>
+              <div class="attr-values">
+                <span class="attr-score">10</span>
+                <span class="attr-mod">+0</span>
+              </div>
+            </div>
+            <div class="attr-item">
+              <span class="attr-name">体质</span>
+              <div class="attr-values">
+                <span class="attr-score">12</span>
+                <span class="attr-mod pos">+1</span>
+              </div>
+            </div>
+            <div class="attr-item int">
+              <span class="attr-name">智力</span>
+              <div class="attr-values">
+                <span class="attr-score">16</span>
+                <span class="attr-mod pos">+3</span>
+              </div>
+            </div>
+            <div class="attr-item">
+              <span class="attr-name">感知</span>
+              <div class="attr-values">
+                <span class="attr-score">14</span>
+                <span class="attr-mod pos">+2</span>
+              </div>
+            </div>
+            <div class="attr-item">
+              <span class="attr-name">魅力</span>
+              <div class="attr-values">
+                <span class="attr-score">10</span>
+                <span class="attr-mod">+0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 资源：HP/CE/初始牌组 -->
+          <div class="resource-row">
+            <div class="resource-item res-hp">
+              <div class="res-icon">❤</div>
+              <span class="res-value">28</span>
+              <span class="res-label">HP</span>
+            </div>
+            <div class="resource-item res-ce">
+              <div class="res-icon">CE</div>
+              <span class="res-value">3</span>
+              <span class="res-label">燃素</span>
+            </div>
+            <div class="resource-item res-deck">
+              <div class="res-icon">🂠</div>
+              <span class="res-value">10</span>
+              <span class="res-label">初始牌组</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- --- 右侧：职业选择 --- -->
+      <div class="profession-panel">
+        <div class="section-header">
+          <h1 class="section-title">选择你的职业</h1>
+          <p class="section-subtitle">职业决定你的牌库构成和战斗风格</p>
+        </div>
+
+        <div class="profession-grid">
+
+          <!-- 战士 -->
+          <div class="prof-card warrior" data-dom-id="prof-warrior">
+            <span class="selected-badge">已选择</span>
+            <div class="prof-head">
+              <div class="prof-icon">⚔</div>
+              <div class="prof-name-block">
+                <div class="prof-name">战士</div>
+                <div class="prof-name-en">Warrior</div>
+              </div>
+            </div>
+            <div class="prof-bonuses">
+              <span class="bonus-tag primary">力量 +3</span>
+              <span class="bonus-tag secondary">体质 +2</span>
+              <span class="bonus-tag secondary">HP 高</span>
+            </div>
+            <div class="prof-mechanic">
+              <span class="mech-label">核心机制</span>
+              <strong>怒气系统</strong> — 高HP高攻击，以近战卡牌为主。受击或攻击时积累怒气，释放强力斩击。
+            </div>
+            <div class="prof-feature">
+              <span class="feat-label">职业特色</span>
+              获得护甲时对攻击者发动反击，越战越勇。
+            </div>
+            <div class="prof-deck-info">
+              <div class="deck-count">
+                <span>初始牌组</span>
+                <span class="count-num">12</span>
+                <span>张</span>
+              </div>
+              <div class="deck-resource">
+                <span class="res-dot rage"></span> 怒气
+                <span class="res-dot hp"></span> 生命
+              </div>
+            </div>
+          </div>
+
+          <!-- 盗贼 -->
+          <div class="prof-card rogue" data-dom-id="prof-rogue">
+            <span class="selected-badge">已选择</span>
+            <div class="prof-head">
+              <div class="prof-icon">🗡</div>
+              <div class="prof-name-block">
+                <div class="prof-name">盗贼</div>
+                <div class="prof-name-en">Rogue</div>
+              </div>
+            </div>
+            <div class="prof-bonuses">
+              <span class="bonus-tag primary">敏捷 +3</span>
+              <span class="bonus-tag secondary">感知 +1</span>
+              <span class="bonus-tag secondary">闪避高</span>
+            </div>
+            <div class="prof-mechanic">
+              <span class="mech-label">核心机制</span>
+              <strong>连击点系统</strong> — 高闪避高爆发，以暗器与身法卡牌为主。连续出拳积累连击点，终结技造成爆发伤害。
+            </div>
+            <div class="prof-feature">
+              <span class="feat-label">职业特色</span>
+              连击数触发额外效果，如毒伤、缴械、二连击。
+            </div>
+            <div class="prof-deck-info">
+              <div class="deck-count">
+                <span>初始牌组</span>
+                <span class="count-num">10</span>
+                <span>张</span>
+              </div>
+              <div class="deck-resource">
+                <span class="res-dot combo"></span> 连击
+                <span class="res-dot ce"></span> 燃素
+              </div>
+            </div>
+          </div>
+
+          <!-- 法师（当前选中） -->
+          <div class="prof-card mage selected" data-dom-id="prof-mage">
+            <span class="selected-badge">已选择</span>
+            <div class="prof-head">
+              <div class="prof-icon">✨</div>
+              <div class="prof-name-block">
+                <div class="prof-name">法师</div>
+                <div class="prof-name-en">Mage</div>
+              </div>
+            </div>
+            <div class="prof-bonuses">
+              <span class="bonus-tag primary">智力 +3</span>
+              <span class="bonus-tag secondary">感知 +2</span>
+              <span class="bonus-tag secondary">AOE强</span>
+            </div>
+            <div class="prof-mechanic">
+              <span class="mech-label">核心机制</span>
+              <strong>法力值系统</strong> — 远程法术AOE，以奥术卡牌为主。消耗法力释放元素法术，管理法力曲线是关键。
+            </div>
+            <div class="prof-feature">
+              <span class="feat-label">职业特色</span>
+              法术可充能升级，高阶法术改变战局。
+            </div>
+            <div class="prof-deck-info">
+              <div class="deck-count">
+                <span>初始牌组</span>
+                <span class="count-num">10</span>
+                <span>张</span>
+              </div>
+              <div class="deck-resource">
+                <span class="res-dot mana"></span> 法力
+                <span class="res-dot ce"></span> 燃素
+              </div>
+            </div>
+          </div>
+
+          <!-- 牧师 -->
+          <div class="prof-card priest" data-dom-id="prof-priest">
+            <span class="selected-badge">已选择</span>
+            <div class="prof-head">
+              <div class="prof-icon">✝</div>
+              <div class="prof-name-block">
+                <div class="prof-name">牧师</div>
+                <div class="prof-name-en">Priest</div>
+              </div>
+            </div>
+            <div class="prof-bonuses">
+              <span class="bonus-tag primary">感知 +3</span>
+              <span class="bonus-tag secondary">魅力 +2</span>
+              <span class="bonus-tag secondary">治疗强</span>
+            </div>
+            <div class="prof-mechanic">
+              <span class="mech-label">核心机制</span>
+              <strong>法力值系统</strong> — 治疗祝福，以神圣卡牌为主。通过祈祷与祝福为团队提供续航与增益。
+            </div>
+            <div class="prof-feature">
+              <span class="feat-label">职业特色</span>
+              祈祷获得持续增益，圣盾与治愈庇护队友。
+            </div>
+            <div class="prof-deck-info">
+              <div class="deck-count">
+                <span>初始牌组</span>
+                <span class="count-num">10</span>
+                <span>张</span>
+              </div>
+              <div class="deck-resource">
+                <span class="res-dot mana"></span> 法力
+                <span class="res-dot ce"></span> 燃素
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== 底部按钮栏 ===== -->
+    <div class="bottom-bar">
+      <button class="btn btn-secondary btn-nav" data-dom-id="btn-prev">
+        <span>←</span>
+        <span>返回上一步</span>
+      </button>
+
+      <div class="step-indicator">
+        第 <span class="current-step">3</span> 步 / 共 <span class="total-steps">7</span> 步
+      </div>
+
+      <button class="btn btn-primary btn-nav" data-dom-id="btn-next">
+        <span>下一步：选择技能</span>
+        <span>→</span>
+      </button>
+    </div>
+
+  </div>
+
+    <style>
+    /* ============================================
+       角色创建页面 — 页面专属样式
+       ============================================ */
+
+    /* --- 页面主容器（1920×1080基准） --- */
+    .char-create-page {
+      width: 100vw;
+      height: 100vh;
+      min-width: 1280px;
+      min-height: 720px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(180deg, #1a1520 0%, #120e18 100%);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* --- 纯CSS星空背景 --- */
+    .starfield {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .starfield .star {
+      position: absolute;
+      background: #fff;
+      border-radius: 50%;
+      animation: twinkle var(--dur, 3s) ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+    }
+    /* 用多层box-shadow模拟大量星星，避免数百个DOM节点 */
+    .starfield::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.8), transparent),
+        radial-gradient(1px 1px at 25% 45%, rgba(255,255,255,0.6), transparent),
+        radial-gradient(1.5px 1.5px at 40% 15%, rgba(240,200,96,0.7), transparent),
+        radial-gradient(1px 1px at 55% 70%, rgba(255,255,255,0.5), transparent),
+        radial-gradient(1px 1px at 70% 30%, rgba(255,255,255,0.8), transparent),
+        radial-gradient(2px 2px at 82% 55%, rgba(155,127,212,0.6), transparent),
+        radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,0.7), transparent),
+        radial-gradient(1px 1px at 15% 85%, rgba(255,255,255,0.5), transparent),
+        radial-gradient(1.5px 1.5px at 48% 90%, rgba(78,205,196,0.5), transparent),
+        radial-gradient(1px 1px at 65% 10%, rgba(255,255,255,0.6), transparent),
+        radial-gradient(1px 1px at 33% 60%, rgba(255,255,255,0.4), transparent),
+        radial-gradient(1px 1px at 78% 88%, rgba(240,200,96,0.5), transparent),
+        radial-gradient(1px 1px at 5% 50%, rgba(255,255,255,0.5), transparent),
+        radial-gradient(1.5px 1.5px at 95% 25%, rgba(255,255,255,0.7), transparent),
+        radial-gradient(1px 1px at 20% 75%, rgba(255,255,255,0.4), transparent);
+      animation: twinkle 4s ease-in-out infinite;
+    }
+    .starfield::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(1px 1px at 12% 35%, rgba(255,255,255,0.6), transparent),
+        radial-gradient(1px 1px at 38% 22%, rgba(255,255,255,0.5), transparent),
+        radial-gradient(1px 1px at 52% 48%, rgba(255,255,255,0.7), transparent),
+        radial-gradient(2px 2px at 68% 65%, rgba(196,87,58,0.4), transparent),
+        radial-gradient(1px 1px at 85% 12%, rgba(255,255,255,0.6), transparent),
+        radial-gradient(1px 1px at 92% 42%, rgba(255,255,255,0.5), transparent),
+        radial-gradient(1.5px 1.5px at 7% 68%, rgba(255,255,255,0.6), transparent),
+        radial-gradient(1px 1px at 45% 8%, rgba(240,192,64,0.5), transparent),
+        radial-gradient(1px 1px at 60% 82%, rgba(255,255,255,0.4), transparent),
+        radial-gradient(1px 1px at 75% 40%, rgba(255,255,255,0.5), transparent),
+        radial-gradient(1px 1px at 28% 92%, rgba(155,127,212,0.4), transparent),
+        radial-gradient(1px 1px at 88% 72%, rgba(255,255,255,0.6), transparent);
+      animation: twinkle 5s ease-in-out infinite 1.5s;
+    }
+    /* 额外的闪烁大星 */
+    .star-bright {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 6px 1px rgba(255,255,255,0.6);
+      animation: twinkle 2.5s ease-in-out infinite;
+    }
+
+    /* --- 顶部进度条区域 --- */
+    .progress-section {
+      position: relative;
+      z-index: 2;
+      padding: 28px 60px 12px;
+    }
+    .progress-bar-wrapper {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      position: relative;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    /* 连接线（在节点下面） */
+    .progress-connector-track {
+      position: absolute;
+      top: 22px;
+      left: 8%;
+      right: 8%;
+      height: 3px;
+      background: var(--color-border-dark);
+      z-index: 0;
+    }
+    .progress-connector-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      /* 第3步（索引2/6），填充到约 2/6 ≈ 33.3%，但要到达第3个节点中心 */
+      width: calc(100% * 2 / 6);
+      background: linear-gradient(90deg, var(--color-text-gold), var(--color-primary));
+      border-radius: 2px;
+      box-shadow: 0 0 8px rgba(240,200,96,0.4);
+    }
+    /* 星盘装饰线 */
+    .progress-connector-track::before,
+    .progress-connector-track::after {
+      content: '';
+      position: absolute;
+      top: -4px;
+      width: 11px;
+      height: 11px;
+      border: 2px solid var(--color-border-gold);
+      border-radius: 50%;
+      opacity: 0.5;
+    }
+    .progress-connector-track::before { left: -6px; }
+    .progress-connector-track::after { right: -6px; }
+
+    .step-list {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+      padding: 0 4%;
+    }
+    .step-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      cursor: default;
+    }
+    .step-node {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      border: 3px solid;
+      transition: all var(--transition-base);
+      position: relative;
+    }
+    /* 已完成节点：金色 */
+    .step-item.completed .step-node {
+      background: linear-gradient(135deg, #f0c860 0%, #c89820 100%);
+      border-color: #8a6810;
+      color: var(--color-text-dark);
+      box-shadow: 0 0 14px rgba(240,200,96,0.5), inset 0 1px 2px rgba(255,255,255,0.3);
+    }
+    .step-item.completed .step-node::after {
+      content: '✓';
+      font-size: 1.1rem;
+    }
+    /* 当前节点：赤陶色脉冲 */
+    .step-item.current .step-node {
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+      border-color: var(--color-primary-dark);
+      color: #fff;
+      box-shadow: 0 0 20px var(--color-primary-glow), inset 0 1px 2px rgba(255,255,255,0.2);
+      animation: step-pulse 2s ease-in-out infinite;
+    }
+    @keyframes step-pulse {
+      0%, 100% { box-shadow: 0 0 20px var(--color-primary-glow), inset 0 1px 2px rgba(255,255,255,0.2); }
+      50% { box-shadow: 0 0 36px var(--color-primary-glow), 0 0 60px rgba(196,87,58,0.25), inset 0 1px 2px rgba(255,255,255,0.3); }
+    }
+    /* 未完成节点：灰色 */
+    .step-item.pending .step-node {
+      background: var(--color-bg-surface);
+      border-color: var(--color-border);
+      color: var(--color-text-muted);
+    }
+    .step-label {
+      font-size: 0.8rem;
+      font-family: var(--font-body);
+      color: var(--color-text-muted);
+      letter-spacing: 1px;
+      text-align: center;
+      white-space: nowrap;
+      transition: color var(--transition-base);
+    }
+    .step-item.completed .step-label {
+      color: var(--color-text-gold);
+    }
+    .step-item.current .step-label {
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+    .step-item.pending .step-label {
+      color: var(--color-text-muted);
+    }
+    .step-number {
+      font-family: var(--font-medieval);
+    }
+    .step-item.completed .step-number { display: none; }
+    .step-item.completed .step-node::after { display: flex; }
+
+    /* --- 中央内容区 --- */
+    .main-content {
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      display: flex;
+      gap: 24px;
+      padding: 20px 60px 20px;
+      overflow: hidden;
+    }
+
+    /* ========== 左侧身份卡 ========== */
+    .identity-card {
+      width: 300px;
+      flex-shrink: 0;
+      background: var(--color-bg-panel);
+      border: 3px solid var(--color-border-dark);
+      border-radius: var(--radius-panel);
+      box-shadow: var(--shadow-panel);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .identity-card::before {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border: 1px solid var(--color-border-light);
+      border-radius: calc(var(--radius-panel) - 2px);
+      pointer-events: none;
+      z-index: 1;
+    }
+    /* 四角装饰 */
+    .id-corner {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--color-border-gold);
+      opacity: 0.7;
+      z-index: 2;
+    }
+    .id-corner-tl { top: 10px; left: 10px; border-right: none; border-bottom: none; }
+    .id-corner-tr { top: 10px; right: 10px; border-left: none; border-bottom: none; }
+    .id-corner-bl { bottom: 10px; left: 10px; border-right: none; border-top: none; }
+    .id-corner-br { bottom: 10px; right: 10px; border-left: none; border-top: none; }
+
+    /* 立绘区 */
+    .portrait-area {
+      height: 200px;
+      background: linear-gradient(180deg, #0e0a16 0%, #1e1628 60%, #2a1f3a 100%);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 2px solid var(--color-border-dark);
+      overflow: hidden;
+    }
+    .portrait-area::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 50% 60%, rgba(155,127,212,0.15) 0%, transparent 60%),
+        radial-gradient(circle at 20% 30%, rgba(240,200,96,0.06) 0%, transparent 40%);
+    }
+    /* 装饰边框 */
+    .portrait-frame {
+      position: absolute;
+      inset: 12px;
+      border: 1px solid rgba(160,128,64,0.3);
+      border-radius: 4px;
+      pointer-events: none;
+    }
+    .portrait-frame::before,
+    .portrait-frame::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--color-border-gold);
+      opacity: 0.5;
+    }
+    .portrait-frame::before {
+      top: -4px; left: -4px;
+      border-right: none; border-bottom: none;
+    }
+    .portrait-frame::after {
+      bottom: -4px; right: -4px;
+      border-left: none; border-top: none;
+    }
+    .portrait-icon {
+      font-size: 80px;
+      position: relative;
+      z-index: 1;
+      filter: drop-shadow(0 0 20px rgba(155,127,212,0.5));
+    }
+    /* 立绘区底部职业标签 */
+    .portrait-class-tag {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(155,127,212,0.25);
+      border: 1px solid var(--color-mage);
+      color: var(--color-mage);
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      padding: 3px 12px;
+      border-radius: 2px;
+      letter-spacing: 2px;
+      z-index: 2;
+    }
+
+    /* 身份卡正文 */
+    .id-body {
+      padding: 16px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* 角色名称输入 */
+    .name-input-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .name-label {
+      font-size: 0.65rem;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .name-input {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid var(--color-border);
+      color: var(--color-text-gold);
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      padding: 4px 0;
+      outline: none;
+      text-align: center;
+      transition: border-color var(--transition-base);
+    }
+    .name-input:focus {
+      border-bottom-color: var(--color-text-gold);
+    }
+    .name-input::placeholder {
+      color: var(--color-text-muted);
+    }
+
+    /* 基础信息行 */
+    .id-info-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.82rem;
+      padding: 6px 0;
+      border-top: 1px dashed rgba(94,82,114,0.4);
+    }
+    .id-info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+      text-align: center;
+    }
+    .id-info-label {
+      font-size: 0.65rem;
+      color: var(--color-text-muted);
+      letter-spacing: 1px;
+    }
+    .id-info-value {
+      font-size: 0.85rem;
+      color: var(--color-text);
+      font-weight: 600;
+    }
+    .id-info-value.mage { color: var(--color-mage); }
+
+    /* 属性网格 */
+    .attr-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 12px;
+      padding: 8px 0;
+      border-top: 1px dashed rgba(94,82,114,0.4);
+    }
+    .attr-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 8px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 3px;
+      border-left: 2px solid var(--color-border);
+    }
+    .attr-name {
+      font-size: 0.72rem;
+      color: var(--color-text-secondary);
+      letter-spacing: 1px;
+    }
+    .attr-values {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+    .attr-score {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--color-text);
+    }
+    .attr-mod {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+    }
+    .attr-mod.pos { color: var(--color-success); }
+    .attr-mod.neg { color: var(--color-danger); }
+    /* 法师主属性高亮 */
+    .attr-item.int {
+      border-left-color: var(--color-mage);
+      background: var(--color-mage-bg);
+    }
+    .attr-item.int .attr-score { color: var(--color-mage); }
+
+    /* 资源行 HP/CE/牌组 */
+    .resource-row {
+      display: flex;
+      justify-content: space-around;
+      gap: 6px;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(94,82,114,0.4);
+    }
+    .resource-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      flex: 1;
+    }
+    .res-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: bold;
+      border: 2px solid;
+    }
+    .res-hp .res-icon {
+      background: radial-gradient(circle, #5abe3a, #3a8a2a);
+      border-color: #2a5a1a;
+      color: #fff;
+      box-shadow: 0 0 8px rgba(90,190,58,0.3);
+    }
+    .res-ce .res-icon {
+      background: radial-gradient(circle, #f0c860, #c89820);
+      border-color: #8a6810;
+      color: var(--color-text-dark);
+      font-family: var(--font-medieval);
+      box-shadow: 0 0 8px rgba(240,200,96,0.3);
+    }
+    .res-deck .res-icon {
+      background: radial-gradient(circle, var(--color-bg-elevated), var(--color-bg-surface));
+      border-color: var(--color-border-light);
+      color: var(--color-text);
+      box-shadow: 0 0 8px rgba(0,0,0,0.3);
+    }
+    .res-value {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--color-text);
+    }
+    .res-label {
+      font-size: 0.6rem;
+      color: var(--color-text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ========== 右侧职业选择区 ========== */
+    .profession-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      position: relative;
+    }
+
+    .section-header {
+      margin-bottom: 18px;
+      position: relative;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--color-text-gold);
+      letter-spacing: 3px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      position: relative;
+      display: inline-block;
+    }
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 0;
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--color-primary), transparent);
+    }
+    .section-subtitle {
+      font-size: 0.95rem;
+      color: var(--color-text-secondary);
+      margin-top: 12px;
+      letter-spacing: 1px;
+    }
+
+    /* 职业卡片网格 */
+    .profession-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 20px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .prof-card {
+      background: var(--color-bg-surface);
+      border: 3px solid var(--color-border);
+      border-radius: var(--radius-card);
+      padding: 20px 22px;
+      position: relative;
+      cursor: pointer;
+      transition: all var(--transition-base);
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden;
+    }
+    .prof-card::before {
+      content: '';
+      position: absolute;
+      inset: 2px;
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: calc(var(--radius-card) - 2px);
+      pointer-events: none;
+      z-index: 1;
+    }
+    .prof-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 60px;
+      background: linear-gradient(180deg, var(--prof-glow, transparent) 0%, transparent 100%);
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    /* 悬停抬起 */
+    .prof-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 24px var(--prof-glow, var(--color-primary-glow));
+      z-index: 5;
+    }
+    /* 职业色 */
+    .prof-card.warrior {
+      border-color: var(--color-warrior);
+      --prof-glow: rgba(212,82,58,0.3);
+    }
+    .prof-card.warrior:hover {
+      box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 28px rgba(212,82,58,0.5);
+    }
+    .prof-card.rogue {
+      border-color: var(--color-rogue);
+      --prof-glow: rgba(78,205,196,0.3);
+    }
+    .prof-card.rogue:hover {
+      box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 28px rgba(78,205,196,0.5);
+    }
+    .prof-card.mage {
+      border-color: var(--color-mage);
+      --prof-glow: rgba(155,127,212,0.3);
+    }
+    .prof-card.mage:hover {
+      box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 28px rgba(155,127,212,0.5);
+    }
+    .prof-card.priest {
+      border-color: var(--color-priest);
+      --prof-glow: rgba(240,192,64,0.3);
+    }
+    .prof-card.priest:hover {
+      box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 28px rgba(240,192,64,0.5);
+    }
+
+    /* 选中状态：金色光晕+缩放 */
+    .prof-card.selected {
+      border-color: var(--color-text-gold);
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 30px rgba(240,200,96,0.5), 0 0 60px rgba(240,200,96,0.2);
+      z-index: 6;
+      background: linear-gradient(135deg, rgba(240,200,96,0.08) 0%, var(--color-bg-surface) 40%, var(--color-bg-surface) 100%);
+    }
+    .prof-card.selected::before {
+      border-color: rgba(240,200,96,0.3);
+    }
+    .prof-card.selected::after {
+      background: linear-gradient(180deg, rgba(240,200,96,0.15) 0%, transparent 100%);
+      opacity: 1;
+    }
+
+    /* 职业卡头部：图标+名称 */
+    .prof-head {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: relative;
+      z-index: 2;
+    }
+    .prof-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      flex-shrink: 0;
+      border: 2px solid;
+      position: relative;
+    }
+    .prof-card.warrior .prof-icon {
+      background: var(--color-warrior-bg);
+      border-color: var(--color-warrior);
+      box-shadow: 0 0 12px rgba(212,82,58,0.3);
+    }
+    .prof-card.rogue .prof-icon {
+      background: var(--color-rogue-bg);
+      border-color: var(--color-rogue);
+      box-shadow: 0 0 12px rgba(78,205,196,0.3);
+    }
+    .prof-card.mage .prof-icon {
+      background: var(--color-mage-bg);
+      border-color: var(--color-mage);
+      box-shadow: 0 0 12px rgba(155,127,212,0.3);
+    }
+    .prof-card.priest .prof-icon {
+      background: var(--color-priest-bg);
+      border-color: var(--color-priest);
+      box-shadow: 0 0 12px rgba(240,192,64,0.3);
+    }
+    .prof-card.selected .prof-icon {
+      border-color: var(--color-text-gold);
+      box-shadow: 0 0 16px rgba(240,200,96,0.5);
+    }
+    .prof-name-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .prof-name {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--color-text);
+      letter-spacing: 1px;
+    }
+    .prof-card.warrior .prof-name { color: var(--color-warrior); }
+    .prof-card.rogue .prof-name { color: var(--color-rogue); }
+    .prof-card.mage .prof-name { color: var(--color-mage); }
+    .prof-card.priest .prof-name { color: var(--color-priest); }
+    .prof-card.selected .prof-name { color: var(--color-text-gold); }
+    .prof-name-en {
+      font-family: var(--font-medieval);
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    /* 属性加成标签 */
+    .prof-bonuses {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 2;
+    }
+    .bonus-tag {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 2px;
+      border: 1px solid;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .bonus-tag.primary {
+      background: rgba(240,200,96,0.12);
+      border-color: rgba(240,200,96,0.4);
+      color: var(--color-text-gold);
+    }
+    .bonus-tag.secondary {
+      background: rgba(255,255,255,0.04);
+      border-color: var(--color-border);
+      color: var(--color-text-secondary);
+    }
+
+    /* 核心机制描述 */
+    .prof-mechanic {
+      font-size: 0.82rem;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+      position: relative;
+      z-index: 2;
+      padding: 6px 0;
+      border-top: 1px dashed rgba(94,82,114,0.3);
+      border-bottom: 1px dashed rgba(94,82,114,0.3);
+    }
+    .prof-mechanic .mech-label {
+      font-size: 0.65rem;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      display: block;
+      margin-bottom: 3px;
+    }
+    .prof-mechanic strong {
+      color: var(--color-text);
+      font-weight: 600;
+    }
+    .prof-card.warrior .prof-mechanic strong { color: var(--color-warrior); }
+    .prof-card.rogue .prof-mechanic strong { color: var(--color-rogue); }
+    .prof-card.mage .prof-mechanic strong { color: var(--color-mage); }
+    .prof-card.priest .prof-mechanic strong { color: var(--color-priest); }
+
+    /* 特色描述 */
+    .prof-feature {
+      font-size: 0.78rem;
+      color: var(--color-text);
+      font-style: italic;
+      position: relative;
+      z-index: 2;
+      padding-left: 10px;
+      border-left: 2px solid;
+    }
+    .prof-card.warrior .prof-feature { border-left-color: var(--color-warrior); }
+    .prof-card.rogue .prof-feature { border-left-color: var(--color-rogue); }
+    .prof-card.mage .prof-feature { border-left-color: var(--color-mage); }
+    .prof-card.priest .prof-feature { border-left-color: var(--color-priest); }
+    .prof-feature .feat-label {
+      font-style: normal;
+      font-size: 0.65rem;
+      color: var(--color-text-muted);
+      letter-spacing: 1px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* 起始牌组信息 */
+    .prof-deck-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+      position: relative;
+      z-index: 2;
+      padding-top: 4px;
+    }
+    .deck-count {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+    }
+    .deck-count .count-num {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-text-gold);
+    }
+    .deck-resource {
+      font-size: 0.7rem;
+      color: var(--color-text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .res-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .res-dot.hp { background: #5abe3a; }
+    .res-dot.rage { background: #d44040; }
+    .res-dot.combo { background: #4ecdc4; }
+    .res-dot.mana { background: #9b50d4; }
+    .res-dot.ce { background: #f0c860; }
+
+    /* 选中标记 */
+    .selected-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: var(--color-text-gold);
+      color: var(--color-text-dark);
+      font-family: var(--font-display);
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 2px;
+      letter-spacing: 1px;
+      z-index: 3;
+      box-shadow: 0 0 10px rgba(240,200,96,0.5);
+      display: none;
+    }
+    .prof-card.selected .selected-badge {
+      display: block;
+      animation: badge-pop 0.3s ease-out;
+    }
+    @keyframes badge-pop {
+      0% { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* ========== 底部按钮栏 ========== */
+    .bottom-bar {
+      position: relative;
+      z-index: 2;
+      padding: 16px 60px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .bottom-bar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 60px;
+      right: 60px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--color-border), transparent);
+    }
+    .step-indicator {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      color: var(--color-text-secondary);
+      letter-spacing: 2px;
+    }
+    .step-indicator .current-step {
+      color: var(--color-primary);
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+    .step-indicator .total-steps {
+      color: var(--color-text-muted);
+    }
+    .btn-nav {
+      min-width: 180px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    /* 航海装饰 — 底部罗盘印记 */
+    .compass-watermark {
+      position: absolute;
+      bottom: -40px;
+      right: -40px;
+      width: 200px;
+      height: 200px;
+      border: 2px solid rgba(160,128,64,0.08);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .compass-watermark::before {
+      content: '';
+      position: absolute;
+      inset: 20px;
+      border: 1px solid rgba(160,128,64,0.06);
+      border-radius: 50%;
+    }
+    .compass-watermark::after {
+      content: '✦';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2rem;
+      color: rgba(160,128,64,0.1);
+    }
+
+  </style>
+</body>
+</html>

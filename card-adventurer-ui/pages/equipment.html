@@ -1,0 +1,1898 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卡牌冒险者 — 角色装备</title>
+    <style id="theme-vars">
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Pirata+One&family=Noto+Serif+SC:wght@400;600;700;900&family=MedievalSharp&display=swap');
+
+:root {
+  /* === 色彩系统 === */
+  /* 主色调 - 欺诈之地赤陶/琥珀红 */
+  --color-primary: #c4573a;
+  --color-primary-hover: #d96b4c;
+  --color-primary-dark: #9a3f28;
+  --color-primary-glow: rgba(196, 87, 58, 0.4);
+
+  /* 背景色 - 深紫黑星空 */
+  --color-bg: #1a1520;
+  --color-bg-deep: #120e18;
+  --color-bg-surface: #2a2338;
+  --color-bg-elevated: #352d45;
+  --color-bg-panel: #2d2540;
+  --color-bg-overlay: rgba(10, 8, 16, 0.85);
+
+  /* 边框色 */
+  --color-border: #4a3f5c;
+  --color-border-light: #5e5272;
+  --color-border-dark: #2d2538;
+  --color-border-gold: #a08040;
+
+  /* 文字色 */
+  --color-text: #e8e0f0;
+  --color-text-secondary: #a89cc0;
+  --color-text-muted: #6e6088;
+  --color-text-gold: #f0c860;
+  --color-text-dark: #1a1520;
+
+  /* 职业色 */
+  --color-warrior: #d4523a;
+  --color-warrior-bg: rgba(212, 82, 58, 0.15);
+  --color-rogue: #4ecdc4;
+  --color-rogue-bg: rgba(78, 205, 196, 0.15);
+  --color-mage: #9b7fd4;
+  --color-mage-bg: rgba(155, 127, 212, 0.15);
+  --color-priest: #f0c040;
+  --color-priest-bg: rgba(240, 192, 64, 0.15);
+
+  /* 状态色 */
+  --color-success: #5a9e3a;
+  --color-success-bg: rgba(90, 158, 58, 0.15);
+  --color-warning: #d49030;
+  --color-warning-bg: rgba(212, 144, 48, 0.15);
+  --color-danger: #c03848;
+  --color-danger-bg: rgba(192, 56, 72, 0.15);
+  --color-info: #5890c8;
+  --color-info-bg: rgba(88, 144, 200, 0.15);
+
+  /* 稀有度色 */
+  --color-common: #8a8090;
+  --color-uncommon: #4a90d4;
+  --color-rare: #9b50d4;
+  --color-legendary: #d4a020;
+
+  /* 燃素虹彩 */
+  --gradient-phlogiston: linear-gradient(135deg, #c4573a, #d49030, #f0c040, #4ecdc4, #5890c8, #9b7fd4);
+
+  /* === 字体系统 === */
+  --font-display: 'Cinzel', 'Noto Serif SC', serif;
+  --font-pirate: 'Pirata One', 'Noto Serif SC', serif;
+  --font-body: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --font-medieval: 'MedievalSharp', 'Courier New', monospace;
+
+  /* === 尺寸系统 === */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-card: 8px;
+  --radius-panel: 6px;
+  --radius-btn: 4px;
+
+  /* === 阴影 === */
+  --shadow-panel: 0 4px 20px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-card-hover: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 20px var(--color-primary-glow);
+  --shadow-btn: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-glow-gold: 0 0 20px rgba(240, 200, 96, 0.4);
+  --shadow-glow-primary: 0 0 20px var(--color-primary-glow);
+
+  /* === 边框装饰 === */
+  --border-rivet: 2px solid var(--color-border);
+  --border-panel: 3px solid var(--color-border-dark);
+  --border-panel-inner: 1px solid var(--color-border-light);
+  --border-gold: 2px solid var(--color-border-gold);
+
+  /* === 动画 === */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.25s ease;
+  --transition-slow: 0.4s ease;
+}
+
+/* === 全局重置 === */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.5;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* === 页面容器 === */
+.page-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-bg-deep);
+}
+
+/* === 背景图层 === */
+.bg-layer {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+}
+
+.bg-layer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(26, 21, 32, 0.3) 0%,
+    rgba(26, 21, 32, 0.1) 40%,
+    rgba(26, 21, 32, 0.7) 100%
+  );
+}
+
+/* === 手绘面板样式 === */
+.panel {
+  background: var(--color-bg-panel);
+  border: var(--border-panel);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-panel);
+  position: relative;
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: var(--border-panel-inner);
+  border-radius: calc(var(--radius-panel) - 2px);
+  pointer-events: none;
+}
+
+/* 面板铆钉装饰 */
+.panel-rivets::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  border: 1px solid rgba(94, 82, 114, 0.3);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.panel-header {
+  padding: 12px 20px;
+  border-bottom: 2px solid var(--color-border-dark);
+  background: linear-gradient(180deg, rgba(196, 87, 58, 0.15) 0%, transparent 100%);
+  position: relative;
+}
+
+.panel-header::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+}
+
+.panel-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-gold);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.panel-body {
+  padding: 16px 20px;
+}
+
+/* === 按钮样式 === */
+.btn {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 12px 28px;
+  border: 3px solid var(--color-border-dark);
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-btn);
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: calc(var(--radius-btn) - 1px);
+  pointer-events: none;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: var(--color-text);
+  border-color: #6a2a18;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(180deg, var(--color-primary-hover) 0%, var(--color-primary) 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow-primary);
+}
+
+.btn-secondary {
+  background: linear-gradient(180deg, var(--color-bg-elevated) 0%, var(--color-bg-surface) 100%);
+  color: var(--color-text);
+  border-color: var(--color-border-dark);
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(180deg, var(--color-border) 0%, var(--color-bg-elevated) 100%);
+  transform: translateY(-2px);
+}
+
+.btn-gold {
+  background: linear-gradient(180deg, #e8b838 0%, #c89820 100%);
+  color: var(--color-text-dark);
+  border-color: #8a6810;
+}
+
+.btn-gold:hover {
+  background: linear-gradient(180deg, #f0c848 0%, #d8a828 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow-gold);
+}
+
+.btn-danger {
+  background: linear-gradient(180deg, var(--color-danger) 0%, #902838 100%);
+  color: var(--color-text);
+  border-color: #5a1820;
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+}
+
+.btn-lg {
+  padding: 16px 40px;
+  font-size: 1.2rem;
+}
+
+/* === 卡牌样式 === */
+.card {
+  width: 140px;
+  height: 200px;
+  background: var(--color-bg-surface);
+  border: 3px solid var(--color-border);
+  border-radius: var(--radius-card);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+}
+
+.card:hover {
+  transform: translateY(-12px) scale(1.05);
+  box-shadow: var(--shadow-card-hover);
+  z-index: 10;
+}
+
+.card-warrior { border-color: var(--color-warrior); }
+.card-warrior:hover { box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 20px rgba(212,82,58,0.5); }
+.card-rogue { border-color: var(--color-rogue); }
+.card-rogue:hover { box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 20px rgba(78,205,196,0.5); }
+.card-mage { border-color: var(--color-mage); }
+.card-mage:hover { box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 20px rgba(155,127,212,0.5); }
+.card-priest { border-color: var(--color-priest); }
+.card-priest:hover { box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 20px rgba(240,192,64,0.5); }
+
+.card-common { border-color: var(--color-common); }
+.card-uncommon { border-color: var(--color-uncommon); }
+.card-rare { border-color: var(--color-rare); box-shadow: 0 0 15px rgba(155,80,212,0.3); }
+.card-legendary {
+  border-color: var(--color-legendary);
+  box-shadow: 0 0 20px rgba(212,160,32,0.4);
+  background: linear-gradient(135deg, #3a2a10, var(--color-bg-surface), #3a2a10);
+}
+
+.card-cost {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 32px;
+  height: 32px;
+  background: radial-gradient(circle, #f0c860 0%, #c89820 60%, #8a6810 100%);
+  border: 2px solid #5a4010;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-medieval);
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--color-text-dark);
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.3);
+}
+
+.card-art {
+  height: 90px;
+  background: linear-gradient(180deg, #1a1520 0%, #2a2338 100%);
+  border-bottom: 2px solid var(--color-border-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.5) 100%);
+}
+
+.card-name {
+  font-family: var(--font-pirate);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 6px 4px 2px;
+  color: var(--color-text);
+  border-bottom: 1px solid rgba(74,63,92,0.5);
+}
+
+.card-type {
+  font-size: 0.65rem;
+  text-align: center;
+  padding: 2px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: rgba(0,0,0,0.3);
+}
+
+.card-text {
+  font-size: 0.7rem;
+  padding: 4px 6px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  line-height: 1.3;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* === 资源/状态条 === */
+.resource-bar {
+  height: 20px;
+  background: var(--color-bg-deep);
+  border: 2px solid var(--color-border-dark);
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.resource-bar-fill {
+  height: 100%;
+  border-radius: 1px;
+  transition: width var(--transition-slow);
+  position: relative;
+}
+
+.resource-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  height: 6px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent);
+  border-radius: 2px;
+}
+
+.resource-bar-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  z-index: 1;
+}
+
+.bar-hp { background: linear-gradient(90deg, #3a8a2a, #5abe3a); }
+.bar-shield { background: linear-gradient(90deg, #2a5a9a, #4a8ad4); }
+.bar-energy { background: linear-gradient(90deg, #8a5a2a, #d4a030); }
+.bar-mana { background: linear-gradient(90deg, #5a3a8a, #9b50d4); }
+.bar-rage { background: linear-gradient(90deg, #8a2a2a, #d44040); }
+.bar-combo { background: linear-gradient(90deg, #2a7a6a, #4ecdc4); }
+
+/* === 资源图标/宝石 === */
+.gem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 0.8rem;
+  border: 2px solid;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.3);
+}
+
+.gem-energy {
+  background: radial-gradient(circle, #f0c860, #c89820);
+  border-color: #5a4010;
+  color: var(--color-text-dark);
+  font-family: var(--font-medieval);
+}
+
+/* === 地图节点 === */
+.map-node {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid var(--color-border);
+  background: var(--color-bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  position: relative;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.map-node-current {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.map-node-visited {
+  opacity: 0.5;
+  border-color: var(--color-border);
+}
+
+.map-node-available {
+  border-color: var(--color-success);
+  box-shadow: 0 0 10px rgba(90,158,58,0.4);
+}
+
+.map-node-locked {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px var(--color-primary-glow); }
+  50% { box-shadow: 0 0 35px var(--color-primary-glow), 0 0 60px rgba(196,87,58,0.2); }
+}
+
+/* === 战斗单位 === */
+.combat-unit {
+  background: var(--color-bg-panel);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 8px;
+  position: relative;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.combat-unit-enemy {
+  border-color: var(--color-danger);
+}
+
+.combat-unit-player {
+  border-color: var(--color-primary);
+}
+
+.unit-portrait {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border-gold);
+  background: var(--color-bg-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto;
+}
+
+.unit-name {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  text-align: center;
+  color: var(--color-text-gold);
+}
+
+.unit-intent {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--color-warning);
+  border: 2px solid #8a5a10;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: var(--color-text-dark);
+}
+
+/* === 状态效果徽章 === */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  border: 1px solid;
+}
+
+.status-buff {
+  background: var(--color-success-bg);
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.status-debuff {
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+/* === 进度条样式 === */
+.progress-track {
+  height: 8px;
+  background: var(--color-bg-deep);
+  border-radius: 4px;
+  border: 1px solid var(--color-border-dark);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width var(--transition-slow);
+}
+
+/* === 工具类 === */
+.text-gold { color: var(--color-text-gold); }
+.text-primary { color: var(--color-primary); }
+.text-muted { color: var(--color-text-muted); }
+.text-warrior { color: var(--color-warrior); }
+.text-rogue { color: var(--color-rogue); }
+.text-mage { color: var(--color-mage); }
+.text-priest { color: var(--color-priest); }
+
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.gap-sm { gap: 8px; }
+.gap-md { gap: 16px; }
+.gap-lg { gap: 24px; }
+
+.text-center { text-align: center; }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+
+.font-display { font-family: var(--font-display); }
+.font-pirate { font-family: var(--font-pirate); }
+.font-medieval { font-family: var(--font-medieval); }
+
+/* === 星空粒子动画 === */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #fff;
+  border-radius: 50%;
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+/* === 装饰角饰 === */
+.corner-ornament {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--color-border-gold);
+  opacity: 0.6;
+}
+
+.corner-ornament-tl { top: 8px; left: 8px; border-right: none; border-bottom: none; }
+.corner-ornament-tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }
+.corner-ornament-bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }
+.corner-ornament-br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
+
+/* === 滚动条 === */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-deep);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-light);
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-primary: var(--color-primary);
+    --color-border: var(--color-border);
+  }
+  @layer base {
+    body { background: var(--color-background); color: var(--color-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body>
+  <div class="page-container">
+    <!-- 星空粒子背景 -->
+    <div class="starfield" id="starfield"></div>
+
+    <!-- ===== 顶部信息栏 ===== -->
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <button class="btn btn-secondary btn-sm" data-dom-id="btn-back">← 返回</button>
+        <div class="char-name">星界冒险者</div>
+        <div class="char-class-level">🧙 法师 · 等级 5</div>
+      </div>
+      <div></div>
+    </div>
+
+    <!-- ===== 主内容区 ===== -->
+    <div class="main-area">
+      <!-- ===== 左侧：装备槽位 ===== -->
+      <div class="equipment-panel">
+        <div class="character-display">
+          <!-- 头部 -->
+          <div class="equip-slot slot-head equip-common">
+            🎩
+            <div class="equip-tooltip">
+              <div class="equip-tooltip-name common">船长帽</div>
+              <div class="equip-tooltip-stats">
+                <span>头部 · 普通</span>
+                <span class="stat-buff">+1 魅力</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 护符/项链 -->
+          <div class="equip-slot slot-neck equip-slot-empty">
+            +
+            <div class="equip-tooltip">
+              <div class="equip-tooltip-empty">空槽位<br>可装备护符</div>
+            </div>
+          </div>
+
+          <!-- 背部 -->
+          <div class="equip-slot slot-back equip-legendary">
+            ✨
+            <div class="equip-tooltip">
+              <div class="equip-tooltip-name legendary">★ 星图斗篷 ★</div>
+              <div class="equip-tooltip-stats">
+                <span>背部 · 传奇</span>
+                <span class="stat-buff">+3 奥术亲和</span>
+                <span class="stat-buff">+2 感知</span>
+                <span class="stat-buff">星界传送（1/长休）</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 主武器 -->
+          <div class="equip-slot slot-mainhand equip-rare">
+            🔥
+            <div class="equip-tooltip">
+              <div class="equip-tooltip-name rare">炎爆法杖 MK.II</div>
+              <div class="equip-tooltip-stats">
+                <span>主武器 · 稀有</span>
+                <span class="stat-buff">+2 智力</span>
+                <span class="stat-buff">火焰伤害+2</span>
+                <span>伤害: 1d8+4 火</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 中央人物立绘 -->
+          <div class="character-portrait">🧙‍♂️</div>
+
+          <!-- 副手 -->
+          <div class="equip-slot slot-offhand equip-uncommon">
+            🔮
+            <div class="equip-tooltip">
+              <div class="equip-tooltip-name uncommon">星界宝珠</div>
+              <div class="equip-tooltip-stats">
+                <span>副手 · 罕见</span>
+                <span class="stat-buff">+1 专注</span>
+                <span class="stat-buff">CE上限+1</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 胸甲 -->
+          <div class="equip-slot slot-chest equip-uncommon">
+            🥼
+            <div class="equip-tooltip">
+              <div class="equip-tooltip-name uncommon">法师长袍</div>
+              <div class="equip-tooltip-stats">
+                <span>胸甲 · 罕见</span>
+                <span>AC: 11 + 智力修正</span>
+                <span class="stat-buff">+1 奥术亲和</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 手套 -->
+          <div class="equip-slot slot-hands equip-rare">
+            🧤
+            <div class="equip-tooltip">
+              <div class="equip-tooltip-name rare">奥术手套</div>
+              <div class="equip-tooltip-stats">
+                <span>手套 · 稀有</span>
+                <span class="stat-buff">+1 智力</span>
+                <span class="stat-buff">法术命中+1</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 戒指 -->
+          <div class="equip-slot slot-ring equip-rare">
+            💍
+            <div class="equip-tooltip">
+              <div class="equip-tooltip-name rare">燃素指环</div>
+              <div class="equip-tooltip-stats">
+                <span>戒指 · 稀有</span>
+                <span class="stat-buff">火焰抗性+2</span>
+                <span class="stat-buff">燃素回复+1/回合</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 饰品 -->
+          <div class="equip-slot slot-trinket equip-slot-empty">
+            +
+            <div class="equip-tooltip">
+              <div class="equip-tooltip-empty">空槽位<br>可装备饰品</div>
+            </div>
+          </div>
+
+          <!-- 腰带 -->
+          <div class="equip-slot slot-waist equip-common">
+            🔧
+            <div class="equip-tooltip">
+              <div class="equip-tooltip-name common">工具腰带</div>
+              <div class="equip-tooltip-stats">
+                <span>腰带 · 普通</span>
+                <span class="stat-buff">携带容量+4</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 远程 -->
+          <div class="equip-slot slot-ranged equip-slot-empty">
+            +
+            <div class="equip-tooltip">
+              <div class="equip-tooltip-empty">空槽位<br>可装备远程武器</div>
+            </div>
+          </div>
+
+          <!-- 靴子 -->
+          <div class="equip-slot slot-feet equip-common">
+            👢
+            <div class="equip-tooltip">
+              <div class="equip-tooltip-name common">风行靴</div>
+              <div class="equip-tooltip-stats">
+                <span>靴子 · 普通</span>
+                <span class="stat-buff">先攻+2</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 中央：角色属性面板 ===== -->
+      <div class="stats-panel panel">
+        <div class="corner-ornament corner-ornament-tl"></div>
+        <div class="corner-ornament corner-ornament-tr"></div>
+        <div class="corner-ornament corner-ornament-bl"></div>
+        <div class="corner-ornament corner-ornament-br"></div>
+
+        <div class="panel-header">
+          <div class="panel-title">角色属性</div>
+        </div>
+
+        <div class="stats-body">
+          <!-- 六大属性 -->
+          <div class="section-title">基础属性</div>
+
+          <div class="attr-row">
+            <div class="attr-label">💪 力量</div>
+            <div class="attr-value-group">
+              <span class="attr-value" style="color: var(--color-danger);">8</span>
+              <span class="attr-mod attr-mod-negative">[-1]</span>
+            </div>
+          </div>
+
+          <div class="attr-row">
+            <div class="attr-label">🏃 敏捷</div>
+            <div class="attr-value-group">
+              <span class="attr-value" style="color: var(--color-text-muted);">10</span>
+              <span class="attr-mod attr-mod-zero">[+0]</span>
+            </div>
+          </div>
+
+          <div class="attr-row">
+            <div class="attr-label">❤ 体质</div>
+            <div class="attr-value-group">
+              <span class="attr-value" style="color: var(--color-success);">12</span>
+              <span class="attr-mod attr-mod-positive">[+1]</span>
+            </div>
+          </div>
+
+          <div class="attr-row attr-primary">
+            <div class="attr-label">🧠 智力</div>
+            <div class="attr-value-group">
+              <span class="attr-value">18</span>
+              <span class="attr-mod attr-mod-positive">[+4]</span>
+            </div>
+          </div>
+
+          <div class="attr-row">
+            <div class="attr-label">👁 感知</div>
+            <div class="attr-value-group">
+              <span class="attr-value" style="color: var(--color-success);">14</span>
+              <span class="attr-mod attr-mod-positive">[+2]</span>
+            </div>
+          </div>
+
+          <div class="attr-row">
+            <div class="attr-label">💬 魅力</div>
+            <div class="attr-value-group">
+              <span class="attr-value" style="color: var(--color-text-muted);">10</span>
+              <span class="attr-mod attr-mod-zero">[+0]</span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- 战斗属性 -->
+          <div class="section-title">战斗属性</div>
+
+          <div class="hp-display">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--color-text-secondary);">
+              <span>❤ 生命值</span>
+            </div>
+            <div class="hp-bar-track">
+              <div class="hp-bar-fill"></div>
+              <div class="hp-bar-text">45 / 60</div>
+            </div>
+          </div>
+
+          <div class="combat-stat-row">
+            <div class="combat-stat-label">✦ 燃素能量 (CE)</div>
+            <div class="ce-display">
+              <div class="ce-gems">
+                <div class="ce-gem ce-gem-on">✦</div>
+                <div class="ce-gem ce-gem-on">✦</div>
+                <div class="ce-gem ce-gem-on">✦</div>
+              </div>
+              <span class="combat-stat-value" style="color: var(--color-text-gold);">3/3</span>
+            </div>
+          </div>
+
+          <div class="combat-stat-row">
+            <div class="combat-stat-label">🛡 护甲等级 (AC)</div>
+            <div class="combat-stat-value">14</div>
+          </div>
+
+          <div class="combat-stat-row">
+            <div class="combat-stat-label">⚡ 先攻</div>
+            <div class="combat-stat-value" style="color: var(--color-success);">+2</div>
+          </div>
+
+          <div class="combat-stat-row">
+            <div class="combat-stat-label">💰 金币</div>
+            <div class="combat-stat-value" style="color: var(--color-text-gold);">1,250</div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- 抗性 -->
+          <div class="section-title">抗性与亲和</div>
+          <div class="resist-list">
+            <span class="resist-tag">🔥 火焰抗性 +2</span>
+            <span class="resist-tag">✦ 奥术亲和 +3</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 右侧：背包物品栏 ===== -->
+      <div class="inventory-panel panel">
+        <div class="corner-ornament corner-ornament-tl"></div>
+        <div class="corner-ornament corner-ornament-tr"></div>
+        <div class="corner-ornament corner-ornament-bl"></div>
+        <div class="corner-ornament corner-ornament-br"></div>
+
+        <div class="inventory-header">
+          <div class="inventory-title">背包物品</div>
+          <div class="inventory-capacity">容量: <span>28</span> / 40</div>
+        </div>
+
+        <!-- 标签切换 -->
+        <div class="inventory-tabs">
+          <div class="inv-tab inv-tab-active">全部</div>
+          <div class="inv-tab">武器</div>
+          <div class="inv-tab">防具</div>
+          <div class="inv-tab">消耗品</div>
+          <div class="inv-tab">卡牌</div>
+          <div class="inv-tab">材料</div>
+        </div>
+
+        <!-- 物品网格 -->
+        <div class="inventory-body">
+          <div class="item-grid">
+            <!-- 已装备物品（带对勾标记） -->
+            <div class="item-slot item-common item-equipped" title="船长帽">🎩<span class="item-type-badge">头</span></div>
+            <div class="item-slot item-legendary item-equipped" title="星图斗篷">✨<span class="item-type-badge">背</span></div>
+            <div class="item-slot item-rare item-equipped" title="炎爆法杖 MK.II">🔥<span class="item-type-badge">武</span></div>
+            <div class="item-slot item-uncommon item-equipped" title="星界宝珠">🔮<span class="item-type-badge">副</span></div>
+            <div class="item-slot item-uncommon item-equipped" title="法师长袍">🥼<span class="item-type-badge">胸</span></div>
+            <div class="item-slot item-rare item-equipped" title="奥术手套">🧤<span class="item-type-badge">手</span></div>
+            <div class="item-slot item-common item-equipped" title="风行靴">👢<span class="item-type-badge">脚</span></div>
+            <div class="item-slot item-rare item-equipped" title="燃素指环">💍<span class="item-type-badge">戒</span></div>
+            <div class="item-slot item-common item-equipped" title="工具腰带">🔧<span class="item-type-badge">腰</span></div>
+
+            <!-- 武器（额外） -->
+            <div class="item-slot item-uncommon" title="寒冰短匕">🗡️<span class="item-type-badge">武</span></div>
+            <div class="item-slot item-rare" title="虚空手枪">🔫<span class="item-type-badge">武</span></div>
+
+            <!-- 防具（额外） -->
+            <div class="item-slot item-common" title="旅人披风">🧥<span class="item-type-badge">背</span></div>
+            <div class="item-slot item-uncommon" title="铁盾">🛡️<span class="item-type-badge">副</span></div>
+            <div class="item-slot item-common" title="皮帽">🎓<span class="item-type-badge">头</span></div>
+
+            <!-- 消耗品（药水/食物/卷轴） -->
+            <div class="item-slot item-common" title="治疗药水">🧪<span class="item-type-badge">药</span></div>
+            <div class="item-slot item-common" title="治疗药水">🧪<span class="item-type-badge">药</span></div>
+            <div class="item-slot item-uncommon" title="法力药水">💙<span class="item-type-badge">药</span></div>
+            <div class="item-slot item-common" title="干粮">🍞<span class="item-type-badge">食</span></div>
+            <div class="item-slot item-rare" title="传送卷轴">📜<span class="item-type-badge">卷</span></div>
+            <div class="item-slot item-uncommon" title="星界罗盘">🧭<span class="item-type-badge">工</span></div>
+
+            <!-- 卡牌 -->
+            <div class="item-slot item-rare" title="火球术卡牌">🃏<span class="item-type-badge">卡</span></div>
+            <div class="item-slot item-uncommon" title="冰箭术卡牌">🃏<span class="item-type-badge">卡</span></div>
+            <div class="item-slot item-common" title="火花卡牌">🃏<span class="item-type-badge">卡</span></div>
+
+            <!-- 材料 -->
+            <div class="item-slot item-common" title="星界尘埃">✨<span class="item-type-badge">材</span></div>
+            <div class="item-slot item-common" title="燃素结晶">💎<span class="item-type-badge">材</span></div>
+            <div class="item-slot item-common" title="铁矿石">🪨<span class="item-type-badge">材</span></div>
+            <div class="item-slot item-uncommon" title="魔法布料">🧵<span class="item-type-badge">材</span></div>
+            <div class="item-slot item-common" title="绳索">🪢<span class="item-type-badge">材</span></div>
+
+            <!-- 空槽位（11个空槽 = 40 - 29... wait, let me recount） -->
+            <!-- 已装备9 + 武器2 + 防具3 + 消耗品6 + 卡牌3 + 材料5 = 28个物品，空槽12个 -->
+            <div class="item-slot item-empty"></div>
+            <div class="item-slot item-empty"></div>
+            <div class="item-slot item-empty"></div>
+            <div class="item-slot item-empty"></div>
+            <div class="item-slot item-empty"></div>
+            <div class="item-slot item-empty"></div>
+            <div class="item-slot item-empty"></div>
+            <div class="item-slot item-empty"></div>
+            <div class="item-slot item-empty"></div>
+            <div class="item-slot item-empty"></div>
+            <div class="item-slot item-empty"></div>
+            <div class="item-slot item-empty"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 星空粒子生成脚本（内联，仅生成静态星星，无交互JS） -->
+  <script>
+    (function() {
+      var sf = document.getElementById('starfield');
+      if (!sf) return;
+      var count = 80;
+      for (var i = 0; i < count; i++) {
+        var s = document.createElement('div');
+        s.className = 'star' + (Math.random() > 0.85 ? ' star-lg' : '');
+        s.style.left = Math.random() * 100 + '%';
+        s.style.top = Math.random() * 100 + '%';
+        s.style.animationDelay = (Math.random() * 3) + 's';
+        s.style.animationDuration = (2 + Math.random() * 3) + 's';
+        sf.appendChild(s);
+      }
+    })();
+  </script>
+
+    <style>
+    /* ===== 装备页面布局 ===== */
+    .page-container {
+      display: flex;
+      flex-direction: column;
+      background: #1a1520;
+    }
+
+    /* ===== 星空粒子背景 ===== */
+    .starfield {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: #fff;
+      border-radius: 50%;
+      animation: twinkle 3s ease-in-out infinite;
+    }
+
+    .star-lg {
+      width: 3px;
+      height: 3px;
+      box-shadow: 0 0 6px rgba(240, 200, 96, 0.6);
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 1; }
+    }
+
+    @keyframes gold-glow {
+      0%, 100% {
+        box-shadow: 0 0 8px rgba(212,160,32,0.4), inset 0 0 8px rgba(212,160,32,0.15);
+        border-color: #d4a020;
+      }
+      50% {
+        box-shadow: 0 0 20px rgba(240,200,96,0.8), 0 0 40px rgba(212,160,32,0.4), inset 0 0 12px rgba(240,200,96,0.25);
+        border-color: #f0c860;
+      }
+    }
+
+    @keyframes float-up {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    /* ===== 顶部信息栏 ===== */
+    .top-bar {
+      height: 80px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 30px;
+      z-index: 10;
+      background: linear-gradient(180deg, rgba(45,37,64,0.95) 0%, rgba(26,21,32,0.8) 100%);
+      border-bottom: 3px solid var(--color-border-dark);
+      position: relative;
+    }
+
+    .top-bar::after {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--color-border-gold), var(--color-primary), var(--color-border-gold), transparent);
+    }
+
+    .top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .char-name {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--color-text-gold);
+      letter-spacing: 3px;
+      text-shadow: 0 2px 8px rgba(240,200,96,0.3), 0 0 20px rgba(212,160,32,0.15);
+    }
+
+    .char-class-level {
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      color: var(--color-mage);
+      padding: 4px 14px;
+      background: var(--color-mage-bg);
+      border: 1px solid rgba(155,127,212,0.4);
+      border-radius: var(--radius-md);
+      letter-spacing: 1px;
+    }
+
+    /* ===== 主内容区 ===== */
+    .main-area {
+      flex: 1;
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+      z-index: 5;
+      overflow: hidden;
+    }
+
+    /* ===== 左侧：装备槽位区 ===== */
+    .equipment-panel {
+      width: 350px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* 人物立绘区域（装备槽围绕人形排列） */
+    .character-display {
+      position: relative;
+      width: 310px;
+      height: 480px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 中央人物立绘 */
+    .character-portrait {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(155,127,212,0.2) 0%, var(--color-bg-deep) 70%);
+      border: 3px solid var(--color-border-gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 6rem;
+      position: relative;
+      z-index: 2;
+      box-shadow: 0 0 30px rgba(240,200,96,0.2), inset 0 0 30px rgba(0,0,0,0.5);
+      animation: float-up 4s ease-in-out infinite;
+    }
+
+    .character-portrait::before {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 2px solid rgba(160,128,64,0.3);
+      pointer-events: none;
+    }
+
+    .character-portrait::after {
+      content: '';
+      position: absolute;
+      inset: -16px;
+      border-radius: 50%;
+      border: 1px dashed rgba(160,128,64,0.15);
+      pointer-events: none;
+    }
+
+    /* 装备槽位基础样式 */
+    .equip-slot {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      background: var(--color-bg-panel);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      cursor: pointer;
+      transition: all var(--transition-base);
+      z-index: 3;
+      box-shadow: var(--shadow-btn);
+    }
+
+    .equip-slot::before {
+      content: '';
+      position: absolute;
+      inset: 2px;
+      border: 1px solid rgba(94,82,114,0.3);
+      border-radius: calc(var(--radius-md) - 1px);
+      pointer-events: none;
+    }
+
+    .equip-slot:hover {
+      transform: scale(1.15) translateY(-2px);
+      z-index: 20;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    }
+
+    /* 空槽位样式 */
+    .equip-slot-empty {
+      border: 2px dashed var(--color-text-muted);
+      background: rgba(45,37,64,0.5);
+      color: var(--color-text-muted);
+      font-size: 1.4rem;
+    }
+
+    .equip-slot-empty:hover {
+      border-color: var(--color-border-gold);
+      color: var(--color-text-gold);
+      background: rgba(160,128,64,0.1);
+    }
+
+    /* 稀有度边框 */
+    .equip-common { border-color: var(--color-common); }
+    .equip-common:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 12px rgba(138,128,144,0.4); }
+
+    .equip-uncommon { border-color: var(--color-uncommon); }
+    .equip-uncommon:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 12px rgba(74,144,212,0.4); }
+
+    .equip-rare { border-color: var(--color-rare); }
+    .equip-rare:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 12px rgba(155,80,212,0.5); }
+
+    .equip-legendary {
+      border-color: var(--color-legendary);
+      animation: gold-glow 2s ease-in-out infinite;
+    }
+    .equip-legendary:hover {
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 30px rgba(240,200,96,0.8);
+    }
+
+    /* 槽位位置（围绕人形排列） */
+    .slot-head { top: 0; left: 50%; transform: translateX(-50%); }
+    .slot-head:hover { transform: translateX(-50%) scale(1.15) translateY(-2px); }
+
+    .slot-neck { top: 55px; left: 50%; transform: translateX(-50%); }
+    .slot-neck:hover { transform: translateX(-50%) scale(1.15) translateY(-2px); }
+
+    .slot-back { top: 80px; left: 10px; }
+    .slot-back:hover { transform: scale(1.15) translateY(-2px); }
+
+    .slot-mainhand { top: 130px; left: 0; }
+    .slot-mainhand:hover { transform: scale(1.15) translateY(-2px); }
+
+    .slot-offhand { top: 130px; right: 0; }
+    .slot-offhand:hover { transform: scale(1.15) translateY(-2px); }
+
+    .slot-chest { top: 150px; left: 50%; transform: translateX(-50%); }
+    .slot-chest:hover { transform: translateX(-50%) scale(1.15) translateY(-2px); }
+
+    .slot-hands { top: 240px; left: 50%; transform: translateX(-50%); }
+    .slot-hands:hover { transform: translateX(-50%) scale(1.15) translateY(-2px); }
+
+    .slot-ring { top: 270px; right: 10px; }
+    .slot-ring:hover { transform: scale(1.15) translateY(-2px); }
+
+    .slot-trinket { top: 310px; right: 30px; }
+    .slot-trinket:hover { transform: scale(1.15) translateY(-2px); }
+
+    .slot-waist { top: 320px; left: 50%; transform: translateX(-50%); }
+    .slot-waist:hover { transform: translateX(-50%) scale(1.15) translateY(-2px); }
+
+    .slot-ranged { top: 350px; left: 10px; }
+    .slot-ranged:hover { transform: scale(1.15) translateY(-2px); }
+
+    .slot-feet { top: 400px; left: 50%; transform: translateX(-50%); }
+    .slot-feet:hover { transform: translateX(-50%) scale(1.15) translateY(-2px); }
+
+    /* Tooltip 样式 */
+    .equip-tooltip {
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: 180px;
+      background: var(--color-bg-overlay);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 10px;
+      font-size: 0.75rem;
+      color: var(--color-text);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition-fast);
+      z-index: 100;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+      white-space: normal;
+      width: 200px;
+    }
+
+    .equip-slot:hover .equip-tooltip {
+      opacity: 1;
+    }
+
+    .equip-tooltip-name {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--color-border-dark);
+    }
+
+    .equip-tooltip-name.common { color: var(--color-common); }
+    .equip-tooltip-name.uncommon { color: var(--color-uncommon); }
+    .equip-tooltip-name.rare { color: var(--color-rare); }
+    .equip-tooltip-name.legendary { color: var(--color-text-gold); }
+
+    .equip-tooltip-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      color: var(--color-text-secondary);
+    }
+
+    .equip-tooltip-stats .stat-buff {
+      color: var(--color-success);
+    }
+
+    .equip-tooltip-empty {
+      text-align: center;
+      color: var(--color-text-muted);
+      font-style: italic;
+    }
+
+    /* ===== 中央：属性面板 ===== */
+    .stats-panel {
+      width: 300px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stats-body {
+      padding: 16px 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-text-gold);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--color-border-dark);
+      margin-bottom: 4px;
+      position: relative;
+    }
+
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 40px;
+      height: 2px;
+      background: var(--color-primary);
+    }
+
+    /* 六大属性行 */
+    .attr-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      border-radius: var(--radius-sm);
+      transition: background var(--transition-fast);
+    }
+
+    .attr-row:hover {
+      background: rgba(255,255,255,0.03);
+    }
+
+    .attr-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+    }
+
+    .attr-value-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .attr-value {
+      font-family: var(--font-medieval);
+      font-size: 1.1rem;
+      font-weight: bold;
+      min-width: 28px;
+      text-align: right;
+    }
+
+    .attr-mod {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 3px;
+      min-width: 32px;
+      text-align: center;
+    }
+
+    .attr-mod-negative {
+      color: var(--color-danger);
+      background: var(--color-danger-bg);
+    }
+
+    .attr-mod-zero {
+      color: var(--color-text-muted);
+      background: rgba(110,96,136,0.15);
+    }
+
+    .attr-mod-positive {
+      color: var(--color-success);
+      background: var(--color-success-bg);
+    }
+
+    /* 主属性高亮 */
+    .attr-primary {
+      background: rgba(240,200,96,0.08);
+      border: 1px solid rgba(240,200,96,0.2);
+      border-radius: var(--radius-sm);
+    }
+
+    .attr-primary .attr-label {
+      color: var(--color-text-gold);
+      font-weight: 600;
+    }
+
+    .attr-primary .attr-value {
+      color: var(--color-text-gold);
+      font-size: 1.4rem;
+      text-shadow: 0 0 10px rgba(240,200,96,0.4);
+    }
+
+    .attr-primary .attr-mod-positive {
+      color: var(--color-text-gold);
+      background: rgba(240,200,96,0.2);
+      font-size: 0.85rem;
+    }
+
+    /* 分隔线 */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--color-border), transparent);
+      margin: 4px 0;
+    }
+
+    /* 战斗属性 */
+    .combat-stat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 0.85rem;
+    }
+
+    .combat-stat-label {
+      color: var(--color-text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .combat-stat-value {
+      font-family: var(--font-medieval);
+      font-weight: bold;
+      font-size: 1rem;
+      color: var(--color-text);
+    }
+
+    /* HP条 */
+    .hp-display {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .hp-bar-track {
+      height: 22px;
+      background: var(--color-bg-deep);
+      border: 2px solid var(--color-border-dark);
+      border-radius: 3px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hp-bar-fill {
+      height: 100%;
+      width: 75%;
+      background: linear-gradient(90deg, #3a8a2a, #5abe3a);
+      border-radius: 1px;
+      position: relative;
+    }
+
+    .hp-bar-fill::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      right: 2px;
+      height: 6px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.25), transparent);
+      border-radius: 2px;
+    }
+
+    .hp-bar-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.9);
+      z-index: 1;
+    }
+
+    /* CE燃素能量宝石 */
+    .ce-display {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ce-gems {
+      display: flex;
+      gap: 4px;
+    }
+
+    .ce-gem {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid #5a4010;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      transition: all var(--transition-base);
+    }
+
+    .ce-gem-on {
+      background: radial-gradient(circle, #f0c860 0%, #c89820 60%, #8a6810 100%);
+      color: var(--color-text-dark);
+      box-shadow: 0 2px 6px rgba(240,200,96,0.5), inset 0 1px 2px rgba(255,255,255,0.3);
+    }
+
+    .ce-gem-off {
+      background: var(--color-bg-deep);
+      color: var(--color-text-muted);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    /* 抗性标签 */
+    .resist-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .resist-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      border: 1px solid var(--color-success);
+      background: var(--color-success-bg);
+      color: var(--color-success);
+    }
+
+    /* ===== 右侧：背包/物品栏 ===== */
+    .inventory-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .inventory-header {
+      padding: 12px 20px;
+      border-bottom: 2px solid var(--color-border-dark);
+      background: linear-gradient(180deg, rgba(196,87,58,0.1) 0%, transparent 100%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .inventory-header::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 20%;
+      right: 20%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+    }
+
+    .inventory-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--color-text-gold);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .inventory-capacity {
+      font-size: 0.8rem;
+      color: var(--color-text-secondary);
+      font-family: var(--font-medieval);
+    }
+
+    .inventory-capacity span {
+      color: var(--color-text-gold);
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
+
+    /* 标签切换 */
+    .inventory-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--color-border-dark);
+      background: rgba(0,0,0,0.15);
+    }
+
+    .inv-tab {
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 5px 12px;
+      border: 2px solid var(--color-border-dark);
+      border-radius: var(--radius-btn);
+      cursor: pointer;
+      transition: all var(--transition-base);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      background: linear-gradient(180deg, var(--color-bg-elevated) 0%, var(--color-bg-surface) 100%);
+      color: var(--color-text-secondary);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .inv-tab::before {
+      content: '';
+      position: absolute;
+      inset: 1px;
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: calc(var(--radius-btn) - 1px);
+      pointer-events: none;
+    }
+
+    .inv-tab-active {
+      background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+      color: var(--color-text);
+      border-color: #6a2a18;
+      box-shadow: var(--shadow-glow-primary);
+    }
+
+    .inv-tab:hover:not(.inv-tab-active) {
+      background: linear-gradient(180deg, var(--color-border) 0%, var(--color-bg-elevated) 100%);
+      color: var(--color-text);
+    }
+
+    /* 物品网格 */
+    .inventory-body {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .item-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+    }
+
+    .item-slot {
+      aspect-ratio: 1;
+      background: var(--color-bg-surface);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      cursor: pointer;
+      transition: all var(--transition-base);
+      position: relative;
+      min-height: 0;
+    }
+
+    .item-slot::before {
+      content: '';
+      position: absolute;
+      inset: 2px;
+      border: 1px solid rgba(94,82,114,0.2);
+      border-radius: calc(var(--radius-md) - 1px);
+      pointer-events: none;
+    }
+
+    .item-slot:hover {
+      transform: translateY(-4px) scale(1.08);
+      z-index: 10;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    }
+
+    /* 物品稀有度 */
+    .item-common { border-color: var(--color-common); }
+    .item-common:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.5), 0 0 10px rgba(138,128,144,0.3); }
+
+    .item-uncommon { border-color: var(--color-uncommon); }
+    .item-uncommon:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.5), 0 0 10px rgba(74,144,212,0.4); }
+
+    .item-rare { border-color: var(--color-rare); }
+    .item-rare:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.5), 0 0 14px rgba(155,80,212,0.5); }
+
+    .item-legendary {
+      border-color: var(--color-legendary);
+      box-shadow: 0 0 10px rgba(212,160,32,0.3);
+    }
+    .item-legendary:hover {
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5), 0 0 24px rgba(240,200,96,0.7);
+    }
+
+    /* 已装备标记 */
+    .item-equipped::after {
+      content: '✓';
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 16px;
+      height: 16px;
+      background: var(--color-success);
+      border-radius: 50%;
+      font-size: 0.6rem;
+      font-weight: bold;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+    /* 空背包槽 */
+    .item-empty {
+      background: rgba(42,35,56,0.3);
+      border: 1px dashed rgba(74,63,92,0.3);
+      cursor: default;
+    }
+
+    .item-empty::before { display: none; }
+    .item-empty:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* 物品类型角标 */
+    .item-type-badge {
+      position: absolute;
+      bottom: 1px;
+      left: 1px;
+      font-size: 0.5rem;
+      padding: 1px 3px;
+      border-radius: 2px;
+      background: rgba(0,0,0,0.6);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    /* 角饰 */
+    .corner-ornament {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--color-border-gold);
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .corner-ornament-tl { top: 6px; left: 6px; border-right: none; border-bottom: none; }
+    .corner-ornament-tr { top: 6px; right: 6px; border-left: none; border-bottom: none; }
+    .corner-ornament-bl { bottom: 6px; left: 6px; border-right: none; border-top: none; }
+    .corner-ornament-br { bottom: 6px; right: 6px; border-left: none; border-top: none; }
+  </style>
+</body>
+</html>

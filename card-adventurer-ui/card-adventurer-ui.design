@@ -1,0 +1,275 @@
+{
+  "data": [
+    {
+      "id": "page-main-menu",
+      "title": "主菜单",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783958000000,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/main-menu.html",
+        "interactions": [
+          {
+            "domId": "btn-new-game",
+            "targetPageId": "page-char-create",
+            "transitionLabel": "开始新游戏"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-char-create",
+      "title": "角色创建",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783958000000,
+      "canvasData": {
+        "x": 620,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/char-create.html",
+        "interactions": [
+          {
+            "domId": "btn-next",
+            "targetPageId": "page-star-map",
+            "transitionLabel": "完成创建，进入星图"
+          },
+          {
+            "domId": "btn-prev",
+            "targetPageId": "page-main-menu",
+            "hideEdge": true,
+            "transitionLabel": "返回主菜单"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-star-map",
+      "title": "星域地图",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783958000000,
+      "canvasData": {
+        "x": 1240,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/star-map.html",
+        "interactions": [
+          {
+            "domId": "btn-starport",
+            "targetPageId": "page-starport",
+            "transitionLabel": "进入星港船坞"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-grid-explore",
+      "title": "网格探索",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783958000000,
+      "canvasData": {
+        "x": 0,
+        "y": 377,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/grid-explore.html",
+        "interactions": [
+          {
+            "domId": "btn-back-map",
+            "targetPageId": "page-star-map",
+            "hideEdge": true,
+            "transitionLabel": "返回星图"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-combat",
+      "title": "战斗界面",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783958000000,
+      "canvasData": {
+        "x": 620,
+        "y": 377,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/combat.html",
+        "interactions": []
+      }
+    },
+    {
+      "id": "page-starport",
+      "title": "星港船坞",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783958000000,
+      "canvasData": {
+        "x": 1860,
+        "y": 0,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/starport.html",
+        "interactions": [
+          {
+            "domId": "btn-back-map",
+            "targetPageId": "page-star-map",
+            "hideEdge": true,
+            "transitionLabel": "返回星图"
+          },
+          {
+            "domId": "btn-leave-port",
+            "targetPageId": "page-star-map",
+            "hideEdge": true,
+            "transitionLabel": "离开星港"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-crew",
+      "title": "船员管理",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783958000000,
+      "canvasData": {
+        "x": 1240,
+        "y": 377,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/crew.html",
+        "interactions": [
+          {
+            "domId": "btn-back",
+            "targetPageId": "page-starport",
+            "hideEdge": true,
+            "transitionLabel": "返回星港"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-equipment",
+      "title": "装备界面",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783958000000,
+      "canvasData": {
+        "x": 1860,
+        "y": 377,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/equipment.html",
+        "interactions": [
+          {
+            "domId": "btn-back",
+            "targetPageId": "page-star-map",
+            "hideEdge": true,
+            "transitionLabel": "返回星图"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-skills",
+      "title": "技能与成就",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1783958000000,
+      "canvasData": {
+        "x": 2480,
+        "y": 377,
+        "group": 1
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/skills.html",
+        "interactions": [
+          {
+            "domId": "btn-back",
+            "targetPageId": "page-star-map",
+            "hideEdge": true,
+            "transitionLabel": "返回星图"
+          }
+        ]
+      }
+    },
+    {
+      "id": "image-001",
+      "title": "主菜单星空背景",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1783958000000,
+      "canvasData": {
+        "x": 0,
+        "y": 806
+      },
+      "devMetadata": {
+        "imageSrc": "assets/bg-main-menu.jpg"
+      }
+    },
+    {
+      "id": "image-002",
+      "title": "星域地图背景",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1783958000000,
+      "canvasData": {
+        "x": 620,
+        "y": 806
+      },
+      "devMetadata": {
+        "imageSrc": "assets/bg-star-map.jpg"
+      }
+    },
+    {
+      "id": "image-003",
+      "title": "战斗场景背景",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1783958000000,
+      "canvasData": {
+        "x": 1240,
+        "y": 806
+      },
+      "devMetadata": {
+        "imageSrc": "assets/bg-combat.jpg"
+      }
+    },
+    {
+      "id": "image-004",
+      "title": "卡牌背面图案",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1783958000000,
+      "canvasData": {
+        "x": 1860,
+        "y": 806
+      },
+      "devMetadata": {
+        "imageSrc": "assets/card-back.jpg"
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "desktop",
+    "projectName": "卡牌冒险者 · 界面设计",
+    "designLibrary": null
+  }
+}
