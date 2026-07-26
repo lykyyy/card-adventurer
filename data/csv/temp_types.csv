@@ -1,0 +1,6 @@
+type_id,emoji,color,name,desc
+merchant,🛸,#ffd700,流浪商人,稀有商品·限时2回合
+beacon,📡,#e94560,求救信标,限时救援·奖励翻倍
+debris,💥,#888,残骸区,免费拾荒·随机材料
+surge,⚡,#4ecdc4,能量涌流,经过时AP+2 EP恢复
+storm,🌪,#c0392b,虚空风暴,封锁路径·需等待或绕行

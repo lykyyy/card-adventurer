@@ -1,0 +1,17 @@
+# 敌人技能配置 | enemy_id:敌人编号 | name_zh:技能名 | name_en:英文名 | probability:概率权重 | damage:伤害 | heal:治疗 | shield:护盾 | buff:增益类型(berserk/flee/无) | desc_zh:描述
+enemy_id,name_zh,name_en,probability,damage,heal,shield,buff,desc_zh
+E-001,普通攻击,Normal Attack,0.60,8,0,0,,造成8点伤害
+E-001,跳跃攻击,Jump Attack,0.30,15,0,0,,造成15点伤害
+E-001,分裂,Split,0.10,0,5,0,,恢复5点生命值
+E-002,普通攻击,Normal Attack,0.50,10,0,0,,造成10点伤害
+E-002,投掷匕首,Dagger Throw,0.35,18,0,0,,造成18点伤害
+E-002,逃跑,Flee,0.15,0,0,0,flee,跳过回合
+E-003,普通攻击,Normal Attack,0.45,12,0,0,,造成12点伤害
+E-003,骨盾,Bone Shield,0.35,0,0,5,,获得5点护盾
+E-003,召唤,Summon,0.20,0,10,0,,恢复10点生命值
+E-004,普通攻击,Normal Attack,0.40,14,0,0,,造成14点伤害
+E-004,狂暴,Berserk,0.35,0,0,0,berserk,下回合攻击力翻倍
+E-004,恢复,Regenerate,0.25,0,15,0,,恢复15点生命值
+E-005,暗影打击,Shadow Strike,0.50,20,0,0,,造成20点伤害
+E-005,黑暗护盾,Dark Shield,0.30,0,0,10,,获得10点护盾
+E-005,召唤暗影,Summon Shadow,0.20,0,20,0,,恢复20点生命值

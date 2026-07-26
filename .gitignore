@@ -1,0 +1,45 @@
+# === 敏感数据 ===
+# Obsidian 插件配置（含 API Key / 私钥）
+docs/.obsidian/
+
+# 环境变量
+.env
+.env.*
+!.env.example
+
+# === 参考文档（大文件 / 版权材料） ===
+docs/参考/
+*.chm
+*.pdf
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# === Node ===
+node_modules/
+package-lock.json
+
+# === IDE ===
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# === OS ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === 构建产物 ===
+dist/
+build/
+*.log
+
+# === Godot ===
+.godot/
+*.import

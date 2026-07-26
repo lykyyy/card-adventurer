@@ -1,0 +1,57 @@
+# 卡牌配置 | card_id:编号 | name_zh:中文名 | name_en:英文名 | type:类型(attack/defense/skill/support/team) | cost:CE消耗 | rarity:稀有度(common/uncommon/rare/epic) | tags:标签(逗号分隔) | owner:归属(P-XXX/shared/team) | status:状态(active/deprecated)
+card_id,name_zh,name_en,type,cost,rarity,tags,owner,status
+C-001,攻击,Attack,basic,0,common,,,deprecated
+C-002,防御,Defend,basic,0,common,,,deprecated
+C-003,重击,Heavy Strike,skill,1,common,,,deprecated
+C-080,攻击,Attack,basic,0,common,,,deprecated
+C-081,防御,Defend,basic,0,common,,,deprecated
+C-082,重击,Heavy Strike,skill,1,common,,,deprecated
+C-083,治疗,Heal,skill,1,common,,,deprecated
+C-084,护甲,Armor,equip,1,common,装备,,deprecated
+C-085,武器,Weapon,equip,1,common,装备,,deprecated
+C-086,斩击,Slash,attack,1,common,,,deprecated
+C-004,急救,First Aid,support,1,common,,shared,active
+C-005,护甲,Armor,equip,1,common,装备,,deprecated
+C-006,武器,Weapon,equip,1,common,装备,,deprecated
+C-007,斩击,Slash,attack,1,common,,,deprecated
+C-008,连斩,Double Slash,attack,1,common,,,deprecated
+C-009,全力一击,Power Strike,attack,2,common,,,deprecated
+C-010,蓄力斩,Power Slash,attack,1,common,战士·怒气,P-001,active
+C-011,格挡反击,Counter Guard,defense,1,common,战士·怒气,P-001,active
+C-012,怒意爆发,Rage Burst,attack,1,uncommon,战士·终结技,P-001,active
+C-013,战斗狂热,Battle Fury,skill,2,uncommon,战士·爆发,P-001,active
+C-014,毁灭之握,Destructive Grasp,attack,4,rare,战士·终极,P-001,active
+C-020,双重打击,Dual Strike,attack,1,common,盗贼·CP,P-003,active
+C-021,烟雾掩护,Smoke Cover,defense,1,common,盗贼·防御,P-003,active
+C-022,刺骨,Bone Piercer,attack,2,uncommon,盗贼·终结技,P-003,active
+C-023,暗影预备,Shadow Prep,skill,0,common,盗贼·CP生成,P-003,active
+C-024,死亡莲华,Death Lotus,attack,3,rare,盗贼·终极,P-003,active
+C-030,奥术飞弹,Arcane Missile,attack,1,common,法师·塑能,P-002,active
+C-031,魔法护盾,Mage Shield,defense,1,common,法师·防护,P-002,active
+C-032,烈焰风暴,Firestorm,attack,3,uncommon,法师·AOE,P-002,active
+C-033,魔力回流,Mana Recoup,skill,2,uncommon,法师·恢复,P-002,active
+C-034,星辰陨落,Starfall,attack,4,rare,法师·终极,P-002,active
+C-050,圣光击,Holy Strike,attack,1,common,牧师·通用,P-004,active
+C-051,治疗祷言,Healing Prayer,skill,1,common,牧师·生命,P-004,active
+C-052,光耀之盾,Radiant Shield,defense,1,common,牧师·光明,P-004,active
+C-053,公正审判,Righteous Judgment,attack,2,uncommon,牧师·战争,P-004,active
+C-054,净化,Purify,skill,1,common,牧师·通用,P-004,active
+C-070,铁壁,Iron Wall,defense,1,common,,,deprecated
+C-071,闪避,Dodge,defense,1,common,,,deprecated
+C-072,战备,Battle Prep,support,1,common,抽牌,shared,active
+C-073,专注,Focus,skill,0,common,CE恢复,shared,active
+C-074,威吓,Intimidate,control,1,common,,,deprecated
+C-075,破甲,Armor Break,control,2,common,,,deprecated
+C-076,战术集火,Focused Fire,skill,1,rare,团队·伤害,team,active
+C-077,防御阵型,Defensive Formation,defense,1,rare,团队·护盾,team,active
+C-078,战术撤退,Tactical Retreat,skill,0,rare,团队·移动,team,active
+C-079,集中火力,Concentrated Fire,skill,2,rare,团队·CE,team,active
+C-080,星图导航,Star Chart,tactic,0,common,战略·探索,shared,active
+C-081,贸易协定,Trade Agreement,tactic,0,common,战略·经济,shared,active
+C-082,情报网络,Intel Network,tactic,0,uncommon,战略·情报,shared,active
+C-083,紧急维修,Emergency Repair,tactic,0,uncommon,战略·恢复,shared,active
+C-090,精准打击,Precision Strike,attack,1,common,通用·攻击,shared,active
+C-091,战术指挥,Tactical Command,support,1,uncommon,通用·增益,shared,active
+C-092,绝境反击,Desperate Counter,attack,3,rare,通用·残血,shared,active
+C-093,灵活闪避,Agile Dodge,defense,1,common,通用·防御,shared,active
+C-094,快速包扎,Quick Bandage,support,1,common,通用·恢复,shared,active

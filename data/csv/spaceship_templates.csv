@@ -1,0 +1,16 @@
+# 太空船模板定义
+# template_id: 模板编号
+# name: 飞船名称
+# description: 描述
+# build_cost_stardust: 建造所需星尘
+# build_cost_ether: 建造所需以太精华
+# build_cost_crystal: 建造所需魔晶核
+# build_cost_gold: 建造所需金币
+# hull: 船体HP
+# shield: 护盾值
+# energy: 能源储备
+# engine_speed: 引擎速度(闪避率)
+# weapon_damage: 武器伤害
+# crew_slots: 船员槽位数
+template_id,name,description,build_cost_stardust,build_cost_ether,build_cost_crystal,build_cost_gold,hull,shield,energy,engine_speed,weapon_damage,crew_slots
+SHIP-001,星界探索者,标准魔法船·适合初期星际探索,5,2,0,200,100,50,100,10,15,5

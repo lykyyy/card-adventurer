@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Card Adventurer - 卡牌冒险者</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a1a;color:#e0e0e0;font-family:'Segoe UI','Microsoft YaHei',sans-serif;overflow:hidden;height:100vh;width:100vw}
+#root{position:relative;width:100%;height:100vh;overflow:hidden}
+.scene{display:none;position:absolute;top:0;left:0;width:100%;height:100%;animation:fadeIn .3s ease}
+.scene.active{display:flex}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+#status-bar{display:none;position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(10,10,26,0.85);border-bottom:1px solid #333;padding:6px 16px;justify-content:space-between;font-size:13px;backdrop-filter:blur(4px)}
+#status-bar.show{display:flex}
+
+#scene-menu{background:radial-gradient(ellipse at center,#1a1a2e 0%,#0a0a1a 70%);flex-direction:column;align-items:center;justify-content:center}
+.menu-stars{position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;pointer-events:none}
+.menu-star{position:absolute;background:#fff;border-radius:50%;animation:twinkle 2s infinite alternate}
+@keyframes twinkle{0%{opacity:0.3;transform:scale(0.8)}100%{opacity:1;transform:scale(1.2)}}
+.menu-content{position:relative;z-index:1;text-align:center}
+.menu-title{font-size:48px;font-weight:bold;color:#e94560;letter-spacing:6px;text-shadow:0 0 20px rgba(233,69,96,0.5),0 0 40px rgba(233,69,96,0.2);margin-bottom:8px}
+.menu-subtitle{font-size:16px;color:#a29bfe;letter-spacing:4px;margin-bottom:48px;text-shadow:0 0 10px rgba(162,155,254,0.3)}
+.menu-btn{display:block;width:260px;padding:14px 0;margin:10px auto;background:transparent;border:2px solid #e94560;color:#e0e0e0;font-size:16px;letter-spacing:2px;cursor:pointer;position:relative;overflow:hidden;transition:all .3s;border-radius:4px}
+.menu-btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(233,69,96,0.2),transparent);transition:left .5s}
+.menu-btn:hover::before,.menu-btn:focus::before{left:100%}
+.menu-btn:hover,.menu-btn:focus{color:#fff;border-color:#ff6b7a;box-shadow:0 0 20px rgba(233,69,96,0.3);transform:scale(1.03);outline:none}
+.menu-version{position:absolute;bottom:20px;color:#555;font-size:12px;letter-spacing:2px}
+
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:400;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-box{background:#1a1a2e;border:2px solid #e94560;border-radius:8px;padding:24px 32px;min-width:300px;max-width:500px;text-align:center;animation:fadeIn .3s}
+.modal-box h3{color:#e94560;margin-bottom:12px;font-size:18px}
+.modal-box p,.modal-box label{color:#ccc;font-size:13px;margin:6px 0}
+.modal-box select{padding:6px 12px;background:#111;color:#fff;border:1px solid #555;border-radius:4px;font-size:14px;margin:6px 0}
+.modal-box button{margin:8px 4px;padding:8px 20px;border:none;border-radius:4px;font-size:14px;cursor:pointer;transition:all .2s}
+.btn-primary{background:#e94560;color:#fff}
+.btn-primary:hover{background:#ff6b7a;box-shadow:0 0 10px rgba(233,69,96,0.5)}
+.btn-secondary{background:#333;color:#ccc}
+.btn-secondary:hover{background:#555}
+
+#scene-char-create{flex-direction:column;align-items:center;justify-content:flex-start;overflow-y:auto;padding:10px}
+.char-header{text-align:center;padding:14px 0 8px;width:100%}
+.char-header h1{font-size:22px;color:#e94560;letter-spacing:2px}
+.char-progress{display:flex;align-items:center;padding:8px 20px;gap:0;max-width:600px;width:100%}
+.char-step-dot{width:28px;height:28px;border-radius:50%;background:#222;border:2px solid #444;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:#666;transition:all .3s;flex-shrink:0}
+.char-step-dot.active{background:#e94560;border-color:#e94560;color:#fff;box-shadow:0 0 12px rgba(233,69,96,0.6)}
+.char-step-dot.done{background:#2e7d32;border-color:#2e7d32;color:#fff}
+.char-step-line{flex:1;height:2px;background:#333;transition:background .3s}
+.char-step-line.done{background:#2e7d32}
+.char-step-label{text-align:center;font-size:13px;color:#aaa;padding:4px 0}
+.char-content{flex:1;width:100%;max-width:700px;min-height:360px;padding:10px 20px;position:relative}
+.char-pane{display:none;animation:slideIn .35s ease}
+.char-pane.active{display:block}
+@keyframes slideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+.char-nav{display:flex;justify-content:space-between;padding:10px 20px;gap:10px;max-width:600px;width:100%}
+.char-nav button{padding:10px 24px;border:none;border-radius:6px;font-size:13px;font-weight:bold;cursor:pointer;transition:all .2s}
+#btn-cr-prev{background:#333;color:#ccc}
+#btn-cr-prev:hover{background:#555}
+#btn-cr-prev:disabled{opacity:.3;cursor:not-allowed}
+#btn-cr-next{background:#e94560;color:#fff}
+#btn-cr-next:hover{background:#ff6b7a;box-shadow:0 0 15px rgba(233,69,96,0.5)}
+#btn-cr-next:disabled{background:#555;cursor:not-allowed;box-shadow:none}
+
+.section-title{font-size:16px;color:#ffd700;margin-bottom:14px;text-align:center;letter-spacing:1px}
+.card-grid{display:grid;gap:10px}
+.grid-4{grid-template-columns:repeat(2,1fr)}
+.grid-6{grid-template-columns:repeat(3,1fr)}
+@media(max-width:500px){.grid-4{grid-template-columns:1fr}.grid-6{grid-template-columns:repeat(2,1fr)}}
+.card-option{background:#1e1e3a;border:2px solid #333;border-radius:8px;padding:12px;cursor:pointer;transition:all .25s;position:relative}
+.card-option:hover{transform:translateY(-2px);border-color:#e94560;box-shadow:0 4px 16px rgba(233,69,96,0.25)}
+.card-option.selected{border-color:#e94560;box-shadow:0 0 20px rgba(233,69,96,0.5);background:#261630}
+.card-option .emoji{font-size:28px;margin-bottom:6px;display:block}
+.card-option .name{font-size:14px;font-weight:bold;color:#fff;margin-bottom:4px}
+.card-option .stats-row{display:flex;flex-wrap:wrap;gap:3px;margin:4px 0;font-size:10px}
+.card-option .stat-tag{background:#252545;padding:1px 5px;border-radius:3px;color:#ccc}
+.card-option .stat-tag.highlight{color:#ffd700;font-weight:bold}
+.card-option .desc{font-size:10px;color:#999;margin-top:4px;line-height:1.4}
+.card-option.evt-a{background:linear-gradient(135deg,#2a1015,#1e1e3a)}
+.card-option.evt-a .name{color:#e94560}
+.card-option.evt-b{background:linear-gradient(135deg,#102030,#1e1e3a)}
+.card-option.evt-b .name{color:#4ecdc4}
+.card-option.evt-c{background:linear-gradient(135deg,#2a2010,#1e1e3a);border-color:#ffd700}
+.card-option.evt-c .name{color:#ffd700}
+
+.tag-badge{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;margin:2px 2px;font-weight:bold}
+.tag-warrior{background:#e94560;color:#fff}
+.tag-scholar{background:#4ecdc4;color:#111}
+.tag-default{background:#444;color:#ccc}
+
+#identity-card{background:linear-gradient(135deg,#1a1a2e,#16213e);border:2px solid #ffd700;border-radius:10px;padding:20px;text-align:center}
+#identity-card .id-title{font-size:20px;color:#ffd700;letter-spacing:2px;margin-bottom:8px}
+#identity-card .id-origin{font-size:12px;color:#aaa}
+#identity-card .id-narrative{font-size:12px;color:#ccc;margin-top:10px;line-height:1.6;max-width:500px;margin-left:auto;margin-right:auto}
+#identity-card .id-tags{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-top:8px}
+#identity-card .attr-summary{display:flex;justify-content:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+
+.skill-list{display:flex;flex-direction:column;gap:8px;max-width:400px;margin:0 auto}
+.skill-item{display:flex;align-items:center;gap:10px;background:#1e1e3a;border:1px solid #333;border-radius:6px;padding:10px 14px;transition:all .2s}
+.skill-item:hover{border-color:#555}
+.skill-item input[type=checkbox]{width:18px;height:18px;accent-color:#e94560;cursor:pointer;flex-shrink:0}
+.skill-item input[type=checkbox]:disabled{accent-color:#555;cursor:not-allowed}
+.skill-item label{flex:1;cursor:pointer;font-size:13px}
+.skill-item label .sk-name{font-weight:bold;color:#fff}
+.skill-item label .sk-attrs{font-size:10px;color:#888;margin-left:6px}
+.skill-item.locked{opacity:.9;background:#1a1a30;border-color:#ffd700}
+.skill-item.locked .lock-icon{color:#ffd700;font-size:12px}
+#sk-counter{text-align:center;font-size:14px;color:#ffd700;margin-bottom:10px;font-weight:bold}
+#sk-counter .count{font-size:20px}
+
+.final-header{text-align:center;padding:12px 0;border-bottom:2px solid #ffd700;margin-bottom:14px}
+.final-header h2{font-size:18px;color:#ffd700;letter-spacing:2px}
+.panel-section{margin-bottom:12px}
+.panel-section h3{font-size:13px;color:#e94560;margin-bottom:6px;letter-spacing:1px}
+.attr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.attr-cell{background:#1e1e3a;border:1px solid #333;border-radius:6px;padding:8px;text-align:center}
+.attr-cell .attr-val{font-size:20px;font-weight:bold;color:#ffd700}
+.attr-cell .attr-mod{font-size:11px;color:#4ecdc4}
+.attr-cell .attr-label{font-size:10px;color:#888}
+.derived-row{display:flex;gap:8px;flex-wrap:wrap}
+.derived-item{flex:1;min-width:70px;background:#1e1e3a;border:1px solid #333;border-radius:6px;padding:8px;text-align:center}
+.derived-item .val{font-size:16px;font-weight:bold;color:#fff}
+.derived-item .lbl{font-size:9px;color:#888}
+.deck-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+@media(max-width:500px){.deck-grid{grid-template-columns:repeat(2,1fr)}}
+.deck-card{background:#1e1e3a;border:1px solid #444;border-radius:6px;padding:6px;cursor:pointer;transition:all .2s;text-align:center}
+.deck-card:hover{transform:scale(1.05);border-color:#e94560}
+.deck-card .card-icon{font-size:22px;display:block}
+.deck-card .card-name{font-size:10px;font-weight:bold;color:#fff;margin-top:2px}
+.deck-card .card-cost{font-size:9px;color:#ffd700;margin-top:1px}
+.card-type-tag{font-size:8px;padding:0 3px;border-radius:2px;margin-top:2px;display:inline-block}
+.type-attack{background:#e94560;color:#fff}
+.type-defense{background:#4ecdc4;color:#111}
+.type-support{background:#2ecc71;color:#111}
+.type-skill{background:#a29bfe;color:#111}
+.filter-bar{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;justify-content:center}
+.filter-btn{padding:4px 12px;border:1px solid #555;border-radius:4px;background:transparent;color:#aaa;cursor:pointer;font-size:11px;transition:all .15s}
+.filter-btn.active{background:#e94560;border-color:#e94560;color:#fff}
+.filter-btn:hover:not(.active){border-color:#888}
+#btn-to-map{display:block;width:100%;max-width:300px;margin:12px auto;padding:14px 0;background:linear-gradient(135deg,#e94560,#c0392b);color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;letter-spacing:2px;transition:all .3s}
+#btn-to-map:hover{box-shadow:0 0 25px rgba(233,69,96,0.6);transform:translateY(-2px)}
+
+#scene-map{flex-direction:column;position:relative}
+#ship-hud{position:absolute;top:40px;left:10px;z-index:10;background:rgba(10,10,26,0.85);border:1px solid #333;border-radius:8px;padding:8px 12px;font-size:11px;min-width:180px;backdrop-filter:blur(4px);pointer-events:none}
+#ship-hud>*{pointer-events:auto}
+.ship-hud-title{color:#ffd700;font-size:12px;font-weight:bold;margin-bottom:6px;text-align:center}
+.ship-bar{display:flex;align-items:center;gap:6px;margin:3px 0}
+.ship-bar .bar-bg{flex:1;height:6px;background:#222;border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .5s}
+.bar-hull{background:#e94560}
+.bar-shield{background:#4ecdc4}
+.bar-energy{background:#ffd700}
+#map-canvas{flex:1;width:100%;height:100%}
+
+#scene-grid{flex-direction:column;align-items:center;padding:10px;overflow-y:auto}
+.grid-controls{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:440px;padding:8px 12px;margin-bottom:8px;background:#16213e;border:1px solid #333;border-radius:6px}
+.grid-controls .ep-display{font-size:16px;color:#ffd700;font-weight:bold}
+.grid-controls button{background:#555;color:#ccc;border:none;padding:6px 16px;border-radius:4px;cursor:pointer;font-size:12px}
+.grid-controls button:hover{background:#777}
+.grid-container{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;max-width:400px;width:100%}
+.grid-cell{aspect-ratio:1;background:#1a1a3a;border:2px solid #444;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:28px;transition:all .4s;position:relative;overflow:hidden}
+.grid-cell:hover{border-color:#e94560;box-shadow:0 0 10px rgba(233,69,96,0.3)}
+.grid-cell.flipped{background:#252545}
+.grid-cell .cell-front{display:flex;align-items:center;justify-content:center;width:100%;height:100%;transition:opacity .3s}
+.grid-cell .cell-hint{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);font-size:9px;padding:1px 4px;border-radius:2px;background:rgba(0,0,0,0.5);white-space:nowrap}
+.grid-task-bar{width:100%;max-width:440px;padding:8px 12px;margin-top:8px;background:#16213e;border:1px solid #333;border-radius:6px;text-align:center;font-size:13px;color:#a29bfe}
+
+#scene-combat{flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px;overflow-y:auto;padding:12px}
+.combat-team-panel{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:500px;margin:0 auto}
+.combat-unit{background:#1a1a2e;border:1px solid #333;border-radius:6px;padding:6px 10px;min-width:100px;font-size:10px}
+.combat-unit .cu-name{color:#ccc;font-size:11px}
+.combat-unit .cu-hp{color:#aaa;font-size:9px;margin:2px 0}
+.combat-unit .cu-bar{background:#111;border-radius:3px;height:5px;margin:2px 0}
+.combat-unit .cu-bar-fill{height:100%;border-radius:3px;transition:width .3s}
+.combat-unit .cu-atk{color:#888;font-size:9px}
+.combat-enemy-panel{background:#2a1215;border:2px solid #e94560;border-radius:8px;padding:12px;max-width:500px;margin:0 auto}
+.combat-enemy-panel .ce-name{color:#e94560;font-size:14px}
+.combat-enemy-panel .ce-hp{color:#ccc;font-size:11px;margin:4px 0}
+.combat-enemy-panel .ce-bar{background:#111;border-radius:3px;height:8px;margin:6px 0}
+.combat-enemy-panel .ce-bar-fill{height:100%;border-radius:3px;background:#e94560;transition:width .3s}
+.combat-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:500px;margin:12px auto 0}
+.combat-actions button{padding:8px 16px;border:none;border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s;min-width:80px}
+.combat-btn-attack{background:#e94560;color:#fff}
+.combat-btn-attack:hover{background:#c0392b}
+.combat-btn-defend{background:#333;color:#ccc;border:1px solid #555}
+.combat-btn-defend:hover{background:#444}
+.combat-btn-flee{background:#555;color:#aaa}
+.combat-btn-flee:hover{background:#666}
+.combat-result-win{color:#2ecc71;font-size:16px;padding:12px}
+.combat-result-lose{color:#e94560;font-size:16px;padding:12px}
+.battle-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:140px}
+.battle-cell{aspect-ratio:1;background:#1a1a2e;border:1px solid #333;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:20px;transition:all .2s;position:relative}
+.battle-cell.occupied{border-color:#2ecc71;background:#1a2a1a;cursor:pointer}
+.battle-cell.enemy{border-color:#e94560;background:#2a1215;cursor:pointer}
+.battle-cell.front{border-width:2px}
+.battle-cell.targeted{border-color:#ffd700;box-shadow:0 0 8px rgba(255,215,0,0.5)}
+.battle-cell-label{position:absolute;bottom:2px;right:4px;font-size:7px;color:#888}
+.battle-cell-hp{position:absolute;top:2px;right:4px;font-size:7px;color:#aaa}
+.battle-container{display:flex;gap:16px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
+.battle-side-label{text-align:center;font-size:11px;color:#888;margin-bottom:4px}
+.battle-info{font-size:10px;color:#aaa;margin-top:6px;max-width:300px;line-height:1.5}
+
+#confirm-popup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center}
+#confirm-popup.show{display:flex}
+.cfm-box{background:#1a1a2e;border:2px solid #e94560;border-radius:8px;padding:20px;min-width:280px;max-width:400px;text-align:center;animation:fadeIn .2s}
+.cfm-box h3{color:#ffd700;margin-bottom:10px}
+.cfm-box p{color:#ccc;font-size:13px;margin:8px 0}
+.cfm-btns{display:flex;justify-content:center;gap:10px;margin-top:14px}
+.shop-item{background:#1e1e3a;border:1px solid #333;border-radius:6px;padding:12px 16px;margin:6px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:all .2s}
+.shop-item:hover{border-color:#ffd700}
+.shop-item .shop-price{color:#ffd700;font-weight:bold}
+.hud-btn{font-size:9px;padding:2px 6px;background:#333;color:#ccc;border:1px solid #555;border-radius:3px;cursor:pointer}
+.hud-btn:hover{background:#e94560;color:#fff}
+.save-slot{background:#1a1a2e;border:2px solid #333;border-radius:8px;padding:16px;margin:8px 0;cursor:pointer;transition:all .2s;display:flex;gap:12px;align-items:center}
+.save-slot:hover{border-color:#e94560;box-shadow:0 0 12px rgba(233,69,96,0.2)}
+.save-slot .slot-icon{font-size:28px;flex-shrink:0}
+.save-slot .slot-info{flex:1;min-width:0}
+.save-slot .slot-info .slot-title{font-size:14px;font-weight:bold;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.save-slot .slot-info .slot-detail{font-size:10px;color:#888;margin-top:2px}
+.save-slot .slot-info .slot-time{font-size:9px;color:#666;margin-top:1px}
+.save-slot .slot-delete{padding:4px 10px;font-size:10px;background:#555;color:#ccc;border:none;border-radius:4px;cursor:pointer}
+.save-slot .slot-delete:hover{background:#e94560;color:#fff}
+.save-slot.empty{opacity:.6;cursor:default;border-style:dashed}
+.save-slot.empty:hover{border-color:#555;box-shadow:none}
+#save-indicator{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(46,204,113,0.9);color:#fff;padding:8px 24px;border-radius:6px;font-size:14px;z-index:500;pointer-events:none;animation:fadeOut 1.5s forwards}
+@keyframes fadeOut{0%,50%{opacity:1}100%{opacity:0}}
+#btn-save-quick{font-size:9px;padding:2px 8px;background:rgba(46,204,113,0.2);color:#2ecc71;border:1px solid #2ecc71;border-radius:3px;cursor:pointer;display:none}
+#btn-save-quick:hover{background:rgba(46,204,113,0.4)}
+#btn-settings{position:fixed;top:6px;left:6px;z-index:55;width:28px;height:28px;background:rgba(10,10,26,0.85);border:1px solid #555;border-radius:50%;color:#aaa;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;padding:0;line-height:28px}
+#btn-settings:hover{color:#ffd700;border-color:#ffd700;background:rgba(26,26,46,0.9);transform:rotate(30deg)}
+.starport-npc{display:flex;align-items:center;gap:16px;background:#1a1a2e;border:1px solid #333;border-radius:10px;padding:16px;margin:8px 0;cursor:pointer;transition:all .25s}
+.starport-npc:hover{background:#1e1e3a;border-color:#e94560;transform:translateX(4px);box-shadow:0 0 16px rgba(233,69,96,0.15)}
+.starport-npc .npc-avatar{font-size:48px;min-width:60px;text-align:center}
+.starport-npc .npc-info{flex:1}
+.starport-npc .npc-name{font-size:15px;color:#ffd700;font-weight:bold}
+.starport-npc .npc-desc{font-size:11px;color:#aaa;margin:4px 0}
+.starport-npc .npc-action{font-size:10px;color:#e94560;text-align:right}
+.npc-dialog{background:#1a1a2e;border:2px solid #ffd700;border-radius:10px;padding:16px;margin:12px 0;position:relative}
+.npc-dialog:before{content:'';position:absolute;top:-10px;left:30px;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:10px solid #ffd700}
+.npc-dialog-title{color:#ffd700;font-size:13px;font-weight:bold;margin-bottom:6px}
+.npc-dialog-text{color:#ccc;font-size:11px;margin-bottom:10px;line-height:1.5}
+.npc-choices{display:flex;gap:6px;flex-wrap:wrap}
+.npc-choices button{padding:6px 14px;font-size:11px;border:1px solid #555;border-radius:5px;background:#1e1e3a;color:#ccc;cursor:pointer;transition:all .2s}
+.npc-choices button:hover{background:#e94560;color:#fff;border-color:#e94560}
+#node-preview{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:50;width:90%;max-width:380px;display:none}
+#node-preview.show{display:block;animation:fadeIn .3s}
+.node-pv-title{color:#ffd700;font-size:16px;margin-bottom:4px}
+.node-pv-desc{color:#aaa;font-size:11px;margin:6px 0 12px}
+.node-pv-stats{display:flex;gap:8px;justify-content:center;margin:8px 0;font-size:11px}
+.node-pv-stat{background:#111;border:1px solid #333;border-radius:4px;padding:4px 10px;color:#ccc}
+.node-pv-enter{display:block;width:100%;padding:10px;margin-top:10px;background:#e94560;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;transition:all .2s}
+.node-pv-enter:hover{background:#c0392b;box-shadow:0 0 12px rgba(233,69,96,0.4)}
+.node-pv-enter:disabled{background:#555;cursor:not-allowed}
+.node-pv-close{position:absolute;top:8px;right:12px;background:none;border:none;color:#888;font-size:16px;cursor:pointer}
+.node-pv-close:hover{color:#fff}
+.settings-menu{display:flex;flex-direction:column;gap:6px;padding:8px 0}
+.settings-btn{display:block;width:100%;padding:12px 20px;background:#1e1e3a;border:1px solid #333;border-radius:6px;color:#ccc;font-size:14px;cursor:pointer;text-align:left;transition:all .2s}
+.settings-btn:hover{background:#261630;border-color:#e94560;color:#fff;transform:translateX(4px);box-shadow:0 0 12px rgba(233,69,96,0.2)}
+.settings-btn .s-icon{margin-right:10px;font-size:16px}
+.settings-btn.exit-btn:hover{border-color:#c0392b;color:#e94560;box-shadow:0 0 12px rgba(192,57,43,0.3)}
+.game-setting-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#1e1e3a;border:1px solid #333;border-radius:6px;margin:6px 0}
+.game-setting-row label{font-size:13px;color:#ccc}
+.game-setting-row input[type=range]{width:120px;accent-color:#e94560}
+.game-setting-row select{padding:4px 8px;background:#111;color:#fff;border:1px solid #555;border-radius:4px;font-size:12px}
+.key-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.key-tag{font-size:10px;padding:2px 8px;background:#252545;border:1px solid #555;border-radius:3px;color:#aaa}
+</style>
+</head>
+<body>
+<div id="root">
+<div id="status-bar">
+  <button id="btn-settings" onclick="openSettings()" title="设置">⚙</button>
+  <span id="sb-ap">AP: 6/12</span>
+  <span id="sb-scene-label"></span>
+  <span id="sb-hp">HP: 120/120</span>
+  <span id="sb-gold">💰 100G</span>
+  <button id="btn-save-quick" onclick="quickSave()">💾 保存</button>
+</div>
+<div id="scene-menu" class="scene active">
+  <div class="menu-stars" id="menu-stars"></div>
+  <div class="menu-content">
+    <div class="menu-title">CARD ADVENTURER</div>
+    <div class="menu-subtitle">魔法船 · 星界冒险</div>
+    <button class="menu-btn" onclick="startNewGame()">▶ 新游戏</button>
+    <button class="menu-btn" onclick="showContinueMenu()">📂 继续游戏</button>
+    <button class="menu-btn" onclick="openModal('modal-diff')">⚙️ 难度设置</button>
+    <button class="menu-btn" onclick="openModal('modal-help')">📖 操作帮助</button>
+  </div>
+  <div class="menu-version">MVP v1.0 · Integrated</div>
+</div>
+<div id="scene-char-create" class="scene">
+  <div class="char-header"><h1>角色创建</h1></div>
+  <div class="char-progress" id="char-progress"></div>
+  <div class="char-step-label" id="char-step-label"></div>
+  <div class="char-content" id="char-content"></div>
+  <div class="char-nav">
+    <button id="btn-cr-prev" onclick="crGoPrev()">上一步</button>
+    <button id="btn-cr-next" onclick="crGoNext()">下一步</button>
+  </div>
+</div>
+<div id="scene-map" class="scene">
+  <div id="ship-hud">
+    <div class="ship-hud-title">🚀 星界探索者</div>
+    <div class="ship-bar"><span>船体</span><div class="bar-bg"><div class="bar-fill bar-hull" id="bar-hull"></div></div><span id="hull-text">100/100</span></div>
+    <div class="ship-bar"><span>护盾</span><div class="bar-bg"><div class="bar-fill bar-shield" id="bar-shield"></div></div><span id="shield-text">50/50</span></div>
+    <div class="ship-bar"><span>能源</span><div class="bar-bg"><div class="bar-fill bar-energy" id="bar-energy"></div></div><span id="energy-text">100%</span></div>
+    <div class="ship-bar"><span>引擎</span><span id="engine-text" style="color:#2ecc71;font-size:12px">正常</span></div>
+    <div class="ship-bar"><span>武器</span><span id="weapon-text" style="font-size:12px">15 ATK</span></div>
+    <div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap">
+      <button class="hud-btn" onclick="switchScene('starport')">🏗️船坞</button>
+      <button class="hud-btn" onclick="switchScene('crew')">👥船员</button>
+      <button class="hud-btn" onclick="switchScene('equipment')">⚔️装备</button>
+      <button class="hud-btn" onclick="switchScene('skills')">🌟技能</button>
+    </div>
+  </div>
+  <canvas id="map-canvas"></canvas>
+</div>
+<div id="scene-grid" class="scene">
+  <div class="grid-controls">
+    <span class="ep-display" id="ep-display">EP: 4/8</span>
+    <span style="font-size:12px;color:#aaa" id="zone-name">未知区域</span>
+    <button id="btn-leave-grid" onclick="leaveGrid()">退出区域</button>
+  </div>
+  <div class="grid-container" id="grid-5x5"></div>
+  <div class="grid-task-bar" id="grid-task-bar">区域任务: 等待探索</div>
+</div>
+<div id="scene-combat" class="scene"><iframe id="battle-iframe" style="width:100%;height:100%;border:none;display:none"></iframe><div id="battle-loading" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#aaa;font-size:14px">准备战斗...</div></div>
+</div>
+<!-- Scene: Starport -->
+<div id="scene-starport" class="scene" style="flex-direction:column;align-items:center;padding:40px 10px;overflow-y:auto;gap:12px">
+  <h2 style="color:#ffd700;font-size:22px">🏗️ 星港 · 太空船坞</h2>
+  <div id="starport-content" style="width:100%;max-width:600px"></div>
+</div>
+<!-- Scene: Crew -->
+<div id="scene-crew" class="scene" style="flex-direction:column;align-items:center;padding:20px 10px;overflow-y:auto;gap:10px">
+  <h2 style="color:#ffd700;font-size:20px">👥 船员管理</h2>
+  <div id="crew-content" style="width:100%;max-width:600px"></div>
+</div>
+<!-- Scene: Equipment -->
+<div id="scene-equipment" class="scene" style="flex-direction:column;align-items:center;padding:20px 10px;overflow-y:auto;gap:10px">
+  <h2 style="color:#ffd700;font-size:20px">⚔️ 角色装备与属性</h2>
+  <div id="equip-content" style="width:100%;max-width:600px;display:flex;gap:16px;flex-wrap:wrap"></div>
+</div>
+<!-- Scene: Skills -->
+<div id="scene-skills" class="scene" style="flex-direction:column;align-items:center;padding:20px 10px;overflow-y:auto;gap:12px">
+  <h2 style="color:#ffd700;font-size:20px">🌟 技能树 & 成就</h2>
+  <div id="skills-content" style="width:100%;max-width:600px"></div>
+</div>
+<div id="modal-diff" class="modal-overlay" onclick="closeModalBg(event,'modal-diff')">
+  <div class="modal-box"><h3>⚙️ 难度设置</h3><p>选择敌人强度系数</p>
+    <select id="diff-select"><option value="0.8">简单 (敌HPx0.8)</option><option value="1.0" selected>普通 (敌HPx1.0)</option><option value="1.3">困难 (敌HPx1.3)</option></select><br>
+    <button class="btn-primary" onclick="closeModal('modal-diff')">确认</button></div>
+</div>
+<div id="modal-help" class="modal-overlay" onclick="closeModalBg(event,'modal-help')">
+  <div class="modal-box"><h3>📖 操作帮助</h3>
+    <p>L1地图：点击相邻节点移动（消耗AP）</p><p>L2网格：点击卡牌翻牌（消耗EP）</p><p>L3战斗：新窗口打开</p>
+    <button class="btn-primary" onclick="closeModal('modal-help')">关闭</button></div>
+</div>
+<div id="confirm-popup"><div class="cfm-box" id="cfm-box"></div></div>
+<div id="save-indicator">💾 已保存</div>
+<div id="modal-save" class="modal-overlay" onclick="closeModalBg(event,'modal-save')">
+  <div class="modal-box" style="max-width:420px"><h3>📂 存档管理</h3><div id="save-slots-content"></div>
+    <button class="btn-secondary" onclick="closeModal('modal-save')" style="margin-top:8px">关闭</button></div>
+</div>
+<div id="modal-settings" class="modal-overlay" onclick="closeModalBg(event,'modal-settings')">
+  <div class="modal-box" style="max-width:300px"><h3>⚙️ 游戏菜单</h3>
+    <div class="settings-menu">
+      <button class="settings-btn" onclick="resumeGame()"><span class="s-icon">▶️</span>继续游戏</button>
+      <button class="settings-btn" onclick="saveFromMenu()"><span class="s-icon">💾</span>存档</button>
+      <button class="settings-btn" onclick="loadFromMenu()"><span class="s-icon">📂</span>读档</button>
+      <button class="settings-btn" onclick="openGameSettings()"><span class="s-icon">🎛️</span>游戏设置</button>
+      <button class="settings-btn exit-btn" onclick="exitGame()"><span class="s-icon">🚪</span>退出游戏</button>
+    </div>
+    <button class="btn-secondary" onclick="closeModal('modal-settings')" style="margin-top:8px;width:100%">关闭</button>
+  </div>
+</div>
+<div id="modal-game-settings" class="modal-overlay" onclick="closeModalBg(event,'modal-game-settings')">
+  <div class="modal-box" style="max-width:360px"><h3>🎛️ 游戏设置</h3>
+    <div class="game-setting-row"><label>🔊 音量</label><input type="range" id="setting-volume" min="0" max="100" value="80" onchange="updateVolume(this.value)"><span style="font-size:11px;color:#ffd700;width:30px" id="vol-label">80%</span></div>
+    <div class="game-setting-row"><label>🖥️ 主题</label><select id="setting-theme" onchange="updateTheme(this.value)"><option value="dark">暗黑星界</option><option value="nebula">星云紫</option><option value="deep">深空蓝</option></select></div>
+    <div class="game-setting-row"><label>🖱️ 难度</label><select id="setting-diff" onchange="updateDiff(this.value)"><option value="0.8">简单</option><option value="1.0" selected>普通</option><option value="1.3">困难</option></select></div>
+    <div style="font-size:11px;color:#888;margin-top:8px;text-align:center">⌨️ 快捷键<br><div class="key-list"><span class="key-tag">ESC 关闭弹窗</span><span class="key-tag">⚙ 设置</span><span class="key-tag">💾 快速保存</span></div></div>
+    <button class="btn-secondary" onclick="closeModal('modal-game-settings')" style="margin-top:10px;width:100%">返回</button>
+  </div>
+</div>
+<div id="node-preview"><div class="node-pv-close" onclick="hideNodePreview()">✕</div><div class="node-pv-title" id="npv-title"></div><div class="node-pv-desc" id="npv-desc"></div><div class="node-pv-stats" id="npv-stats"></div><button class="node-pv-enter" id="npv-enter" onclick="enterNodeFromPreview()">前往探索</button></div>
+<script>
+var DATA={CREW_POOL:[],MAP_DATA:{},CARDS_DB:{},RACES:[],ORIGINS:[],STORY_DB:[],loading:true};
+async function loadCSV(filename){
+  var r=await fetch('../data/csv/'+filename);
+  if(!r.ok){console.warn('CSV加载失败:'+filename);return null}
+  var t=await r.text();return t;
+}
+function parseCSV(text){
+  var lines=text.split('\n').filter(function(l){return l.trim()&&!l.startsWith('#')});
+  if(lines.length<2)return{headers:[],rows:[]};
+  var headers=lines[0].split(','),rows=[];
+  for(var i=1;i<lines.length;i++){
+    var cols=lines[i].split(','),row={};
+    headers.forEach(function(h,j){row[h.trim()]=cols[j]?cols[j].trim():''});
+    rows.push(row);
+  }
+  return{headers:headers,rows:rows};
+}
+function csvToObj(rows,keyField){
+  var obj={};
+  rows.forEach(function(r){obj[r[keyField]]=r});
+  return obj;
+}
+async function initData(){
+  var loaded=0;
+  var csv,rs;
+  csv=await loadCSV('crew_members.csv');
+  if(csv){rs=parseCSV(csv).rows;DATA.CREW_POOL=rs.map(function(r){return{id:r.crew_id,name:r.name,role:r.role,skill:parseInt(r.skill_level)||1,hp:50+parseInt(r.skill_level)*10,atk:2+parseInt(r.skill_level),special:r.bonus_desc,cost:50+parseInt(r.skill_level)*50,story:r.name,bonus:{hull:parseInt(r.skill_level)*2,shield:0,weapon:parseInt(r.skill_level)*2,energy:parseInt(r.skill_level)*2}}});loaded++}
+  csv=await loadCSV('map_nodes.csv');
+  if(csv){var rows=parseCSV(csv).rows;DATA.MAP_DATA={1:[],2:[],3:[]};rows.forEach(function(r){var d=parseInt(r.domain)||1;DATA.MAP_DATA[d].push({id:r.node_id,name:r.name,type:r.type,terrain:r.terrain,apCost:parseInt(r.ap_cost)||1,posX:parseInt(r.pos_x)||50,posY:parseInt(r.pos_y)||50,conn:r.connections?r.connections.split('|'):[],domain:d,desc:r.desc||'',gateDomain:r.gate_domain?parseInt(r.gate_domain):undefined,requiresBoss:r.requires_boss||undefined,boss:r.boss==='true',finalBoss:r.final_boss==='true'})});loaded++}
+  csv=await loadCSV('story_db.csv');
+  if(csv){DATA.STORY_DB=parseCSV(csv).rows.map(function(r){return{f:r.name,t:r.story_text}});loaded++}
+  csv=await loadCSV('temp_types.csv');
+  if(csv){DATA.TEMP_TYPES={};parseCSV(csv).rows.forEach(function(r){DATA.TEMP_TYPES[r.type_id]={e:r.emoji,c:r.color,n:r.name,d:r.desc}});loaded++}
+  csv=await loadCSV('crew_slots.csv');
+  if(csv){DATA.CREW_SLOTS=parseCSV(csv).rows.map(function(r){return{id:r.slot_id,name:r.name,icon:r.icon,desc:r.desc,bonusKey:r.bonus_key}});loaded++}
+  csv=await loadCSV('domain_names.csv');
+  if(csv){DATA.DOMAIN_NAMES={};parseCSV(csv).rows.forEach(function(r){DATA.DOMAIN_NAMES[parseInt(r.domain_id)]=r.name});loaded++}
+  csv=await loadCSV('cards.csv');
+  if(csv){parseCSV(csv).rows.forEach(function(r){if(r.card_id)DATA.CARDS_DB[r.card_id]={name:r.name||r.card_id,type:r.type||'attack',cost:parseInt(r.cost)||1,effect:r.effect||'',tags:(r.tags||'通用').split('|')}});loaded++}
+  csv=await loadCSV('races.csv');
+  if(csv){DATA.RACES=parseCSV(csv).rows.map(function(r){return{id:r.race_id,name:r.race_name,emoji:r.emoji||'👤',str:parseInt(r.base_str)||10,dex:parseInt(r.base_dex)||10,con:parseInt(r.base_con)||10,intel:parseInt(r.base_int)||10,wis:parseInt(r.base_wis)||10,cha:parseInt(r.base_cha)||10,desc:r.passive_desc||'',fixedSkill:r.fixed_skill||null,skillExtra:parseInt(r.skill_extra)||0}});loaded++}
+  DATA.loading=false;console.log('📦 CSV loaded: '+loaded+' files');return loaded;
+}
+function finalizeData(){
+  if(DATA.CREW_POOL.length>0)CREW_POOL=DATA.CREW_POOL;
+  if(DATA.CREW_SLOTS.length>0)CREW_SLOTS=DATA.CREW_SLOTS;
+  if(Object.keys(DATA.MAP_DATA[1]||{}).length>0)MAP_DATA=DATA.MAP_DATA;
+  if(DATA.STORY_DB.length>0)STORY_DB=DATA.STORY_DB;
+  if(Object.keys(DATA.TEMP_TYPES).length>0)TEMP_TYPES=DATA.TEMP_TYPES;
+  if(Object.keys(DATA.DOMAIN_NAMES).length>0)DOMAIN_NAMES=DATA.DOMAIN_NAMES;
+  if(Object.keys(DATA.CARDS_DB).length>0)CARDS_DB=DATA.CARDS_DB;
+  if(DATA.RACES.length>0)RACES=DATA.RACES;
+}
+let GS={scene:'menu',difficulty:1.0,char:null,mapNodes:[],currentNode:null,explored:new Set(),domain:1,domainCleared:[],ap:6,apMax:12,tempContents:[],gridFloor:null,gridCards:[],ep:4,epMax:8,flippedCards:new Set(),gridTaskDone:!1,gridTaskGoal:0,gridTaskProgress:0,combatResult:null,confirmCallback:null,
+  ship:{name:'星界探索者',built:true,hull:100,shield:50,energy:100,engine:10,weapon:15,maxHull:100,maxShield:50,upgrades:{hull:0,engine:0,weapon:0,shield:0,phasma_furnace:0}},
+  resources:{stardust:15,ether:8,crystal:3},
+  crew:{star_bridge:null,phasma_furnace:null,magic_cannon:null,crystal_shield:null,star_chart:null},crewRecruited:[],
+  achievements:{firstBattle:false,flip10:0,bossKill:false,fullClear:false,gold1000:0},
+  skillPoints:3
+}
+const MAP_DATA={1:[{id:'N-101',name:'流浪星港',type:'rest',terrain:'starport',apCost:1,posX:15,posY:50,conn:['N-102','N-103','N-104'],domain:1,desc:'安全港湾·修复补给'},{id:'N-102',name:'商路哨站',type:'shop',terrain:'trade_route',apCost:1,posX:35,posY:30,conn:['N-101','N-105','N-106','N-115'],domain:1,desc:'星界商路上的贸易站'},{id:'N-103',name:'废弃信号塔',type:'event',terrain:'trade_route',apCost:1,posX:35,posY:65,conn:['N-101','N-107','N-108'],domain:1,desc:'古老信号塔仍在发送信号'},{id:'N-104',name:'小行星采矿带',type:'combat',terrain:'asteroid_belt',apCost:2,posX:15,posY:80,conn:['N-101','N-109'],domain:1,desc:'矿盗出没的危险地带'},{id:'N-105',name:'星界商路',type:'combat',terrain:'asteroid_belt',apCost:2,posX:55,posY:20,conn:['N-102','N-110','N-111'],domain:1,desc:'海盗伏击的高风险航线'},{id:'N-106',name:'古代观测站',type:'story',terrain:'trade_route',apCost:1,posX:55,posY:50,conn:['N-102','N-112'],domain:1,desc:'遗落星界的古代遗迹'},{id:'N-107',name:'浮游垃圾带',type:'event',terrain:'asteroid_belt',apCost:2,posX:55,posY:75,conn:['N-103','N-113'],domain:1,desc:'拾荒者的宝库'},{id:'N-108',name:'加密中继站',type:'event',terrain:'unknown_space',apCost:3,posX:35,posY:88,conn:['N-103','N-114'],domain:1,desc:'未知文明的数据节点'},{id:'N-109',name:'矿盗巢穴',type:'combat',terrain:'asteroid_belt',apCost:2,posX:5,posY:95,conn:['N-104'],domain:1,desc:'矿盗头目据点'},{id:'N-110',name:'深渊星云',type:'combat',terrain:'unknown_space',apCost:3,posX:78,posY:10,conn:['N-105'],domain:1,desc:'深渊生物潜伏的星云'},{id:'N-111',name:'星界漩涡',type:'event',terrain:'unknown_space',apCost:3,posX:78,posY:40,conn:['N-105'],domain:1,desc:'能量漩涡·风险与机遇并存'},{id:'N-112',name:'远古星门',type:'story',terrain:'asteroid_belt',apCost:2,posX:70,posY:60,conn:['N-106'],domain:1,desc:'星图碎片指向的传送门'},{id:'N-113',name:'废船残骸',type:'shop',terrain:'asteroid_belt',apCost:2,posX:70,posY:82,conn:['N-107'],domain:1,desc:'废弃商船·可能还有值钱货'},{id:'N-114',name:'星门·深渊',type:'gate',terrain:'deep_space',apCost:3,posX:20,posY:95,conn:['N-108'],domain:1,gateDomain:2,desc:'通往深渊裂隙的星门'},{id:'N-115',name:'太空站招募处',type:'crew',terrain:'trade_route',apCost:1,posX:30,posY:15,conn:['N-102'],domain:1,desc:'帝国太空站·招募船员'}],2:[{id:'N-201',name:'裂隙前哨',type:'rest',terrain:'asteroid_belt',apCost:1,posX:50,posY:85,conn:['N-202','N-203','N-204'],domain:2,desc:'深渊边缘的最后一个安全站'},{id:'N-202',name:'暗物质矿区',type:'combat',terrain:'asteroid_belt',apCost:2,posX:30,posY:60,conn:['N-201','N-205'],domain:2,desc:'高价值·高危险'},{id:'N-203',name:'虚空风暴',type:'event',terrain:'unknown_space',apCost:3,posX:70,posY:65,conn:['N-201','N-206'],domain:2,desc:'能量风暴中的幸存者信号'},{id:'N-204',name:'走私者暗港',type:'shop',terrain:'deep_space',apCost:3,posX:50,posY:50,conn:['N-201','N-207','N-208','N-211'],domain:2,desc:'非法贸易站·物品稀有但昂贵'},{id:'N-205',name:'深渊蠕虫巢',type:'combat',terrain:'deep_space',apCost:3,posX:15,posY:45,conn:['N-202'],domain:2,desc:'巨型深渊蠕虫的领地'},{id:'N-206',name:'失落殖民地',type:'story',terrain:'unknown_space',apCost:3,posX:85,posY:50,conn:['N-203'],domain:2,desc:'被遗忘的殖民地·埋藏着秘密'},{id:'N-207',name:'裂隙观测站',type:'event',terrain:'deep_space',apCost:3,posX:50,posY:30,conn:['N-204','N-209'],domain:2,desc:'科学家留下的最后记录'},{id:'N-208',name:'虚空商人',type:'shop',terrain:'deep_space',apCost:3,posX:75,posY:15,conn:['N-204'],domain:2,desc:'虚空中的神秘商人'},{id:'N-209',name:'深渊领主巢穴',type:'combat',terrain:'deep_space',apCost:3,posX:25,posY:18,conn:['N-207'],domain:2,boss:true,desc:'BOSS·深渊领主'},{id:'N-210',name:'星门·太古',type:'gate',terrain:'deep_space',apCost:3,posX:80,posY:80,conn:['N-207'],domain:2,gateDomain:3,requiresBoss:'N-209',desc:'需击败深渊领主方可激活'},{id:'N-211',name:'贸易前哨招募',type:'crew',terrain:'trade_route',apCost:1,posX:80,posY:50,conn:['N-204'],domain:2,desc:'自由商盟·护卫招募'}],3:[{id:'N-301',name:'遗迹外围',type:'rest',terrain:'asteroid_belt',apCost:1,posX:20,posY:80,conn:['N-302','N-303'],domain:3,desc:'太古文明遗迹的外围区域'},{id:'N-302',name:'远古哨兵',type:'combat',terrain:'unknown_space',apCost:3,posX:45,posY:65,conn:['N-301','N-304'],domain:3,desc:'太古守卫者仍在执行程序'},{id:'N-303',name:'遗物殿堂',type:'shop',terrain:'deep_space',apCost:3,posX:45,posY:90,conn:['N-301'],domain:3,desc:'保存着太古遗物的殿堂'},{id:'N-304',name:'知识圣殿',type:'story',terrain:'unknown_space',apCost:3,posX:65,posY:50,conn:['N-302','N-305','N-306'],domain:3,desc:'蕴含宇宙真理的圣殿'},{id:'N-305',name:'虚空图书馆',type:'event',terrain:'deep_space',apCost:3,posX:85,posY:35,conn:['N-304'],domain:3,desc:'无尽知识的虚空图书馆'},{id:'N-306',name:'时空间隙',type:'event',terrain:'deep_space',apCost:3,posX:80,posY:70,conn:['N-304','N-307'],domain:3,desc:'时空裂缝·风险极高'},{id:'N-307',name:'创造者工坊',type:'shop',terrain:'deep_space',apCost:3,posX:70,posY:88,conn:['N-306','N-308'],domain:3,desc:'太古创造者的最后工坊'},{id:'N-308',name:'暗影王座',type:'combat',terrain:'deep_space',apCost:3,posX:88,posY:88,conn:['N-307'],domain:3,boss:true,finalBoss:true,desc:'FINAL BOSS·暗影领主'}]}
+const GRID_CARDS_POOL=['combat','combat','combat','combat','combat','combat','shop','shop','event','event','event','event','story','trap','trap','trap','resource','resource','resource','resource','resource','rest','rest','locked','locked']
+const NODE_TYPE_EMOJI={combat:'🔴',shop:'💰',event:'🔵',story:'🟣',rest:'⬜',gate:'🌀',crew:'👥'}
+const NODE_TYPE_COLOR={combat:'#e94560',shop:'#ffd700',event:'#4ecdc4',story:'#a29bfe',rest:'#ccc',gate:'#ff8c00',crew:'#9b59b6'}
+const TERRAIN_COLOR={starport:'#4ecdc4',trade_route:'#2ecc71',asteroid_belt:'#ffd700',unknown_space:'#e67e22',deep_space:'#e94560'}
+const TERRAIN_LABEL={starport:'港',trade_route:'商',asteroid_belt:'矿',unknown_space:'?',deep_space:'深'}
+const DOMAIN_NAMES={1:'流浪星域',2:'深渊裂隙',3:'太古遗迹'}
+const TEMP_TYPES={merchant:{e:'🛸',c:'#ffd700',n:'流浪商人',d:'稀有商品·限时2回合'},beacon:{e:'📡',c:'#e94560',n:'求救信标',d:'限时救援·奖励翻倍'},debris:{e:'💥',c:'#888',n:'残骸区',d:'免费拾荒·随机材料'},surge:{e:'⚡',c:'#4ecdc4',n:'能量涌流',d:'经过时AP+2 EP恢复'},storm:{e:'🌪',c:'#c0392b',n:'虚空风暴',d:'封锁路径·需等待或绕行'}}
+const STORY_DB=[{f:'前哨废墟',t:'这片废墟曾是星界海军的前哨站。空气中仍弥漫着能量残留的气味...'},{f:'暗影深域',t:'光芒在这里被吞噬。黑暗中似乎有什么东西在移动。'},{f:'虚空之核',t:'你感受到一股强大的引力，将你拉向中心。那里必然有什么重要的东西。'},{f:'失落圣殿',t:'上古文明的遗迹映入眼帘。墙壁上的符文闪烁着微弱的蓝光。'},{f:'首领巢穴',t:'空气变得凝重。巨大的存在正在前方等待着你的到来。'}];
+const GRID_CELL_STYLE={combat:{bg:'#e94560',emoji:'⚔️'},shop:{bg:'#ffd700',emoji:'💰'},event:{bg:'#4ecdc4',emoji:'❓'},story:{bg:'#a29bfe',emoji:'📜'},trap:{bg:'#555',emoji:'⚠️'},resource:{bg:'#2ecc71',emoji:'💎'},rest:{bg:'#ccc',emoji:'💤'},recruit:{bg:'#9b59b6',emoji:'�'}}
+const RACES=[{id:'RACE-001',name:'人类',emoji:'👤',str:10,dex:10,con:10,intel:10,wis:10,cha:10,desc:'均衡全能·额外自选1技能',fixedSkill:null,skillExtra:1},{id:'RACE-002',name:'精灵',emoji:'🧝',str:10,dex:12,con:10,intel:11,wis:10,cha:10,desc:'DEX优先·星界精灵海军',fixedSkill:'SKILL-02',skillExtra:0},{id:'RACE-003',name:'矮人',emoji:'🧔',str:11,dex:10,con:12,intel:10,wis:10,cha:10,desc:'CON优先·小行星矿业种族',fixedSkill:'SKILL-01',skillExtra:0},{id:'RACE-004',name:'兽人',emoji:'👹',str:12,dex:10,con:11,intel:10,wis:10,cha:10,desc:'STR优先·太空佣兵/海盗',fixedSkill:'SKILL-01',skillExtra:0}]
+const ORIGINS=[{id:'ORIGIN-001',name:'星舰之子',emoji:'🚀',gold:50,trait:'星图直觉',desc:'太空航行多1选项',story:'寻找失踪的家船'},{id:'ORIGIN-002',name:'学院学者',emoji:'📚',gold:30,trait:'博闻强记',desc:'知识检定优势',story:'无法打开导师给的星匣'},{id:'ORIGIN-003',name:'拾荒游民',emoji:'🔧',gold:80,trait:'垃圾堆宝藏',desc:'战利品多1掉落',story:'捡到了不该捡的东西'},{id:'ORIGIN-004',name:'商团代理',emoji:'💰',gold:100,trait:'议价术',desc:'购买9折',story:'商团被海盗袭击'},{id:'ORIGIN-005',name:'殖民地开拓者',emoji:'⛏️',gold:60,trait:'坚韧求生',desc:'环境伤害-1',story:'挖出了远古遗迹'},{id:'ORIGIN-006',name:'星界孤儿',emoji:'🌟',gold:20,trait:'星界共鸣',desc:'位面事件多1选项',story:'废弃魔法船上的神秘身世'}]
+const SKILLS=[{id:'SKILL-01',name:'运动',attrs:'STR/CON',card:'C-010'},{id:'SKILL-02',name:'灵巧',attrs:'DEX/STR',card:'C-020'},{id:'SKILL-03',name:'调查',attrs:'INT/WIS',card:'C-072'},{id:'SKILL-04',name:'学识',attrs:'INT/CHA',card:'C-030'},{id:'SKILL-05',name:'洞察',attrs:'WIS/INT',card:'C-073'},{id:'SKILL-06',name:'交涉',attrs:'CHA/WIS',card:'C-050'}]
+const CARDS_DB={'C-004':{name:'急救',type:'support',cost:1,effect:'恢复15HP',tags:['辅助']},'C-010':{name:'蓄力斩',type:'attack',cost:1,effect:'8伤害·+2怒气',tags:['攻击','战士']},'C-011':{name:'格挡反击',type:'defense',cost:1,effect:'5护盾·受击+1怒+3反伤',tags:['防御','战士']},'C-012':{name:'怒意爆发',type:'attack',cost:1,effect:'消耗怒气→怒x3伤',tags:['攻击','终结技']},'C-013':{name:'战斗狂热',type:'skill',cost:2,effect:'+3怒·攻击CE-1',tags:['技能','爆发']},'C-014':{name:'毁灭之握',type:'attack',cost:4,effect:'30伤无视护盾',tags:['攻击','终极']},'C-020':{name:'双重打击',type:'attack',cost:1,effect:'2次各4伤·各+1CP',tags:['攻击','盗贼']},'C-022':{name:'刺骨',type:'attack',cost:2,effect:'消费CP→8+CPx6伤',tags:['攻击','终结技']},'C-030':{name:'奥术飞弹',type:'attack',cost:1,effect:'10伤害·法力1',tags:['攻击','法师']},'C-031':{name:'魔法护盾',type:'defense',cost:1,effect:'8护盾·格挡DOT',tags:['防御','法师']},'C-032':{name:'烈焰风暴',type:'attack',cost:3,effect:'全体12伤害·法力3',tags:['攻击','AOE']},'C-033':{name:'魔力回流',type:'skill',cost:2,effect:'回2法力·每战1次',tags:['技能','恢复']},'C-050':{name:'圣光击',type:'attack',cost:1,effect:'10伤害+自回5HP',tags:['攻击','牧师']},'C-051':{name:'治疗祷言',type:'skill',cost:1,effect:'恢复20HP',tags:['技能','治疗']},'C-052':{name:'光耀之盾',type:'defense',cost:1,effect:'10护盾·敌攻-5',tags:['防御','牧师']},'C-072':{name:'战备',type:'support',cost:1,effect:'抽2张牌',tags:['辅助','通用']},'C-073':{name:'专注',type:'skill',cost:0,effect:'CE+1·每战1次',tags:['技能','通用']}}
+const EVENTS=[{A:{name:'太空格斗训练',card:'C-010',tag:'战士',desc:'在零重力下接受严苛训练'},B:{name:'星图导航课',card:'C-072',tag:'导航员',desc:'学习解读星图与引力漩涡'},C:{'RACE-001':{name:'学院进修',card:'C-030',tag:'学者',desc:'进入星界学院深造'},'RACE-002':{name:'精灵箭术',card:'C-020',tag:'射手',desc:'修习古老箭术传承'},'RACE-003':{name:'矿坑求生',card:'C-011',tag:'生存者',desc:'在小行星矿坑学会求生'},'RACE-004':{name:'佣兵试炼',card:'C-012',tag:'狂战士',desc:'通过佣兵团死亡试炼'}}},{A:{name:'遭遇海盗袭击',card:'C-004',tag:'老兵',desc:'在星盗突袭中学会急救'},B:{name:'星港贸易',card:'C-004',tag:'商人',desc:'在繁华星港学会贸易'},C:{'RACE-001':{name:'外交使团',card:'C-050',tag:'外交官',desc:'参与跨种族外交谈判'},'RACE-002':{name:'远古遗物',card:'C-031',tag:'守护者',desc:'探索远古防护魔法'},'RACE-003':{name:'锻造大师',card:'C-013',tag:'铁匠',desc:'跟随矮人大师学习'},'RACE-004':{name:'血怒觉醒',card:'C-014',tag:'毁灭者',desc:'在血战中觉醒'}}},{A:{name:'深渊歼敌战',card:'C-073',tag:'英雄',desc:'击败深渊边缘巨型星兽'},B:{name:'远古知识',card:'C-033',tag:'博学者',desc:'破译上古秘典'},C:{'RACE-001':{name:'命运抉择',card:'C-051',tag:'天命者',desc:'在命运十字路口选择'},'RACE-002':{name:'星界共鸣',card:'C-032',tag:'星语者',desc:'与星界之灵建立共鸣'},'RACE-003':{name:'地下探险',card:'C-014',tag:'探险家',desc:'深入地下城探索秘密'},'RACE-004':{name:'部落荣耀',card:'C-022',tag:'酋长',desc:'赢得部落联盟尊敬'}}}]
+const CREW_POOL=[{id:'CREW-001',name:'老船长维克多',role:'star_bridge',skill:4,hp:80,atk:5,special:'回合开始CE+1',cost:200,story:'曾在帝国海军服役30年的传奇船长',bonus:{hull:8,shield:0,weapon:0,energy:3}},{id:'CREW-002',name:'导航官艾莉',role:'star_bridge',skill:3,hp:60,atk:3,special:'先攻+1',cost:150,story:'星图学院毕业的天才导航师',bonus:{hull:4,shield:2,weapon:0,energy:5}},{id:'CREW-003',name:'燃素技师凯恩',role:'phasma_furnace',skill:5,hp:70,atk:4,special:'燃素炉效率+20%',cost:250,story:'矮人工匠家族的传人',bonus:{hull:0,shield:0,weapon:2,energy:10}},{id:'CREW-004',name:'学徒诺瓦',role:'phasma_furnace',skill:2,hp:40,atk:2,special:'每战恢复5HP',cost:100,story:'凯恩的年轻学徒',bonus:{hull:2,shield:2,weapon:0,energy:4}},{id:'CREW-005',name:'炮术长雷克斯',role:'magic_cannon',skill:4,hp:90,atk:8,special:'首轮伤害+15%',cost:220,story:'退役佣兵，百发百中',bonus:{hull:0,shield:0,weapon:12,energy:0}},{id:'CREW-006',name:'见习炮手小杰',role:'magic_cannon',skill:2,hp:50,atk:4,special:'连续攻击+3',cost:120,story:'梦想成为传奇炮手的少年',bonus:{hull:0,shield:0,weapon:6,energy:0}},{id:'CREW-007',name:'护盾工程师琳达',role:'crystal_shield',skill:4,hp:60,atk:2,special:'护盾+15/回合',cost:200,story:'晶壁技术的研究专家',bonus:{hull:0,shield:12,weapon:0,energy:2}},{id:'CREW-008',name:'晶壁学徒索尔',role:'crystal_shield',skill:2,hp:45,atk:1,special:'受伤时护盾+5',cost:100,story:'琳达的得力助手',bonus:{hull:0,shield:6,weapon:0,energy:1}},{id:'CREW-009',name:'星图师奥莉维亚',role:'star_chart',skill:5,hp:55,atk:3,special:'揭示1格相邻节点',cost:280,story:'能够阅读太古星图的精灵学者',bonus:{hull:2,shield:2,weapon:0,energy:8}},{id:'CREW-010',name:'观星学徒费恩',role:'star_chart',skill:2,hp:40,atk:2,special:'随机事件预知',cost:110,story:'人类中罕见的星界感知者',bonus:{hull:0,shield:0,weapon:0,energy:4}}]
+const CREW_SLOTS=[{id:'star_bridge',name:'星桥',icon:'🎮',desc:'控制飞船航向与战斗策略',bonusKey:'energy'},{id:'phasma_furnace',name:'燃素炉',icon:'🔥',desc:'为飞船系统提供核心能量',bonusKey:'energy'},{id:'magic_cannon',name:'魔导炮阵',icon:'⚔️',desc:'操控舰载武器的火力输出',bonusKey:'weapon'},{id:'crystal_shield',name:'晶壁护盾',icon:'🔮',desc:'维持飞船防御护盾的完整',bonusKey:'shield'},{id:'star_chart',name:'星图仪',icon:'🌟',desc:'解读星图·揭示隐藏信息',bonusKey:'energy'}];
+const TAG_ATTR={战士:'str',导航员:'intel',学者:'intel',射手:'dex',生存者:'con',狂战士:'str',老兵:'con',商人:'cha',外交官:'cha',守护者:'con',铁匠:'str',毁灭者:'str',英雄:'str',博学者:'intel',天命者:'wis',星语者:'wis',探险家:'dex',酋长:'cha'}
+const TITLE_MAP={'星舰之子_战士':'星界游侠','星舰之子_法师':'星舰奥术师','星舰之子_盗贼':'星舰暗影','星舰之子_牧师':'星舰圣者','学院学者_战士':'战斗学者','学院学者_法师':'星界大法师','学院学者_盗贼':'暗影学者','学院学者_牧师':'光明学者','拾荒游民_战士':'废土勇士','拾荒游民_法师':'拾荒术士','拾荒游民_盗贼':'废土潜行者','拾荒游民_牧师':'废土圣徒','商团代理_战士':'商团卫士','商团代理_法师':'商团奥术师','商团代理_盗贼':'商团密探','商团代理_牧师':'商团圣职者','殖民地开拓者_战士':'开拓勇士','殖民地开拓者_法师':'开拓术士','殖民地开拓者_盗贼':'开拓斥候','殖民地开拓者_牧师':'开拓圣者','星界孤儿_战士':'星界游侠','星界孤儿_法师':'星界术士','星界孤儿_盗贼':'星界暗影','星界孤儿_牧师':'星界圣徒'}
+const PROF_BASE={战士:{hp:120,ce:4,energyType:'rage',em:10},盗贼:{hp:90,ce:3,energyType:'cp',em:3},法师:{hp:70,ce:2,energyType:'mana',em:0},牧师:{hp:80,ce:2,energyType:'mana',em:0}}
+const PROF_MAP={战士:'warrior',法师:'mage',盗贼:'rogue',牧师:'priest'}
+const ENERGY_MAP={战士:'rage',盗贼:'cp',法师:'mana',牧师:'mana'}
+let cr={step:1,race:null,origin:null,events:[null,null,null],tags:[],skills:[],identity:null,deckFilter:'全部'}
+let mapPulse=0;let pendingNode=null;
+function hideNodePreview(){$S('node-preview').classList.remove('show')}
+function showNodePreview(node){pendingNode=node;$S('npv-title').textContent=NODE_TYPE_EMOJI[node.type]+' '+node.name;$S('npv-desc').textContent=node.desc||'';$S('npv-stats').innerHTML='<span class="node-pv-stat">'+node.type+'</span><span class="node-pv-stat">'+node.terrain+'</span><span class="node-pv-stat">AP:'+node.apCost+'</span>';var btn=$S('npv-enter');btn.disabled=GS.ap<node.apCost;btn.textContent=GS.ap>=node.apCost?'前往('+node.apCost+'AP)':'AP不足('+node.apCost+')';$S('node-preview').classList.add('show')}
+function enterNodeFromPreview(){if(!pendingNode)return;var cost=pendingNode.apCost||1;if(GS.ap<cost&&GS.char&&GS.char.hp>GS.char.mh*0.3){hideNodePreview();showConfirm('AP不足·强行前往?','需要AP:'+cost+'\n当前AP:'+GS.ap+'\n强行前往将被虚空风暴损伤-30%HP',function(){GS.char.hp=Math.max(1,GS.char.hp-Math.floor(GS.char.mh*0.3));GS.explored.add(pendingNode.id);GS.currentNode=pendingNode.id;triggerNodeEffect(pendingNode);renderMap()},'强行前往',function(){},'放弃')}else if(GS.ap<cost){hideNodePreview();showConfirm('AP不足','需要AP:'+cost+'\n当前AP:'+GS.ap,null,'关闭')}else{hideNodePreview();GS.ap-=cost;GS.explored.add(pendingNode.id);GS.currentNode=pendingNode.id;triggerNodeEffect(pendingNode);renderMap()}}
+
+function $S(id){return document.getElementById(id)}
+function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}}
+
+// === 存档系统 ===
+let currentSlot=null;
+const SAVE_PREFIX='card_adv_save_';
+
+function getSlotKey(slot){return SAVE_PREFIX+slot}
+function getSaveSlots(){let s=[];for(let i=0;i<3;i++){let d=localStorage.getItem(getSlotKey(i));s.push(d?JSON.parse(d):null)};return s}
+function flashSave(){let e=$S('save-indicator');e.style.display='block';e.style.animation='none';e.offsetHeight;e.style.animation='fadeOut 1.5s forwards'}
+
+function serializeGS(){
+let g={
+v:1,ts:Date.now(),difficulty:GS.difficulty,
+char:GS.char?{...GS.char}:null,
+ship:{...GS.ship},
+resources:{...GS.resources},
+crew:{...GS.crew},
+achievements:{...GS.achievements},
+skillPoints:GS.skillPoints,
+skillTree:{...GS.skillTree},
+equipment:{...GS.equipment},
+ap:GS.ap,apMax:GS.apMax,
+currentNode:GS.currentNode,
+explored:Array.from(GS.explored||[]),domain:GS.domain,domainCleared:GS.domainCleared||[]
+};
+return g
+}
+
+function deserializeGS(g){
+if(g.v!==1)return false;
+GS.difficulty=g.difficulty||1;GS.char=g.char;GS.ship=g.ship;GS.resources=g.resources;GS.crew=g.crew;GS.achievements=g.achievements;
+GS.skillPoints=g.skillPoints||0;GS.skillTree=g.skillTree||{};GS.equipment=g.equipment||{};GS.ap=g.ap||6;GS.apMax=g.apMax||12;GS.domain=g.domain||1;GS.domainCleared=g.domainCleared||[];
+GS.currentNode=g.currentNode;GS.explored=new Set(g.explored||[]);
+GS.scene='map';GS.mapNodes=MAP_DATA[GS.domain]||MAP_DATA[1];GS.gridCards=[];GS.ep=4;GS.epMax=8;GS.flippedCards=new Set();GS.gridTaskDone=false;GS.gridTaskGoal=0;GS.gridTaskProgress=0;
+return true
+}
+
+function saveGame(slot){
+let d=serializeGS();
+d.ts=Date.now();d.slot=slot;
+localStorage.setItem(getSlotKey(slot),JSON.stringify(d));
+currentSlot=slot;flashSave()
+}
+
+function loadGame(slot){
+let d=localStorage.getItem(getSlotKey(slot));
+if(!d)return false;
+let g=JSON.parse(d);
+if(!deserializeGS(g))return false;
+currentSlot=slot;enterMap();return true
+}
+
+function deleteSave(slot){
+localStorage.removeItem(getSlotKey(slot));
+if(currentSlot===slot)currentSlot=null
+}
+
+function quickSave(){
+if(!GS.char||currentSlot===null)return;
+saveGame(currentSlot)
+}
+
+function autoSave(){
+if(!GS.char||currentSlot===null)return;
+saveGame(currentSlot)
+}
+
+function showContinueMenu(){
+let slots=getSaveSlots(),hasAny=slots.some(s=>s);
+let ct=$S('save-slots-content');
+ct.innerHTML='<p style="font-size:12px;color:#aaa;margin-bottom:8px">选择存档加载</p>'+
+slots.map((s,i)=>{
+if(!s||!s.char)return'<div class="save-slot empty"><span class="slot-icon">📭</span><div class="slot-info"><div class="slot-title">空存档</div></div></div>';
+let d=new Date(s.ts),t=d.toLocaleString('zh-CN'),deck=s.char.deck?s.char.deck.length:0;
+return'<div class="save-slot" onclick="if(loadGame('+i+')){closeModal(\'modal-save\')}"><span class="slot-icon">💾</span><div class="slot-info"><div class="slot-title">'+s.char.name+'</div><div class="slot-detail">HP:'+s.char.hp+'/'+s.char.mh+' | 💰'+s.char.gold+'G | 牌库:'+deck+'张</div><div class="slot-time">'+t+'</div></div><button class="slot-delete" onclick="event.stopPropagation();showConfirm(\'删除存档?\',\'确定删除存档 '+s.char.name+'?\',function(){deleteSave('+i+');showContinueMenu()},\'删除\')">❌</button></div>'
+}).join('');
+openModal('modal-save')
+}
+
+function startNewGame(){
+let slots=getSaveSlots(),hasAny=slots.some(s=>s),hasAll=slots.every(s=>s);
+let ct=$S('save-slots-content');
+ct.innerHTML='<p style="font-size:12px;color:#aaa;margin-bottom:8px">选择存档槽位</p>'+
+slots.map((s,i)=>{
+if(!s)return'<div class="save-slot" onclick="localStorage.setItem(\'card_adv_pending_slot\',\''+i+'\');window.location.href=\'character-create.html\'"><span class="slot-icon">📭</span><div class="slot-info"><div class="slot-title">槽位 '+(i+1)+' — 空</div><div class="slot-detail">点击创建新角色</div></div></div>';
+let d=new Date(s.ts),t=d.toLocaleString('zh-CN');
+return'<div class="save-slot" onclick="showConfirm(\'覆盖存档?\',\'槽位'+(i+1)+'已有存档: '+s.char.name+'. 确定覆盖?\',function(){localStorage.setItem(\'card_adv_pending_slot\',\''+i+'\');window.location.href=\'character-create.html\'},\'覆盖\',function(){},\'取消\')"><span class="slot-icon">💾</span><div class="slot-info"><div class="slot-title">槽位 '+(i+1)+' — '+s.char.name+'</div><div class="slot-time">上次保存: '+t+'</div></div></div>'
+}).join('');
+openModal('modal-save')
+}
+
+// === 存档系统结束 ===
+
+// === 设置系统 ===
+function openSettings(){if(GS.char)openModal('modal-settings')}
+
+function resumeGame(){closeModal('modal-settings')}
+
+function saveFromMenu(){
+if(!GS.char||currentSlot===null){showConfirm('无法存档','找不到角色数据或未选择存档槽位',null,'确定');return}
+closeModal('modal-settings');
+saveGame(currentSlot);
+showConfirm('存档成功','进度已保存到槽位 '+(currentSlot+1),null,'确定')
+}
+
+function loadFromMenu(){
+closeModal('modal-settings');
+showContinueMenu()
+}
+
+function openGameSettings(){
+closeModal('modal-settings');
+let v=localStorage.getItem('card_adv_volume')||'80';
+$S('setting-volume').value=v;$S('vol-label').textContent=v+'%';
+let t=localStorage.getItem('card_adv_theme')||'dark';
+$S('setting-theme').value=t;
+let d=GS.difficulty||1.0;
+$S('setting-diff').value=String(d);
+openModal('modal-game-settings')
+}
+
+function updateVolume(v){$S('vol-label').textContent=v+'%';localStorage.setItem('card_adv_volume',v)}
+function updateTheme(t){localStorage.setItem('card_adv_theme',t);applyTheme(t)}
+function updateDiff(v){GS.difficulty=parseFloat(v);localStorage.setItem('card_adv_difficulty',v)}
+function applyTheme(t){
+let b=document.body;
+if(t==='dark')b.style.background='#1a1a2e';
+else if(t==='nebula')b.style.background='#1a1a24';
+else b.style.background='#0a1628'
+}
+
+function exitGame(){
+closeModal('modal-settings');
+showConfirm('退出游戏','确定要退出到主菜单吗？\n未保存的进度将丢失。',function(){
+GS.scene='menu';GS.char=null;currentSlot=null;
+document.querySelectorAll('.scene').forEach(function(s){s.classList.remove('active')});
+var menu=$S('scene-menu');if(menu)menu.classList.add('active');
+$S('status-bar').classList.remove('show');
+$S('btn-settings').style.display='none';
+$S('btn-save-quick').style.display='none';
+renderMenu()
+},'退出',function(){},'取消')
+}
+
+function loadSettings(){var v=localStorage.getItem('card_adv_volume')||'80',t=localStorage.getItem('card_adv_theme')||'dark',d=localStorage.getItem('card_adv_difficulty');if(d)GS.difficulty=parseFloat(d);applyTheme(t)}
+// === 设置系统结束 ===
+function switchScene(scene){GS.scene=scene;document.querySelectorAll('.scene').forEach(s=>s.classList.remove('active'));let t=$S('scene-'+scene);if(t)t.classList.add('active');updateStatusBar();renderScene()}
+function updateStatusBar(){let sb=$S('status-bar');if(GS.scene==='menu'||GS.scene==='char-create'){$S('btn-save-quick').style.display='none';$S('btn-settings').style.display='none';sb.classList.remove('show')}else{sb.classList.add('show');$S('btn-save-quick').style.display=currentSlot!==null?'inline-block':'none';$S('btn-settings').style.display='flex';if(GS.char){$S('sb-hp').textContent='HP: '+GS.char.hp+'/'+GS.char.mh;$S('sb-gold').textContent='💰 '+GS.char.gold+'G'}if(GS.scene==='map'){$S('sb-ap').textContent='AP: '+GS.ap+'/'+GS.apMax;$S('sb-scene-label').textContent='🌌'+DOMAIN_NAMES[GS.domain]+' ⭐'+GS.resources.stardust+' 💧'+GS.resources.ether}else if(GS.scene==='grid'){$S('sb-ap').textContent='';$S('sb-scene-label').textContent='探索区域'}else if(GS.scene==='combat'){$S('sb-ap').textContent='';$S('sb-scene-label').textContent='战斗'}}}
+function renderScene(){switch(GS.scene){case 'menu':renderMenu();break;case 'char-create':renderCharCreate();break;case 'map':renderMap();break;case 'grid':renderGrid();break;case 'combat':$S('battle-loading').style.display='flex';break;case 'starport':renderStarport();break;case 'crew':renderCrew();break;case 'equipment':renderEquipment();break;case 'skills':renderSkills();break}}
+
+function renderMenu(){let s=$S('menu-stars');if(!s.innerHTML){for(let i=0;i<60;i++){let d=document.createElement('div');d.className='menu-star';d.style.left=Math.random()*100+'%';d.style.top=Math.random()*100+'%';let sz=1+Math.random()*2;d.style.width=sz+'px';d.style.height=sz+'px';d.style.animationDelay=Math.random()*3+'s';d.style.animationDuration=(1.5+Math.random()*2)+'s';s.appendChild(d)}}}
+function startAdventure(){if(GS.char&&GS.char.name){enterMap()}else{window.location.href='character-create.html'}}
+function openModal(id){$S(id).classList.add('show')}
+function closeModal(id){$S(id).classList.remove('show')}
+function closeModalBg(e,id){if(e.target===$S(id))$S(id).classList.remove('show')}
+
+function renderCharCreate(){crGoRender()}
+function crBuildProgress(){let p=$S('char-progress');p.innerHTML='';for(let i=1;i<=7;i++){let d=document.createElement('div');d.className='char-step-dot';d.textContent=i;if(i<cr.step)d.classList.add('done');if(i===cr.step)d.classList.add('active');p.appendChild(d);if(i<7){let l=document.createElement('div');l.className='char-step-line';if(i<cr.step)l.classList.add('done');p.appendChild(l)}}$S('char-step-label').textContent=['','种族选择','出身选择','成长事件·一','成长事件·二','成长事件·三','身份卡生成','技能分配'][cr.step]}
+function crGoRender(){crBuildProgress();let ct=$S('char-content'),bp=$S('btn-cr-prev'),bn=$S('btn-cr-next');if(cr.step===1){bp.disabled=true;bn.disabled=!cr.race;bn.textContent='下一步';crRenderRace(ct)}else if(cr.step===2){bp.disabled=false;bn.disabled=!cr.origin;bn.textContent='下一步';crRenderOrigin(ct)}else if(cr.step>=3&&cr.step<=5){bp.disabled=false;let ri=cr.step-3;bn.disabled=!cr.events[ri];bn.textContent='下一步';crRenderEvent(ct,ri)}else if(cr.step===6){bp.disabled=false;bn.disabled=false;bn.textContent='下一步';crRenderIdentity(ct)}else if(cr.step===7){bp.disabled=false;bn.textContent='完成';bn.disabled=!crCanComplete();crRenderSkills(ct)}if(cr.step>7){crRenderFinal(ct)}}
+function crRenderRace(ct){ct.innerHTML='<div class="char-pane active"><div class="section-title">选择你的种族</div><div class="card-grid grid-4">'+RACES.map(r=>{let sel=cr.race===r.id,attrs=['STR','DEX','CON','INT','WIS','CHA'],vals=[r.str,r.dex,r.con,r.intel,r.wis,r.cha],max=Math.max(...vals);return'<div class="card-option'+(sel?' selected':'')+'" onclick="crSelectRace(\''+r.id+'\')"><span class="emoji">'+r.emoji+'</span><div class="name">'+r.name+'</div><div class="stats-row">'+attrs.map((a,i)=>'<span class="stat-tag'+(vals[i]===max?' highlight':'')+'">'+a+':'+vals[i]+'</span>').join('')+'</div><div class="desc">'+r.desc+'</div></div>'}).join('')+'</div></div>'}
+function crSelectRace(id){cr.race=id;crGoRender()}
+function crRenderOrigin(ct){ct.innerHTML='<div class="char-pane active"><div class="section-title">选择你的出身</div><div class="card-grid grid-6">'+ORIGINS.map(o=>{let sel=cr.origin===o.id;return'<div class="card-option'+(sel?' selected':'')+'" onclick="crSelectOrigin(\''+o.id+'\')"><span class="emoji">'+o.emoji+'</span><div class="name">'+o.name+'</div><div class="desc">💰 '+o.gold+'金币 | '+o.trait+': '+o.desc+'</div><div class="desc" style="color:#ffd700;font-size:9px">剧情: '+o.story+'</div></div>'}).join('')+'</div></div>'}
+function crSelectOrigin(id){cr.origin=id;crGoRender()}
+function crRenderEvent(ct,ri){let ev=EVENTS[ri],selId=cr.events[ri],cEv=ev.C[cr.race],opts=[{key:'A',cls:'evt-a',...ev.A},{key:'B',cls:'evt-b',...ev.B},{key:'C',cls:'evt-c',...cEv}];ct.innerHTML='<div class="char-pane active"><div class="section-title">成长事件 · 第'+(ri+1)+'轮</div><div class="card-grid" style="grid-template-columns:repeat(3,1fr)">'+opts.map(o=>{let sel=selId===o.key,cd=CARDS_DB[o.card];return'<div class="card-option '+o.cls+(sel?' selected':'')+'" onclick="crSelectEvent('+ri+',\''+o.key+'\')"><div class="name">'+o.name+'</div><div class="desc">'+o.desc+'</div><div style="margin-top:6px"><span class="tag-badge tag-warrior">'+o.tag+'</span><span class="tag-badge tag-default">奖励:'+(cd?cd.name:o.card)+'</span></div></div>'}).join('')+'</div></div>'}
+function crSelectEvent(ri,key){cr.events[ri]=key;crGoRender()}
+function crRenderIdentity(ct){if(!cr.identity)crCalcIdentity();let id=cr.identity;ct.innerHTML='<div class="char-pane active"><div class="section-title">身份卡</div><div id="identity-card"><div class="id-title">'+id.title+'</div><div class="id-origin">'+id.originName+' · '+id.profession+'</div><div class="id-tags">'+id.tags.map(t=>'<span class="tag-badge '+(t==='战士'?'tag-warrior':t==='学者'?'tag-scholar':'tag-default')+'">'+t+'</span>').join('')+'</div><div class="attr-summary">'+Object.entries(id.bonusAttrs).filter(([,v])=>v>0).map(([k,v])=>'<span class="stat-tag highlight">'+k.toUpperCase()+'+'+v+'</span>').join('')+'</div><div class="id-narrative">'+id.narrative+'</div><div style="margin-top:12px;font-size:12px;color:#ffd700;">💰 '+id.gold+'金币</div></div></div>'}
+function crRenderSkills(ct){let rc=RACES.find(r=>r.id===cr.race),max=3+(rc.skillExtra||0),fixed=rc.fixedSkill,cur=cr.skills.length,full=cur>=max;ct.innerHTML='<div class="char-pane active"><div class="section-title">分配技能熟练</div><div id="sk-counter">已选 <span class="count">'+cur+'</span> / '+max+'</div><div class="skill-list">'+SKILLS.map(s=>{let isFixed=s.id===fixed,checked=cr.skills.includes(s.id),disabled=(!checked&&full)||isFixed;return'<div class="skill-item'+(isFixed?' locked':'')+'"><input type="checkbox" '+(checked?'checked':'')+' '+(disabled?'disabled':'')+' onchange="crToggleSkill(\''+s.id+'\')"><label><span class="sk-name">'+s.name+'</span><span class="sk-attrs">'+s.attrs+'</span>'+(isFixed?' <span class="lock-icon">🔒 种族固定</span>':'')+'</label></div>'}).join('')+'</div></div>'}
+function crToggleSkill(id){let idx=cr.skills.indexOf(id);if(idx>=0){cr.skills.splice(idx,1)}else{let rc=RACES.find(r=>r.id===cr.race),max=3+(rc.skillExtra||0);if(cr.skills.length<max)cr.skills.push(id)}crGoRender()}
+function crCanComplete(){let rc=RACES.find(r=>r.id===cr.race),max=3+(rc.skillExtra||0);return cr.skills.length===max}
+function crCalcIdentity(){let rc=RACES.find(r=>r.id===cr.race),or=ORIGINS.find(o=>o.id===cr.origin),tags=[];for(let ri=0;ri<3;ri++){let key=cr.events[ri];if(!key)continue;let ev=EVENTS[ri];if(key==='A')tags.push(ev.A.tag);else if(key==='B')tags.push(ev.B.tag);else if(key==='C'){let cEv=ev.C[cr.race];if(cEv)tags.push(cEv.tag)}}cr.tags=tags;let prof=crDeriveProf(tags),bonus={str:0,dex:0,con:0,intel:0,wis:0,cha:0};tags.forEach(t=>{let a=TAG_ATTR[t];if(a)bonus[a]++});let stats={str:rc.str+(bonus.str||0),dex:rc.dex+(bonus.dex||0),con:rc.con+(bonus.con||0),intel:rc.intel+(bonus.intel||0),wis:rc.wis+(bonus.wis||0),cha:rc.cha+(bonus.cha||0)},mods={};Object.keys(stats).forEach(k=>{mods[k]=Math.floor((stats[k]-10)/2)});let pb=PROF_BASE[prof],hp=pb.hp+mods.con*5,ce=pb.ce;if(stats.con>=16)ce+=2;else if(stats.con>=12)ce+=1;let mana=null;if(prof==='法师')mana=5+mods.intel;else if(prof==='牧师')mana=4+mods.wis;let tk=or.name+'_'+prof,title=TITLE_MAP[tk]||(or.name+'的'+prof),eds=[];for(let ri=0;ri<3;ri++){let key=cr.events[ri];if(!key)continue;let ev=EVENTS[ri];if(key==='A')eds.push(ev.A.desc);else if(key==='B')eds.push(ev.B.desc);else if(key==='C'&&ev.C[cr.race])eds.push(ev.C[cr.race].desc)}let narrative='出身于'+or.name+'——'+or.story+'。'+eds.join('。')+'。以"'+title+'"之名踏上星界冒险。';cr.identity={title,originName:or.name,profession:prof,gold:or.gold,tags,stats,modifiers:mods,hp,ce,mana,bonusAttrs:bonus,narrative}}
+function crDeriveProf(tags){if(tags.includes('学者')||tags.includes('博学者'))return'法师';if(tags.includes('射手')||tags.includes('刺客'))return'盗贼';return'战士'}
+function crBuildDeck(){let deck=[];for(let ri=0;ri<3;ri++){let key=cr.events[ri];if(!key)continue;let ev=EVENTS[ri],cid;if(key==='A')cid=ev.A.card;else if(key==='B')cid=ev.B.card;else if(key==='C'){let cEv=ev.C[cr.race];if(cEv)cid=cEv.card}if(cid&&CARDS_DB[cid])deck.push({id:cid,...CARDS_DB[cid]})}cr.skills.forEach(sid=>{let sk=SKILLS.find(s=>s.id===sid);if(sk&&sk.card&&CARDS_DB[sk.card])deck.push({id:sk.card,...CARDS_DB[sk.card]})});['C-004','C-072','C-073'].forEach(cid=>{if(CARDS_DB[cid])deck.push({id:cid,...CARDS_DB[cid]})});return deck}
+function cardIcon(t){let m={attack:'⚔️',defense:'🛡️',support:'💊',skill:'✨',control:'🔮'};return m[t]||'🃏'}
+function deckTypeMap(f){return f==='控制'?'control':f}
+function crRenderFinal(ct){let id=cr.identity,deck=crBuildDeck(),keys=['str','dex','con','intel','wis','cha'],attrs=['STR','DEX','CON','INT','WIS','CHA'];ct.innerHTML='<div class="char-pane active"><div class="final-header"><h2>'+id.title+'</h2></div><div class="panel-section"><h3>属性</h3><div class="attr-grid">'+keys.map((k,i)=>'<div class="attr-cell"><div class="attr-label">'+attrs[i]+'</div><div class="attr-val">'+id.stats[k]+'</div><div class="attr-mod">'+(id.modifiers[k]>=0?'+':'')+id.modifiers[k]+'</div></div>').join('')+'</div></div><div class="panel-section"><h3>战斗数据</h3><div class="derived-row"><div class="derived-item"><div class="val">'+id.hp+'</div><div class="lbl">HP</div></div><div class="derived-item"><div class="val">'+id.ce+'</div><div class="lbl">CE</div></div><div class="derived-item"><div class="val">'+(id.mana||'-')+'</div><div class="lbl">法力值</div></div><div class="derived-item"><div class="val">'+id.profession+'</div><div class="lbl">职业</div></div><div class="derived-item"><div class="val">💰'+id.gold+'</div><div class="lbl">金币</div></div></div></div><div class="panel-section"><h3>牌库 ('+deck.length+'张)</h3><div class="filter-bar">'+['全部','攻击','防御','辅助','控制'].map(f=>'<button class="filter-btn'+(f===cr.deckFilter?' active':'')+'" onclick="crSetFilter(\''+f+'\')">'+f+'</button>').join('')+'</div><div class="deck-grid">'+deck.filter(c=>cr.deckFilter==='全部'||c.type===deckTypeMap(cr.deckFilter)).map(c=>'<div class="deck-card" onclick="crShowCard(\''+c.id+'\')"><span class="card-icon">'+cardIcon(c.type)+'</span><div class="card-name">'+c.name+'</div><div class="card-cost">CE '+c.cost+'</div><span class="card-type-tag type-'+c.type+'">'+c.type+'</span></div>').join('')+'</div></div><button id="btn-to-map" onclick="crFinish()">踏上冒险</button></div>'}
+function crSetFilter(f){cr.deckFilter=f;crRenderFinal($S('char-content'))}
+function crShowCard(cid){let c=CARDS_DB[cid];if(!c)return;showConfirm(cardIcon(c.type)+' '+c.name+' ('+cid+')',c.effect+'\nCE消耗: '+c.cost+'\n类型: '+c.type,null,'关闭')}
+function crGoNext(){if(cr.step===1&&!cr.race)return;if(cr.step===2&&!cr.origin)return;if(cr.step>=3&&cr.step<=5&&!cr.events[cr.step-3])return;if(cr.step===7){if(!crCanComplete())return;crCalcIdentity();cr.step=8}else{cr.step++}if(cr.step===8){$S('btn-cr-prev').style.display='none';$S('btn-cr-next').style.display='none'}crGoRender()}
+function crGoPrev(){if(cr.step===1)return;if(cr.step===8){cr.step=7;$S('btn-cr-prev').style.display='';$S('btn-cr-next').style.display=''}else{cr.step--}crGoRender()}
+function crFinish(){let id=cr.identity,deck=crBuildDeck(),prof=PROF_MAP[id.profession]||'warrior',em=id.profession==='战士'?10:id.profession==='盗贼'?3:(id.mana||6);GS.char={name:id.title,hp:id.hp,mh:id.hp,ce:id.ce,cm:id.ce,prof:prof,energy:ENERGY_MAP[id.profession]||'rage',ev:0,em:em,mana:id.mana,stats:id.stats,skills:cr.skills,gold:id.gold,deck:deck.map(c=>c.id)};GS.ap=6;GS.apMax=12;GS.domain=1;GS.domainCleared=[];if(!GS.ship.built){GS.ship={...GS.ship,built:true,name:'星界探索者',hull:100,shield:50,energy:100,engine:10,weapon:15,maxHull:100,maxShield:50,upgrades:{hull:0,engine:0,weapon:0,shield:0,phasma_furnace:0}}}GS.resources={stardust:15,ether:8,crystal:3};GS.skillPoints=3;GS.skillTree={};GS.equipment={};GS.crew={};GS.achievements={firstBattle:false,flip10:0,bossKill:false,fullClear:false,gold1000:0};enterMap()}
+
+function showConfirm(title,msg,onConfirm,confirmText,onCancel,cancelText){let box=$S('cfm-box');box.innerHTML='<h3>'+title+'</h3><p style="white-space:pre-line">'+msg+'</p><div class="cfm-btns">'+(onCancel?'<button class="btn-secondary" id="cfm-cancel">'+(cancelText||'取消')+'</button>':'')+'<button class="btn-primary" id="cfm-confirm">'+(confirmText||'确认')+'</button></div>';$S('confirm-popup').classList.add('show');$S('cfm-confirm').onclick=function(){$S('confirm-popup').classList.remove('show');if(onConfirm)onConfirm()};if(onCancel){$S('cfm-cancel').onclick=function(){$S('confirm-popup').classList.remove('show');if(onCancel)onCancel()}}}
+
+function enterMap(d){if(d!==undefined)GS.domain=d;var nodes=MAP_DATA[GS.domain]||MAP_DATA[1];GS.mapNodes=nodes;GS.explored=new Set([nodes[0].id]);GS.currentNode=nodes[0].id;GS.ap=GS.ap||6;GS.apMax=12;if(!GS.domainCleared)GS.domainCleared=[];GS.tempContents=[];switchScene('map')}
+function refreshTempContents(){GS.tempContents=GS.tempContents.filter(function(tc){tc.turnsLeft--;return tc.turnsLeft>0});if(GS.tempContents.length>=3)return;var types=['merchant','beacon','surge','storm'];var exploredNodes=GS.mapNodes.filter(function(n){return GS.explored.has(n.id)&&n.id!==GS.currentNode});if(Math.random()<0.3&&exploredNodes.length>0){var n=exploredNodes[Math.floor(Math.random()*exploredNodes.length)];var tp=types[Math.floor(Math.random()*types.length)];var exists=GS.tempContents.some(function(tc){return tc.nodeId===n.id});if(!exists)GS.tempContents.push({type:tp,nodeId:n.id,turnsLeft:[2,3][Math.floor(Math.random()*2)]})}}
+function renderTempContents(ctx,W,H){GS.tempContents.forEach(function(tc){var node=GS.mapNodes.find(function(n){return n.id===tc.nodeId});if(!node)return;var tp=TEMP_TYPES[tc.type];if(!tp)return;var x=node.posX/100*W,y=node.posY/100*H-30;ctx.font='16px serif';ctx.textAlign='center';ctx.fillText(tp.e,x,y);ctx.font='8px "Microsoft YaHei",sans-serif';ctx.fillStyle=tp.c;ctx.fillText('T'+tc.turnsLeft,x,y+14)})}
+function checkTempAtNode(node){if(!node)return;var tc=GS.tempContents.find(function(t){return t.nodeId===node.id});if(!tc)return null;var tp=TEMP_TYPES[tc.type];if(!tp)return null;return{tc:tc,tp:tp}}
+function updateShipHUD(){if(!GS.ship||!GS.ship.built)return;let sh=GS.ship;$S('bar-hull').style.width=(sh.hull/sh.maxHull*100)+'%';$S('hull-text').textContent=sh.hull+'/'+sh.maxHull;$S('bar-shield').style.width=(sh.shield/sh.maxShield*100)+'%';$S('shield-text').textContent=sh.shield+'/'+sh.maxShield;$S('bar-energy').style.width=(sh.energy/100*100)+'%';$S('energy-text').textContent=sh.energy+'%';$S('engine-text').textContent=sh.engine>5?'正常':'故障';$S('engine-text').style.color=sh.engine>5?'#2ecc71':'#e94560';$S('weapon-text').textContent=sh.weapon+' ATK';$S('ship-hud').querySelector('.ship-hud-title').textContent='🚀 '+GS.ship.name;}
+let mapHoverNode=null;
+function isReachable(node){if(!node)return false;var cn=GS.mapNodes.find(function(n){return n.id===GS.currentNode});if(!cn||!cn.conn)return false;return cn.conn.indexOf(node.id)>=0}
+function renderMap(){var canvas=$S('map-canvas'),rect=canvas.parentElement.getBoundingClientRect();canvas.width=rect.width;canvas.height=rect.height;var ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height;ctx.fillStyle='#0a0a1a';ctx.fillRect(0,0,W,H);for(var i=0;i<50;i++){var sx=(i*173+37)%W,sy=(i*251+73)%H,alpha=0.3+0.4*Math.abs(Math.sin(Date.now()/2000+i));ctx.fillStyle='rgba(255,255,255,'+alpha+')';ctx.beginPath();ctx.arc(sx,sy,1+Math.random()*0.5,0,Math.PI*2);ctx.fill()}ctx.fillStyle='rgba(255,215,0,0.15)';ctx.font='bold 16px "Microsoft YaHei",sans-serif';ctx.textAlign='right';ctx.fillText(DOMAIN_NAMES[GS.domain]||'星域',W-16,28);GS.mapNodes.forEach(function(node){if(!node.conn)return;node.conn.forEach(function(cid){var target=GS.mapNodes.find(function(n){return n.id===cid});if(!target)return;var exploredFrom=GS.explored.has(node.id),exploredTo=GS.explored.has(target.id);if(!exploredFrom&&!exploredTo)return;var risk=node.apCost||1;ctx.strokeStyle=risk>=3?'#e94560':risk>=2?'#ffd700':'#4ecdc4';ctx.lineWidth=exploredFrom&&exploredTo?1.5:0.8;ctx.globalAlpha=exploredFrom&&exploredTo?0.7:0.3;ctx.beginPath();ctx.moveTo(node.posX/100*W,node.posY/100*H);ctx.lineTo(target.posX/100*W,target.posY/100*H);ctx.stroke();ctx.globalAlpha=1})});GS.mapNodes.forEach(function(node){var x=node.posX/100*W,y=node.posY/100*H,explored=GS.explored.has(node.id),current=GS.currentNode===node.id,reachable=isReachable(node);if(!explored&&!reachable){var pulse=0.4+0.15*Math.sin(Date.now()/1500+node.posX);ctx.fillStyle='rgba(10,10,26,'+(0.75+pulse*0.2)+')';ctx.beginPath();ctx.arc(x,y,14,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(255,255,255,'+pulse+')';ctx.font='12px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('⬛',x,y);return}if(current){mapPulse+=0.03;var pa=0.4+0.3*Math.sin(mapPulse);ctx.strokeStyle='rgba(255,215,0,'+pa+')';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,16,0,Math.PI*2);ctx.stroke()}if(reachable&&!explored&&!current){ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.setLineDash([3,3]);ctx.beginPath();ctx.arc(x,y,14,0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}var tc=TERRAIN_COLOR[node.terrain]||'#555';ctx.strokeStyle=tc;ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,12,0,Math.PI*2);ctx.stroke();var color=explored?NODE_TYPE_COLOR[node.type]:'#555';ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,10,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='12px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(NODE_TYPE_EMOJI[node.type]||'?',x,y);if(explored||current){ctx.fillStyle='#ccc';ctx.font='bold 9px "Microsoft YaHei",sans-serif';ctx.fillText(node.name,x,y+22);ctx.fillStyle=tc;ctx.font='8px "Microsoft YaHei",sans-serif';ctx.fillText(TERRAIN_LABEL[node.terrain]+' '+node.apCost+'AP',x,y+34)}});if(mapHoverNode){var hx=mapHoverNode.posX/100*W,hy=mapHoverNode.posY/100*H+44;ctx.fillStyle='rgba(0,0,0,0.85)';var tw=ctx.measureText(mapHoverNode.desc||mapHoverNode.name).width+20;ctx.fillRect(hx-tw/2-4,hy,tw+8,18);ctx.fillStyle='#ffd700';ctx.font='10px "Microsoft YaHei",sans-serif';ctx.textAlign='center';ctx.fillText(mapHoverNode.desc||mapHoverNode.name,hx,hy+12)}renderTempContents(ctx,W,H);ctx.fillStyle='rgba(10,10,26,0.8)';ctx.fillRect(8,H-36,260,28);ctx.fillStyle='#aaa';ctx.font='10px "Microsoft YaHei",sans-serif';ctx.textAlign='left';ctx.fillText('🔴战 💰店 🔵事 🟣剧 ⬜休 🌀门 | 🟢商路 🟡矿区 🟠未知 🔴深空',10,H-14);canvas.onmousemove=function(e){var mx=e.offsetX,my=e.offsetY;mapHoverNode=null;for(var k=0;k<GS.mapNodes.length;k++){var node=GS.mapNodes[k],nx=node.posX/100*W,ny=node.posY/100*H,dist=Math.sqrt((mx-nx)*(mx-nx)+(my-ny)*(my-ny));if(dist<14&&(GS.explored.has(node.id)||isReachable(node))){mapHoverNode=node;break}}renderMap()};canvas.onmouseleave=function(){mapHoverNode=null;renderMap()};canvas.onclick=function(e){var mx=e.offsetX,my=e.offsetY;for(var k=0;k<GS.mapNodes.length;k++){var node=GS.mapNodes[k],nx=node.posX/100*W,ny=node.posY/100*H,dist=Math.sqrt((mx-nx)*(mx-nx)+(my-ny)*(my-ny));if(dist>=14)continue;if(node.id===GS.currentNode)return;if(!isReachable(node))return;showNodePreview(node);return}};window._mr=function(){if(GS.scene==='map')renderMap()};window.removeEventListener('resize',window._mr);window.addEventListener('resize',window._mr);updateShipHUD()}
+function renderStarport(){
+var ct=$S('starport-content');
+var h='<div style="padding:10px;max-width:520px;margin:0 auto">';
+h+='<div style="text-align:center;margin-bottom:16px"><h2 style="color:#ffd700;font-size:18px;margin:0">流浪星港</h2><p style="color:#888;font-size:11px;margin:4px 0">安全港湾·修复补给·招募船员</p></div>';
+h+='<div style="background:#111;border:1px solid #333;border-radius:8px;padding:10px;margin-bottom:12px;display:flex;justify-content:space-around;font-size:11px">';
+h+='<span>⭐星尘:'+GS.resources.stardust+'</span><span>💧以太:'+GS.resources.ether+'</span><span>💎魔晶:'+GS.resources.crystal+'</span><span>💰金币:'+(GS.char?GS.char.gold:0)+'</span></div>';
+h+='<div class="starport-npc" onclick="talkToInnkeeper()"><div class="npc-avatar">🍺</div><div class="npc-info"><div class="npc-name">酒馆老板·格瑞塔</div><div class="npc-desc">"路过的好汉，要不要来一杯？顺便看看有没有合眼的伙伴。"</div></div><div class="npc-action">点击对话</div></div>';
+h+='<div class="starport-npc" onclick="talkToShipwright()"><div class="npc-avatar">🔧</div><div class="npc-info"><div class="npc-name">船厂技师·铁锤巴克</div><div class="npc-desc">"你的船看起来还能升级。只要你有足够的资源和金币。"</div></div><div class="npc-action">点击对话</div></div>';
+h+='<div class="starport-npc" onclick="talkToInn()"><div class="npc-avatar">🛏️</div><div class="npc-info"><div class="npc-name">旅馆老板娘·艾玛</div><div class="npc-desc">"长途跋涉累了吧？这里有温暖的食物和柔软的床铺。"</div></div><div class="npc-action">点击对话</div></div>';
+h+='<div id="starport-dialog"></div>';
+h+='<button class="btn-secondary" onclick="switchScene(\'map\');renderMap()" style="margin-top:8px;padding:8px 20px;width:100%">返回星域地图</button></div>';
+ct.innerHTML=h;}
+
+function talkToInnkeeper(){
+var dlg=$S('starport-dialog');
+var crewCount=Object.values(GS.crew||{}).filter(function(c){return!!c}).length;
+var h='<div class="npc-dialog"><div class="npc-dialog-title">🍺 酒馆老板·格瑞塔</div>';
+h+='<div class="npc-dialog-text">"欢迎光临！我们这儿消息灵通，总有些有趣的家伙出没。你船上现在有'+crewCount+'个人。"</div>';
+h+='<div class="npc-choices"><button onclick="innkeeperRecruit()">👤 招募船员</button>';
+h+='<button onclick="$S(\'starport-dialog\').innerHTML=\'\'">🚪 离开</button></div></div>';dlg.innerHTML=h;}
+
+function innkeeperRecruit(){
+var dlg=$S('starport-dialog');
+var avail=CREW_POOL.filter(function(c){return!Object.values(GS.crew||{}).some(function(x){return x&&x.id===c.id})});
+if(avail.length===0){dlg.innerHTML='<div class="npc-dialog"><div class="npc-dialog-title">酒馆老板</div><div class="npc-dialog-text">"抱歉伙计，最近没什么新人出没。过段时间再来看看吧。"</div><div class="npc-choices"><button onclick="$S(\'starport-dialog\').innerHTML=\'\'">好的</button></div></div>';return}
+var h='<div class="npc-dialog"><div class="npc-dialog-title">可选船员</div>';
+avail.forEach(function(c){
+h+='<div class="starport-npc" style="cursor:pointer" onclick="hireCrew(\''+c.id+'\')"><div class="npc-avatar" style="font-size:30px">👤</div><div class="npc-info"><div class="npc-name">'+c.name+' ⭐Lv'+c.skill+'</div><div class="npc-desc">'+c.story+'<br>HP:'+c.hp+' | ATK:'+c.atk+' | '+c.special+'</div></div><div class="npc-action">💰'+c.cost+'G 招募</div></div>';});
+h+='<div class="npc-choices"><button onclick="talkToInnkeeper()">返回</button></div></div>';dlg.innerHTML=h;}
+
+function hireCrew(cid){
+var c=CREW_POOL.find(function(x){return x.id===cid});
+if(!c)return;
+if(GS.char.gold<c.cost){showConfirm('金币不足','需要'+c.cost+'G，当前:'+GS.char.gold,null,'确定');return}
+showConfirm('招募 '+c.name,'HP:'+c.hp+' ATK:'+c.atk+' Lv'+c.skill+'\n'+c.special+'\n💰'+c.cost+'G',function(){
+GS.char.gold-=c.cost;
+var assigned=false;
+CREW_SLOTS.forEach(function(sl){if(!assigned&&!GS.crew[sl.id]&&c.role===sl.id){GS.crew[sl.id]=c;assigned=true}});if(!GS.crewRecruited)GS.crewRecruited=[];GS.crewRecruited.push(c.id);
+$S('starport-dialog').innerHTML='<div class="npc-dialog"><div class="npc-dialog-title">招募成功</div><div class="npc-dialog-text">'+c.name+' 加入了你的团队！可在船员管理中分配岗位。</div><div class="npc-choices"><button onclick="talkToInnkeeper()">继续招募</button><button onclick="switchScene(\'map\');renderMap()">返回地图</button></div></div>';
+autoSave()
+},'确认招募',function(){},'取消')}
+
+function talkToShipwright(){
+var dlg=$S('starport-dialog');
+var h='<div class="npc-dialog"><div class="npc-dialog-title">🔧 船厂技师·巴克</div>';
+h+='<div class="npc-dialog-text">"让我看看你的船... '+GS.ship.name+'。来，选一个组件，我给你报个价。"</div>';
+var comps=[{id:'hull',name:'🛡️船体',lv:GS.ship.upgrades.hull,lvMax:3},{id:'engine',name:'⚡引擎',lv:GS.ship.upgrades.engine,lvMax:3},{id:'weapon',name:'⚔️武器',lv:GS.ship.upgrades.weapon,lvMax:3},{id:'shield',name:'🔮护盾',lv:GS.ship.upgrades.shield,lvMax:3},{id:'phasma_furnace',name:'🔥燃素炉',lv:GS.ship.upgrades.phasma_furnace,lvMax:3}];
+h+='<div style="margin:8px 0">';
+comps.forEach(function(co){
+if(co.lv<co.lvMax){
+var costs=[[5,2,0,100],[10,5,1,300],[15,10,3,600]][co.lv];
+var afford=GS.resources.stardust>=costs[0]&&GS.resources.ether>=costs[1]&&GS.resources.crystal>=costs[2]&&(GS.char?GS.char.gold:0)>=costs[3];
+h+='<div class="starport-npc" style="cursor:'+(afford?'pointer':'default')+';opacity:'+(afford?'1':'0.5')+'" onclick="'+(!afford?'':"shipwrightUpgrade('"+co.id+"',"+co.lv+")")+'"><div class="npc-avatar" style="font-size:30px">'+co.name.substring(0,2)+'</div><div class="npc-info"><div class="npc-name">'+co.name+' Lv'+(co.lv+1)+'→Lv'+(co.lv+2)+'</div><div class="npc-desc">⭐'+costs[0]+' 💧'+costs[1]+' 💎'+costs[2]+' 💰'+costs[3]+'</div></div><div class="npc-action" style="color:'+(afford?'#2ecc71':'#e94560')+'">'+(afford?'可升级':'资源不足')+'</div></div>';}else{
+h+='<div class="starport-npc" style="cursor:default;opacity:0.4"><div class="npc-avatar" style="font-size:30px">'+co.name.substring(0,2)+'</div><div class="npc-info"><div class="npc-name">'+co.name+'</div><div class="npc-desc">已满级 MAX</div></div><div class="npc-action" style="color:#2ecc71">✓</div></div>';}});
+h+='</div><div class="npc-choices"><button onclick="renderStarport()">返回</button></div></div>';dlg.innerHTML=h;}
+
+function shipwrightUpgrade(comp,lv){
+var costs=[[5,2,0,100],[10,5,1,300],[15,10,3,600]][lv];
+showConfirm('升级确认','组件:'+comp+'\nLv'+(lv+1)+'→Lv'+(lv+2)+'\n⭐'+costs[0]+' 💧'+costs[1]+' 💎'+costs[2]+' 💰'+costs[3],function(){
+GS.resources.stardust-=costs[0];GS.resources.ether-=costs[1];GS.resources.crystal-=costs[2];GS.char.gold-=costs[3];
+GS.ship.upgrades[comp]=lv+1;
+var b={hull:20,engine:5,weapon:5,shield:10,phasma_furnace:10}[comp]||0;
+if(comp==='hull'){GS.ship.maxHull=100+(GS.ship.upgrades.hull+1)*b;GS.ship.hull=GS.ship.maxHull}
+else if(comp==='shield'){GS.ship.maxShield=50+(GS.ship.upgrades.shield+1)*b;GS.ship.shield=GS.ship.maxShield}
+else if(comp==='engine')GS.ship.engine=10+(GS.ship.upgrades.engine+1)*b;
+else if(comp==='weapon')GS.ship.weapon=15+(GS.ship.upgrades.weapon+1)*b;
+autoSave();talkToShipwright()
+},'确认升级',function(){},'取消')}
+
+function talkToInn(){
+var dlg=$S('starport-dialog');
+var hp=GS.char.hp,mh=GS.char.mh,pct=Math.round(hp/mh*100);
+var h='<div class="npc-dialog"><div class="npc-dialog-title">🛏️ 旅馆·艾玛</div>';
+h+='<div class="npc-dialog-text">"你好旅行者！你的HP还剩'+hp+'/'+mh+' ('+pct+'%)。<br>休息一下恢复体力如何？价格很公道的。"</div>';
+h+='<div class="npc-choices">';
+h+='<button onclick="innRest(50,30,\'快速休息\')">☕ 快速休息 (50G · HP+30%)</button>';
+h+='<button onclick="innRest(120,80,\'充分休息\')">🛁 充分休息 (120G · HP+80%)</button>';
+h+='<button onclick="innRest(200,100,\'豪华疗养\')">🏨 豪华疗养 (200G · HP完全恢复 · AP恢复至上限)</button>';
+h+='<button onclick="$S(\'starport-dialog\').innerHTML=\'\'">🚪 离开</button></div></div>';dlg.innerHTML=h;}
+
+function innRest(cost,pct,label){
+if(!GS.char||GS.char.gold<cost){showConfirm('金币不足','需要'+cost+'G',null,'确定');return}
+GS.char.gold-=cost;
+GS.char.hp=Math.min(GS.char.mh,GS.char.hp+Math.floor(GS.char.mh*pct/100));
+if(pct>=100)GS.ap=GS.apMax;
+showConfirm(label,'花费'+cost+'G\nHP恢复到 '+GS.char.hp+'/'+GS.char.mh+(pct>=100?'\nAP恢复到上限':'')+'\n感觉好多了！',function(){$S('starport-dialog').innerHTML='';autoSave()},'确认');
+}
+function triggerNodeEffect(node){refreshTempContents();switch(node.type){case 'rest':GS.ap=Math.min(GS.apMax,GS.ap+3);GS.char.hp=Math.min(GS.char.mh,GS.char.hp+Math.floor(GS.char.mh*0.3));autoSave();showConfirm('休息节点:'+node.name,'AP +3 (当前:'+GS.ap+')\nHP 恢复30% (当前:'+GS.char.hp+')',function(){renderScene()},'确认');break;case 'shop':showShop();break;case 'crew':handleCrewRecruit(node);break;case 'gate':handleGate(node);break;case 'combat':case 'event':case 'story':enterGrid(node);break;default:enterGrid(node)}autoSave()}
+function handleGate(node){if(!node.gateDomain)return;if(node.requiresBoss&&!GS.domainCleared.includes(node.requiresBoss)){showConfirm('星门锁定','需要击败本星域的BOSS才能激活星门',null,'确定');return}var dn=DOMAIN_NAMES[node.gateDomain]||('星域'+node.gateDomain);showConfirm('🌀 '+node.name,'穿越星门前往 '+dn+'\n\n当前AP将被重置为6',function(){GS.domain=node.gateDomain;GS.ap=6;GS.apMax=12;enterMap(node.gateDomain);autoSave()},'穿越星门',function(){},'留下')}
+function showShop(){let html='<div class="char-pane active" style="padding:20px"><div class="section-title">💰 商店</div>';let items=[{name:'治疗药剂',cost:50,desc:'恢复30HP',act:function(){if(GS.char.gold>=50){GS.char.gold-=50;GS.char.hp=Math.min(GS.char.mh,GS.char.hp+30);showConfirm('购买成功','HP +30',function(){renderScene()},'确认')}else showConfirm('金币不足','需要50G',null,'关闭')}},{name:'法力药剂',cost:80,desc:'恢复3法力',act:function(){if(GS.char.gold>=80){GS.char.gold-=80;GS.char.ev=Math.min(GS.char.em||6,GS.char.ev+3);showConfirm('购买成功','法力 +3',function(){renderScene()},'确认')}else showConfirm('金币不足','需要80G',null,'关闭')}},{name:'随机卡牌',cost:120,desc:'获得一张随机卡牌',act:function(){if(GS.char.gold>=120){GS.char.gold-=120;let pool=Object.keys(CARDS_DB),cid=pool[Math.floor(Math.random()*pool.length)];GS.char.deck.push(cid);showConfirm('购买成功','获得: '+CARDS_DB[cid].name,function(){renderScene()},'确认')}else showConfirm('金币不足','需要120G',null,'关闭')}}];items.forEach(it=>{html+='<div class="shop-item" onclick="('+it.act.toString()+')()"><div><b>'+it.name+'</b><br><span style="font-size:11px;color:#aaa">'+it.desc+'</span></div><div class="shop-price">💰 '+it.cost+'G</div></div>'});html+='<br><button class="btn-secondary" onclick="switchScene(\'map\');renderScene()" style="padding:8px 20px;display:block;margin:0 auto">关闭商店</button></div>';$S('scene-menu').innerHTML=html;$S('scene-menu').classList.add('active');GS.scene='shop';updateStatusBar()}
+
+function genFloorPath(maxFloors){var floors=[];var nodeTypes=['combat','combat','shop','event','story','trap','resource','rest'];for(var fi=0;fi<maxFloors;fi++){var grid=[];for(var r=0;r<5;r++){grid[r]=[];for(var c=0;c<5;c++)grid[r][c]=null}var entryR,entryC,exitR,exitC;if(fi===0){entryR=Math.floor(Math.random()*3)+2;entryC=0;exitR=Math.floor(Math.random()*3);exitC=4}else{entryR=0;entryC=Math.floor(Math.random()*3)+1;exitR=4;exitC=Math.floor(Math.random()*3)+1}var path=[],cr=entryR,cc=entryC;path.push([cr,cc]);var steps=0,maxSteps=8+fi*2;while((cr!==exitR||cc!==exitC)&&steps<20){steps++;var dirs=[];if(exitR>cr&&cr<4)dirs.push([1,0]);if(exitR<cr&&cr>0)dirs.push([-1,0]);if(exitC>cc&&cc<4)dirs.push([0,1]);if(exitC<cc&&cc>0)dirs.push([0,-1]);if(dirs.length===0){dirs=[[1,0],[-1,0],[0,1],[0,-1]].filter(function(d){var nr=cr+d[0],nc=cc+d[1];return nr>=0&&nr<5&&nc>=0&&nc<5&&!path.some(function(p){return p[0]===nr&&p[1]===nc})})}var d=dirs[Math.floor(Math.random()*dirs.length)];cr+=d[0];cc+=d[1];path.push([cr,cc])}for(var i=0;i<path.length;i++){var pr=path[i][0],pc=path[i][1];var tp=nodeTypes[(i+fi*3)%nodeTypes.length];if(i===0)tp='entry';if(i===path.length-1)tp='exit';grid[pr][pc]={type:tp,revealed:i===0,visited:i===0,row:pr,col:pc}}var storyEntry=STORY_DB[fi%STORY_DB.length];floors.push({index:fi,cards:grid,entry:[entryR,entryC],exit:[exitR,exitC],name:storyEntry.f,storyText:storyEntry.t,cleared:false})}return floors}
+function enterGrid(node){var maxFloors=node.type==='story'?Math.floor(Math.random()*3)+3:node.type==='combat'?Math.floor(Math.random()*2)+2:Math.floor(Math.random()*2)+1;GS.gridFloor={index:0,maxFloors:maxFloors,floors:genFloorPath(maxFloors),nodeType:node.type,nodeName:node.name};GS.ep=4;GS.epMax=8;$S('zone-name').textContent=node.name;switchScene('grid')}
+function gridMove(targetR,targetC){var fl=GS.gridFloor;if(!fl)return;var cur=fl.floors[fl.index];var cell=cur.cards[targetR][targetC];if(!cell)return;var playerPos=null;for(var r=0;r<5;r++)for(var c=0;c<5;c++){if(cur.cards[r][c]&&cur.cards[r][c].visited){playerPos=[r,c];break}}if(!playerPos)return;var dr=Math.abs(targetR-playerPos[0]),dc=Math.abs(targetC-playerPos[1]);if(dr+dc!==1)return;if(cell.revealed){showConfirm(cell.type,'你已经探索过这张牌，请选择相邻的未探索卡牌',null,'确定');return}cell.revealed=true;cell.visited=true;if(cur.cards[playerPos[0]][playerPos[1]])cur.cards[playerPos[0]][playerPos[1]].visited=false;var cost=cell.type==='story'?0:1;if(GS.ep<cost){showConfirm('EP不足','需要'+cost+'EP，当前:'+GS.ep,null,'确定');return}GS.ep-=cost;if(cell.type==='exit'){cur.cleared=true;if(fl.index+1>=fl.maxFloors){var rewardMsg='区域探索完成！';if(fl.nodeType==='combat'){rewardMsg='\n发现BOSS！';GS.gridTaskDone=true}else{GS.char.gold+=80+Math.floor(Math.random()*40);rewardMsg+='\n获得'+GS.char.gold+'金币'}showConfirm('通关: '+cur.name,rewardMsg,function(){GS.gridFloor=null;switchScene('map');autoSave()},'返回地图')}else{var next=fl.floors[fl.index+1];showConfirm(cur.name+' 已通关','故事继续...\n\n'+next.storyText,function(){fl.index++;renderGrid()},'进入下一层')}return}switch(cell.type){case 'combat':enterCombat();break;case 'shop':showConfirm('� 商店','发现流浪商人！\n+30金币',function(){GS.char.gold+=30;renderGrid()},'收下');break;case 'event':var events=[{t:'古老的信号',m:'你收到了一个古老的求救信号',r:function(){GS.char.gold+=20;GS.ep=Math.min(GS.epMax,GS.ep+2);return'获得20金币+2EP'}},{t:'废弃的补给',m:'你发现了遗弃的补给箱',r:function(){GS.char.hp=Math.min(GS.char.mh,GS.char.hp+15);return'HP恢复15点'}},{t:'陷阱！',m:'地面突然塌陷！',r:function(){GS.char.hp=Math.max(1,GS.char.hp-10);return'HP损失10点'}}];var ev=events[Math.floor(Math.random()*events.length)];showConfirm(ev.t,ev.m,function(){var msg=ev.r();showConfirm('事件结果',msg,function(){renderGrid()},'确认')},'探索');break;case 'story':showConfirm('📜 剧情',cur.storyText||'你在遗迹中发现了一段古老的记录...',function(){renderGrid()},'继续');break;case 'trap':showConfirm('⚠️ 陷阱','触发了陷阱！\nHP -5',function(){GS.char.hp=Math.max(1,GS.char.hp-5);renderGrid()},'确认');break;case 'resource':showConfirm('💎 资源','发现了资源！\n+20金币 +1EP',function(){GS.char.gold+=20;GS.ep=Math.min(GS.epMax,GS.ep+1);renderGrid()},'确认');break;case 'rest':showConfirm('� 休息','短暂的休息...\nHP恢复10% EP+2',function(){GS.char.hp=Math.min(GS.char.mh,GS.char.hp+Math.floor(GS.char.mh*0.1));GS.ep=Math.min(GS.epMax,GS.ep+2);renderGrid()},'确认');break}autoSave()}
+function renderGrid(){var fl=GS.gridFloor;if(!fl)return;var cur=fl.floors[fl.index];var playerPos=null;for(var r=0;r<5;r++)for(var c=0;c<5;c++){if(cur.cards[r][c]&&cur.cards[r][c].visited){playerPos=[r,c];break}}var html='<div style="padding:12px;max-width:480px;margin:0 auto">';html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';html+='<span style="color:#ffd700;font-size:13px">层 '+(fl.index+1)+'/'+fl.maxFloors+': '+cur.name+'</span>';html+='<span style="font-size:12px;color:#aaa">EP: '+GS.ep+'/'+GS.epMax+'</span></div>';html+='<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;max-width:400px;margin:0 auto">';for(var r=0;r<5;r++){for(var c=0;c<5;c++){var cell=cur.cards[r][c];if(!cell){html+='<div style="aspect-ratio:1;opacity:0.08;background:#111;border:1px dashed #222;border-radius:4px"></div>';continue}var style=GRID_CELL_STYLE[cell.type]||{bg:'#555',emoji:'?'};var isPlayer=playerPos&&playerPos[0]===r&&playerPos[1]===c;var isAdj=playerPos&&Math.abs(r-playerPos[0])+Math.abs(c-playerPos[1])===1;var bg=cell.revealed?style.bg:(isAdj?'#333':'#1a1a1a');var emoji=cell.revealed?style.emoji:(isAdj?(cell.type==='exit'?'🚪':'❓'):'·');var border=isPlayer?'3px solid #ffd700':cell.revealed?'2px solid '+style.bg:'1px solid #333';if(cell.type==='entry'){bg='#2ecc71';emoji='▶️';border='2px solid #27ae60'}if(cell.type==='exit'&&cell.revealed){bg='#ff8c00';emoji='🚪'}var onclick='';if(isAdj&&!cell.revealed)onclick='gridMove('+r+','+c+')';html+='<div onclick="'+onclick+'" style="aspect-ratio:1;background:'+bg+';border:'+border+';border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:'+(onclick?'pointer':'default')+';transition:all .2s'+(onclick?';opacity:1':';opacity:0.7')+'">'+emoji+'</div>'}}html+='</div>';html+='<div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">';html+='<button class="btn-secondary" onclick="leaveGrid()" style="padding:6px 16px;font-size:12px">退出区域</button>';html+='<span style="font-size:10px;color:#666">点击相邻❓卡牌进行探索</span></div></div>';$S('scene-grid').innerHTML=html}
+function handleCrewRecruit(node){var pool=CREW_POOL.filter(function(c){return!Object.values(GS.crew||{}).some(function(x){return x&&x.id===c.id})});if(pool.length===0){showConfirm('暂无船员','所有船员已招募完毕',function(){renderScene()},'确定');return}var pc=pool[Math.floor(Math.random()*pool.length)];var msg='👤 '+pc.name+'\n📍 '+pc.story+'\n⚔️ HP:'+pc.hp+' ATK:'+pc.atk+' ⭐Lv:'+pc.skill+'\n🔧 '+pc.special+'\n💰 '+pc.cost+'G';showConfirm('招募船员',msg,function(){if(GS.char.gold>=pc.cost){GS.char.gold-=pc.cost;var assigned=false;CREW_SLOTS.forEach(function(sl){if(!assigned&&!GS.crew[sl.id]&&pc.role===sl.id){GS.crew[sl.id]=pc;assigned=true}});showConfirm('招募成功！',pc.name+'加入了你的团队！',function(){renderScene();autoSave()},'确认')}else{showConfirm('金币不足','需要'+pc.cost+'G',function(){renderScene()},'确定')}},'招募('+pc.cost+'G)',function(){renderScene()},'离开')}
+function leaveGrid(){var fl=GS.gridFloor;var cur=fl?fl.floors[fl.index]:null;var name=cur?cur.name:'区域';showConfirm('退出区域','确定离开 '+name+' 吗？\n探索进度将不会结算奖励',function(){GS.gridFloor=null;switchScene('map')},'确认离开',function(){},'取消')}
+
+function getCombatUnit(c,isCaptain){if(!c)return null;return{id:isCaptain?'captain':c.id,name:isCaptain?c.name:c.name,hp:isCaptain?c.hp:c.hp,mh:isCaptain?c.mh:c.hp,atk:isCaptain?6+Math.floor(((c.stats?c.stats.str:10)-10)/2):c.atk||3,special:isCaptain?'舰长':c.special,ce:isCaptain?4:3,energy:isCaptain?'rage':'mana',ev:0,em:isCaptain?10:6,prof:isCaptain?'warrior':(c.role||'warrior'),deck:GS.char&&GS.char.deck?GS.char.deck:[]}}
+function getAvailableCrew(){var list=[];Object.values(GS.crew||{}).forEach(function(c){if(c)list.push(c)});return list}
+function enterCombat(){var crew=getAvailableCrew();var all=[];if(GS.char)all.push({unit:getCombatUnit(GS.char,true),isCaptain:true});crew.forEach(function(c,i){all.push({unit:getCombatUnit(c,false),isCaptain:false,crewIndex:i})});document.querySelectorAll('.scene').forEach(function(s){s.classList.remove('active')});var sc=$S('scene-combat');if(sc)sc.classList.add('active');GS.scene='combat';updateStatusBar();renderCrewSelect(all)}
+function renderCrewSelect(all){if(!GS.combatSel)GS.combatSel={};var h='<div style="padding:16px;max-width:480px;margin:0 auto"><h2 style="color:#e94560;font-size:16px;text-align:center;margin-bottom:4px">选择战斗人员</h2><p style="color:#aaa;font-size:11px;text-align:center;margin-bottom:12px">舰长默认参战 | 最多选3人编队</p>';all.forEach(function(a,i){var sel=GS.combatSel[i];var bg=a.isCaptain?'#1a2a1a':sel?'#261630':'#1a1a2e';var bd=a.isCaptain?'2px solid #ffd700':sel?'2px solid #e94560':'1px solid #333';var chk=a.isCaptain?'☑':(sel?'☑':'☐');h+='<div onclick="toggleCombatSel('+i+','+a.isCaptain+')" style="background:'+bg+';border:'+bd+';border-radius:6px;padding:8px 12px;margin:4px 0;display:flex;align-items:center;gap:8px;cursor:pointer;transition:all .15s"><span style="font-size:20px">'+(a.isCaptain?'👤':'👥')+'</span><div style="flex:1"><div style="font-size:12px;color:'+(a.isCaptain?'#ffd700':'#ccc')+'">'+a.unit.name+(a.isCaptain?' (舰长)':'')+'</div><div style="font-size:10px;color:#aaa">HP:'+a.unit.hp+' ATK:'+a.unit.atk+' CE:'+a.unit.ce+' | '+a.unit.special+'</div></div><div style="font-size:18px;color:'+(a.isCaptain||sel?'#ffd700':'#555')+'">'+chk+'</div></div>'});var selCount=Object.values(GS.combatSel).filter(function(v){return v}).length+(GS.char?1:0);var btnStyle=selCount>0?'background:#e94560;color:#fff;cursor:pointer;font-weight:bold':'background:#555;color:#999;cursor:not-allowed';h+='<button onclick="launchBattleWithCrew()" style="width:100%;padding:10px;border:none;border-radius:6px;font-size:14px;margin-top:10px;'+btnStyle+'" '+(selCount===0?'disabled':'')+'>⚔️ 出击！('+selCount+'人编队)</button></div>';$S('scene-combat').innerHTML=h}
+function toggleCombatSel(i,isCaptain){if(isCaptain)return;if(GS.combatSel[i]){delete GS.combatSel[i]}else{var cur=Object.keys(GS.combatSel).length;if(cur>=2)return;GS.combatSel[i]=true}renderCrewSelect(getAllCombatUnits())}
+function getAllCombatUnits(){var crew=getAvailableCrew();var all=[];if(GS.char)all.push({unit:getCombatUnit(GS.char,true),isCaptain:true});crew.forEach(function(c,i){all.push({unit:getCombatUnit(c,false),isCaptain:false,crewIndex:i})});return all}
+function launchBattleWithCrew(){var crew=getAvailableCrew();var crewSelect=[];if(GS.char)crewSelect.push(getCombatUnit(GS.char,true));Object.keys(GS.combatSel).forEach(function(k){var i=parseInt(k);if(GS.combatSel[i]){var ci=i-1;if(ci>=0&&ci<crew.length)crewSelect.push(getCombatUnit(crew[ci],false))}});var enemies=[];var names=['星盗劫掠者','深渊蠕虫','虚空吞噬者','暗影哨兵','机械守卫','变异矿兽','能量残影','腐化佣兵'];var count=1+Math.floor(Math.random()*3);for(var i=0;i<count;i++){enemies.push({name:names[Math.floor(Math.random()*names.length)],hp:30+Math.floor(Math.random()*70),mh:30+Math.floor(Math.random()*70),atk:3+Math.floor(Math.random()*8)})}var url='mvp-battle.html?embed=1&diff='+GS.difficulty+'&crewData='+encodeURIComponent(JSON.stringify(crewSelect))+'&enemyData='+encodeURIComponent(JSON.stringify(enemies));document.querySelectorAll('.scene').forEach(function(s){s.classList.remove('active')});var sc=$S('scene-combat');if(sc){sc.classList.add('active');sc.innerHTML='<iframe id="battle-iframe" style="width:100%;height:100%;border:none"></iframe><div id="battle-loading" style="display:none;align-items:center;justify-content:center;width:100%;height:100%;color:#aaa;font-size:14px">准备战斗...</div>'}var iframe=$S('battle-iframe');if(iframe)iframe.src=url;GS.combatSel={}}
+function handleBattleResult(data){if(data.type==='battleClose'){var crew=data.crew||[];if(crew.length>0&&GS.char){GS.char.hp=Math.max(1,crew[0].hp)}var iframe=$S('battle-iframe');if(iframe)iframe.style.display='none';if(data.win){GS.gridTaskDone=true;var gold=40+Math.floor(Math.random()*60);GS.char.gold+=gold;autoSave();showConfirm('战斗胜利！','获得 '+gold+' 金币',function(){switchScene('grid');renderGrid()},'确认')}else{GS.char.hp=Math.max(1,Math.floor(GS.char.hp*0.5));autoSave();showConfirm('战斗失败','队伍受到重创·HP已降至50%',function(){switchScene('grid');renderGrid()},'返回')}}}
+function launchBattle(){var p={name:GS.char.name,prof:GS.char.prof,hp:GS.char.hp,ce:GS.char.ce,energy:{type:GS.char.energy,cur:GS.char.ev,max:GS.char.em},mana:GS.char.mana,stats:GS.char.stats,deck:GS.char.deck};window.open('mvp-battle.html?customChar='+encodeURIComponent(JSON.stringify(p)),'_blank')}
+function simulateCombatWin(){GS.char.gold+=100;GS.char.hp=Math.max(1,GS.char.hp);var pool=Object.keys(CARDS_DB),cid=pool[Math.floor(Math.random()*pool.length)];GS.char.deck.push(cid);GS.gridTaskProgress=Math.min((GS.gridTaskGoal||0),(GS.gridTaskProgress||0)+1);autoSave();showConfirm('战斗胜利！','获得 100金币\n获得卡牌: '+CARDS_DB[cid].name,function(){if(GS.flippedCards.size>=25||GS.gridTaskProgress>=GS.gridTaskGoal){GS.gridTaskDone=true;leaveGrid()}else{switchScene('grid');renderGrid()}},'确认')}
+function simulateCombatLose(){GS.char.hp=Math.max(1,Math.floor(GS.char.mh*0.5));autoSave();showConfirm('战斗失败...','HP恢复50%: '+GS.char.hp+'/'+GS.char.mh,function(){switchScene('grid');renderGrid()},'返回')}
+function renderCrew(){var ct=$S('crew-content');if(!GS.crew)GS.crew={};var h='<div style="display:flex;gap:12px"><div style="flex:1"><h3 style="font-size:13px;color:#e94560;margin-bottom:6px">岗位槽位</h3>';h+='<div style="background:#1a2a1a;border:1px solid #ffd700;border-radius:6px;padding:8px;margin:4px 0;display:flex;align-items:center;gap:8px"><span style="font-size:22px">👤</span><div style="flex:1"><div style="font-size:11px;color:#aaa">舰长</div><div style="font-size:11px;color:#ffd700">'+(GS.char?GS.char.name:'未知')+'</div><div style="font-size:9px;color:#888">你</div></div></div>';CREW_SLOTS.forEach(function(sl){var cw=GS.crew[sl.id]||null;h+='<div style="background:'+(cw?'#1a2a1a':'#1a1a2e')+';border:'+(cw?'1px solid #2e7d32':'1px solid #333')+';border-radius:6px;padding:8px;margin:4px 0;display:flex;align-items:center;gap:8px;cursor:pointer" onclick="crewSlotClick(\''+sl.id+'\')"><span style="font-size:22px">'+sl.icon+'</span><div style="flex:1"><div style="font-size:11px;color:#aaa">'+sl.name+'</div>'+(cw?'<div style="font-size:11px;color:#2ecc71">'+cw.name+' Lv'+cw.skill+'</div><div style="font-size:9px;color:#888">'+cw.special+'</div>':'<div style="font-size:10px;color:#e94560">闲置</div>')+'</div></div>'});var count=Object.values(GS.crew).filter(function(c){return!!c}).length;h+='</div><div style="flex:1"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="font-size:13px;color:#ffd700;margin-bottom:6px">飞船加成总览</h3>';if(count>0)h+='<button onclick="dismissAllCrew()" style="font-size:9px;padding:2px 8px;background:#c0392b;color:#fff;border:none;border-radius:3px;cursor:pointer">清空</button>';h+='</div>';var sb=calcCrewBonus();h+='<div style="background:#16213e;border:1px solid #333;border-radius:6px;padding:10px"><div style="margin:3px 0"><span style="color:#aaa;font-size:11px">船体</span><span style="color:#2ecc71;float:right">+'+sb.hull+'</span></div><div style="margin:3px 0"><span style="color:#aaa;font-size:11px">护盾</span><span style="color:#2ecc71;float:right">+'+sb.shield+'</span></div><div style="margin:3px 0"><span style="color:#aaa;font-size:11px">武器</span><span style="color:#2ecc71;float:right">+'+sb.weapon+'</span></div><div style="margin:3px 0"><span style="color:#aaa;font-size:11px">能源</span><span style="color:#2ecc71;float:right">+'+sb.energy+'%</span></div><hr style="border-color:#333;margin:6px 0"><div style="font-size:10px;color:#888">任职: '+count+'/'+CREW_SLOTS.length+'</div></div><h3 style="font-size:13px;color:#4ecdc4;margin:10px 0 4px">船员列表</h3>';var assigned=Object.values(GS.crew).filter(function(c){return!!c}).map(function(c){return c.id});var recruited=GS.crewRecruited||[];CREW_POOL.filter(function(c){return assigned.indexOf(c.id)>=0||recruited.indexOf(c.id)>=0}).forEach(function(c){var isAssigned=assigned.indexOf(c.id)>=0;if(isAssigned){var r=null;Object.keys(GS.crew).forEach(function(k){if(GS.crew[k]&&GS.crew[k].id===c.id)r=k});var sl2=CREW_SLOTS.find(function(s){return s.id===r});h+='<div style="background:#1a2a1a;border:1px solid #2e7d32;border-radius:4px;padding:6px;margin:3px 0;font-size:10px;display:flex;justify-content:space-between"><span>'+c.name+' Lv'+c.skill+'</span><span style="color:#2ecc71">'+(sl2?sl2.icon:'')+' 任职中</span></div>'}else{h+='<div style="background:#1a1a2e;border:1px solid #333;border-radius:4px;padding:6px;margin:3px 0;font-size:10px;display:flex;justify-content:space-between"><span>'+c.name+' Lv'+c.skill+' <span style="color:#888">('+c.role+')</span></span></div>'}});h+='</div></div><button class="btn-secondary" onclick="switchScene(\'map\');renderMap()" style="margin-top:8px;padding:6px 16px;font-size:11px">返回地图</button>';ct.innerHTML=h}
+function calcCrewBonus(){var b={hull:0,shield:0,weapon:0,energy:0};Object.keys(GS.crew||{}).forEach(function(k){var c=GS.crew[k];if(c&&c.bonus){b.hull+=c.bonus.hull||0;b.shield+=c.bonus.shield||0;b.weapon+=c.bonus.weapon||0;b.energy+=c.bonus.energy||0}});return b}
+function dismissAllCrew(){showConfirm('清空船员','确定要将所有船员解雇吗？\n他们将回到酒馆等待重新招募。',function(){GS.crew={};GS.crewRecruited=[];renderCrew();autoSave()},'确认清空',function(){},'取消')}
+function crewSlotClick(sid){if(GS.crew[sid]){showConfirm('卸下船员','将 '+GS.crew[sid].name+' 从槽位移除？',function(){GS.crew[sid]=null;renderCrew();autoSave()},'卸下',function(){},'取消');return}var recruited=GS.crewRecruited||[];var pool=CREW_POOL.filter(function(c){return c.role===sid&&!Object.values(GS.crew).some(function(x){return x&&x.id===c.id})&&recruited.indexOf(c.id)>=0});if(pool.length===0){showConfirm('无可用船员','该岗位没有已招募的船员\n请前往星港酒馆招募',null,'确定');return}var h='<h3>选择船员</h3>';pool.forEach(function(c){h+='<div class="shop-item" onclick="GS.crew[\''+sid+'\']=CREW_POOL[CREW_POOL.indexOf(CREW_POOL.find(function(x){return x.id===\''+c.id+'\'}))];renderCrew();autoSave();$S(\'confirm-popup\').classList.remove(\'show\')"><div><b>'+c.name+' Lv'+c.skill+'</b><br><span style="font-size:10px;color:#aaa">'+c.special+'</span></div><div style="text-align:right"><span>+'+c.bonus.hull+' +'+c.bonus.shield+'</span><br><span>+'+c.bonus.weapon+' +'+c.bonus.energy+'%</span></div></div>'});var b=$S('cfm-box');b.innerHTML=h+'<br><button class="btn-secondary" onclick="$S(\'confirm-popup\').classList.remove(\'show\')">取消</button>';$S('confirm-popup').classList.add('show')}
+function backToGridFromCombat(){switchScene('grid');renderGrid()}
+
+function renderEquipment(){let ct=$S('equip-content');let sl=[{id:'head',n:'头部',ic:'🎩',x:1,y:0},{id:'shoulder',n:'肩部',ic:'🧥',x:0,y:1},{id:'chest',n:'躯干',ic:'👕',x:1,y:1},{id:'hands',n:'手部',ic:'🧤',x:2,y:1},{id:'waist',n:'腰部',ic:'🎗️',x:1,y:2},{id:'legs',n:'腿部',ic:'👖',x:1,y:3},{id:'feet',n:'足部',ic:'👢',x:1,y:4},{id:'mainhand',n:'主手',ic:'⚔️',x:3,y:1},{id:'offhand',n:'副手',ic:'🛡️',x:-1,y:1},{id:'neck',n:'颈部',ic:'📿',x:0,y:0},{id:'ring1',n:'戒指1',ic:'💍',x:2,y:3},{id:'ring2',n:'戒指2',ic:'💍',x:0,y:3}];let eq=GS.equipment||{};if(!GS.equipment)GS.equipment=eq;let eh='<div style="position:relative;width:250px;height:320px;background:#16213e;border:2px solid #333;border-radius:10px;margin:0 auto">';eh+='<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:60px;opacity:0.2">👤</div>';sl.forEach(function(s){var l=110+s.x*60,t=40+s.y*55,it=eq[s.id],cl=it?(it.q==='rare'?'#ffd700':it.q==='unique'?'#ff8c00':'#4ecdc4'):'#555';eh+='<div style="position:absolute;left:'+l+'px;top:'+t+'px;width:50px;height:50px;background:#1a1a3a;border:2px solid '+cl+';border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:9px;text-align:center" onclick="equipSlotClick(\''+s.id+'\')">';eh+='<span style="font-size:18px">'+(it?it.e:s.ic)+'</span>';eh+='<span style="color:'+(it?'#fff':'#666')+';font-size:8px">'+(it?it.n:'空')+'</span></div>'});eh+='</div>';if(GS.char){eh+='<div style="flex:1;min-width:200px;background:#1a1a2e;border:1px solid #333;border-radius:8px;padding:12px"><h3 style="color:#ffd700;margin-bottom:8px">角色属性</h3>';var at=['STR','DEX','CON','INT','WIS','CHA'],ky=['str','dex','con','intel','wis','cha'];at.forEach(function(a,i){var v=GS.char.stats[ky[i]]||10,m=Math.floor((v-10)/2);eh+='<div style="display:flex;justify-content:space-between;margin:2px 0;font-size:12px"><span>'+a+'</span><span>'+v+' <span style="color:'+(m>=0?'#2ecc71':'#e94560')+'">('+(m>=0?'+':'')+m+')</span></span></div>'});eh+='<hr style="border-color:#333;margin:6px 0">';eh+='<p style="font-size:12px">HP: '+GS.char.hp+'/'+GS.char.mh+'</p>';eh+='<p style="font-size:12px">CE: '+GS.char.ce+'/'+GS.char.cm+'</p>';eh+='<p style="font-size:12px">金币: 💰'+GS.char.gold+'</p></div>'}eh+='<div style="width:100%;text-align:center;margin-top:8px"><button class="btn-secondary" onclick="switchScene(\'map\');renderMap()" style="padding:8px 20px">返回地图</button></div>';ct.innerHTML=eh}function equipSlotClick(sid){if(!GS.equipment)GS.equipment={};var pi=[{n:'布质头巾',e:'🎩',q:'common'},{n:'皮质护肩',e:'🧥',q:'common'},{n:'硬皮甲',e:'👕',q:'uncommon'},{n:'铁手套',e:'🧤',q:'common'},{n:'短剑',e:'⚔️',q:'rare'},{n:'小圆盾',e:'🛡️',q:'uncommon'}];if(GS.equipment[sid]){showConfirm('卸下装备',GS.equipment[sid].n,function(){GS.equipment[sid]=null;renderEquipment()},'卸下',function(){},'取消')}else{var h='<h3>选择装备 ('+sid+')</h3>';pi.forEach(function(it){h+='<div class="shop-item" onclick="GS.equipment[\''+sid+'\']={n:\''+it.n+'\',e:\''+it.e+'\',q:\''+it.q+'\'};renderEquipment();$S(\'confirm-popup\').classList.remove(\'show\')"><div><b>'+it.e+' '+it.n+'</b></div><span style="font-size:10px;color:#ffd700">'+it.q+'</span></div>'});var b=$S('cfm-box');b.innerHTML=h+'<br><button class="btn-secondary" onclick="$S(\'confirm-popup\').classList.remove(\'show\')">取消</button>';$S('confirm-popup').classList.add('show')}}function renderSkills(){var ct=$S('skills-content');var h='<div style="display:flex;gap:16px;flex-wrap:wrap">';h+='<div style="flex:1;min-width:250px;background:#1a1a2e;border:1px solid #333;border-radius:8px;padding:14px"><h3 style="color:#e94560">技能树 SP:'+GS.skillPoints+'</h3>';var tr=[{p:'warrior',c:'#e94560',n:'战士',nd:[{id:'C-010',nm:'蓄力斩',co:1,u:true},{id:'C-013',nm:'战斗狂热',co:1,u:false,rq:'C-010'},{id:'C-014',nm:'毁灭之握',co:2,u:false,rq:'C-013'}]},{p:'rogue',c:'#2ecc71',n:'盗贼',nd:[{id:'C-020',nm:'双重打击',co:1,u:true},{id:'C-022',nm:'刺骨',co:1,u:false,rq:'C-020'}]},{p:'mage',c:'#a29bfe',n:'法师',nd:[{id:'C-030',nm:'奥术飞弹',co:1,u:true},{id:'C-032',nm:'烈焰风暴',co:1,u:false,rq:'C-030'}]}];if(!GS.skillTree)GS.skillTree={};tr.forEach(function(t){t.nd.forEach(function(nd){var un=GS.skillTree[nd.id]||nd.u,po=!nd.rq||GS.skillTree[nd.rq],cu=!un&&GS.skillPoints>=nd.co&&po;h+='<div style="display:flex;align-items:center;gap:6px;margin:3px 0;padding:4px 8px;background:'+(un?'rgba(46,125,50,0.2)':'#1e1e3a')+';border:2px solid '+(un?'#2e7d32':cu?'#ffd700 dashed':'#555')+';border-radius:4px;font-size:11px">';h+='<span>'+(un?'⭐':cu?'🔓':'🔒')+'</span>';h+='<span style="color:'+(un?'#fff':cu?'#ffd700':'#666')+'">'+nd.nm+'</span>';if(cu)h+='<button style="font-size:10px;background:#ffd700;color:#111;border:none;border-radius:3px;cursor:pointer;margin-left:auto;padding:2px 8px" onclick="unlockSkill(\''+nd.id+'\','+nd.co+')">解锁</button>';h+='</div>'})});h+='</div>';h+='<div style="flex:1;min-width:200px;background:#1a1a2e;border:1px solid #333;border-radius:8px;padding:14px"><h3 style="color:#ffd700">🏆 成就</h3>';[{id:'firstBattle',n:'初次战斗',ic:'⚔️',v:GS.achievements.firstBattle?1:0},{id:'flip10',n:'翻牌达人',ic:'🃏',v:GS.achievements.flip10||0}].forEach(function(a){var d=a.v>=1;h+='<div style="margin:4px 0;padding:4px 8px;background:'+(d?'rgba(255,215,0,0.1)':'#1e1e3a')+';border-radius:4px">';h+='<span>'+a.ic+' <b style="color:'+(d?'#ffd700':'#ccc')+'">'+a.n+'</b></span></div>'});h+='</div></div><button class="btn-secondary" onclick="switchScene(\'map\');renderMap()" style="margin-top:8px;padding:8px 20px">返回地图</button>';ct.innerHTML=h}function unlockSkill(nid,cost){GS.skillPoints-=cost;GS.skillTree[nid]=true;if(GS.char&&GS.char.deck)GS.char.deck.push(nid);renderSkills()}function init(){renderMenu();$S('diff-select').onchange=function(){GS.difficulty=parseFloat(this.value)};document.addEventListener('keydown',function(e){if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.show').forEach(function(m){m.classList.remove('show')});$S('confirm-popup').classList.remove('show')}});window.addEventListener('message',function(e){if(e.data&&e.data.type==='battleClose')handleBattleResult(e.data)});loadSettings();loadCharFromUrl()}
+function loadCharFromUrl(){let p=new URLSearchParams(window.location.search),cd=p.get('char');if(!cd)return;try{let ch=JSON.parse(decodeURIComponent(cd));if(ch.title){GS.char={name:ch.title,hp:ch.hp||120,mh:ch.hp||120,ce:ch.ce||4,cm:ch.ce||4,prof:ch.prof==='战士'?'warrior':ch.prof==='法师'?'mage':ch.prof==='盗贼'?'rogue':'priest',energy:ch.prof==='战士'?'rage':ch.prof==='盗贼'?'cp':'mana',ev:0,em:ch.prof==='战士'?10:ch.prof==='盗贼'?3:(ch.mana||6),mana:ch.mana,stats:ch.stats||{},skills:ch.skills||[],gold:ch.gold||100,deck:ch.deck||[]};GS.ap=6;GS.apMax=12;GS.domain=1;GS.domainCleared=[];GS.resources={stardust:15,ether:8,crystal:3};GS.skillPoints=3;GS.skillTree={};GS.equipment={};GS.crew={};GS.achievements={firstBattle:false,flip10:0,bossKill:false,fullClear:false,gold1000:0};let ps=localStorage.getItem('card_adv_pending_slot');if(ps!==null){currentSlot=parseInt(ps);localStorage.removeItem('card_adv_pending_slot');saveGame(currentSlot)}enterMap();history.replaceState({},'',window.location.pathname)}}catch(e){console.error('角色加载失败:',e)}}
+init();
+</script>
+</body>
+</html>

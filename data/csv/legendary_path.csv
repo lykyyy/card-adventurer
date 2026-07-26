@@ -1,0 +1,20 @@
+# 传奇道途等级表
+# pl: 道途等级 (PL1-PL10)
+# title_zh: 中文称号
+# title_en: 英文称号
+# attr_cap: 属性上限
+# xp_required: XP需求 (0表示需完成任务非XP升级)
+# feat_slot: 是否获得传奇专长 (yes/no)
+# bonus: 额外奖励描述
+# trial: 试炼内容
+pl,title_zh,title_en,attr_cap,xp_required,feat_slot,bonus,trial
+1,传奇勇士,Legendary Champion,24,0,yes,道途身份牌,完成传奇任务：击败远古龙/星界巨舰/大巫妖
+2,传奇英雄,Legendary Hero,24,40000,no,+1技能大师位,
+3,传奇领主,Legendary Lord,24,60000,yes,,
+4,半神,Demigod,26,0,yes,属性上限+2,完成半神试炼：夺取外层位面统治权
+5,高等半神,Greater Demigod,26,90000,no,+1技能大师位,
+6,准神,Quasi-deity,26,130000,yes,,
+7,次等神,Lesser Deity,30,0,yes,属性上限+4,完成真神试炼：击败现存神祇或取代神职
+8,中等神,Intermediate Deity,30,180000,no,+1传奇装备槽,
+9,强大神力,Greater Deity,30,240000,yes,,
+10,至高神,Overdeity,30,0,no,道途终点身份牌,完成终末试炼：对抗上古邪物/改变现实法则

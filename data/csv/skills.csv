@@ -1,0 +1,20 @@
+# 技能定义
+# skill_id: 技能编号 (SKILL-01~SKILL-06)
+# name_zh: 中文名称
+# name_en: 英文名称
+# primary_attr: 主属性 (str/dex/con/int/wis/cha)
+# secondary_attr: 副属性 (str/dex/con/int/wis/cha)
+# category: 技能分类 (physical/mind/social)
+# primary_coef: 主属性系数
+# secondary_coef: 副属性系数
+# cover_scenarios: 覆盖场景
+# combat_bonus_trained: 熟练级战斗加成描述
+# combat_bonus_expert: 专家级战斗加成描述（含解锁战斗牌）
+# combat_bonus_master: 大师级战斗加成描述
+skill_id,name_zh,name_en,primary_attr,secondary_attr,category,primary_coef,secondary_coef,cover_scenarios,combat_bonus_trained,combat_bonus_expert,combat_bonus_master
+SKILL-01,运动,Athletics,str,con,physical,1.0,0.5,攀爬/游泳/推撞/持久力,STR攻击牌伤害+1,解锁碎甲击(2费8伤害目标防御-3),STR攻击牌伤害+3可破盾
+SKILL-02,灵巧,Acrobatics,dex,str,physical,1.0,0.5,隐匿/偷窃/杂技/逃脱,DEX攻击牌命中+1,解锁影袭(1费5伤害下攻命中+2),每回合首张DEX牌费用-1
+SKILL-03,调查,Investigation,int,wis,mind,1.0,0.7,搜索/分析/推理/发现秘密,战斗开始揭示1个敌方属性,解锁弱点标记(0费标记1敌对其伤害+30%),对被标记敌人伤害×1.5
+SKILL-04,学识,Lore,int,cha,mind,1.0,0.7,奥秘/历史/自然/宗教/外交礼仪,法术牌效果+10%,解锁奥术回想(0费从弃牌堆回收1张法术牌),每战1次免费施法
+SKILL-05,洞察,Insight,wis,int,social,0.8,0.8,察觉/读心/识破谎言/预判,预知敌方攻击目标,解锁预兆(1费查看下回合行动格挡+3),每回合免疫首次突袭伤害
+SKILL-06,交涉,Diplomacy,cha,wis,social,0.8,0.8,游说/欺瞒/威吓/表演/谈判,30%概率跳过战斗,解锁威慑(1费敌方攻击力-3持续2回合),敌方每回合5%概率跳过行动

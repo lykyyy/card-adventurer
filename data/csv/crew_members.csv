@@ -1,0 +1,17 @@
+# 船员数据
+# crew_id: 船员编号
+# name: 船员名称
+# role: 岗位角色 (star_bridge/phasma_furnace/magic_cannon/crystal_shield/star_chart)
+# skill_level: 技能等级 (1-5)
+# bonus_desc: 特殊加成描述
+crew_id,name,role,skill_level,bonus_desc
+CREW-001,老船长维克多,star_bridge,4,CE恢复+2/回合·经验丰富
+CREW-002,导航官艾莉,star_bridge,3,全球战术视野·揭示1个敌方意图
+CREW-003,燃素技师凯恩,phasma_furnace,5,闪避率+15%·引擎大师
+CREW-004,学徒诺瓦,phasma_furnace,2,闪避率+5%·勤勉学习
+CREW-005,炮术长雷克斯,magic_cannon,4,武器伤害+8·精准射击
+CREW-006,见习炮手小杰,magic_cannon,2,武器伤害+3·潜力新星
+CREW-007,护盾工程师琳达,crystal_shield,4,护盾恢复+10/回合
+CREW-008,晶壁学徒索尔,crystal_shield,2,护盾恢复+4/回合
+CREW-009,星图师奥莉维亚,star_chart,5,揭示全部敌方行动+弱点标记
+CREW-010,观星学徒费恩,star_chart,2,揭示1个敌方行动

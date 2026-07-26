@@ -1,0 +1,20 @@
+# 跨文件外键关系注册表
+# 记录 CSV 之间的引用关系，用于数据校验和级联更新
+#
+# 字段说明：
+# source_file: 引用的发起方 CSV
+# source_column: 发起方的列名
+# target_file: 引用的目标 CSV
+# target_column: 目标方的列名
+# on_delete: 目标数据被删除时的行为 (cascade/restrict/set_null)
+# on_update: 目标数据被修改时的行为 (cascade/restrict)
+#
+# 更新: 2026-07-15 补全跨系统外键引用（crew/feats关系）
+source_file,source_column,target_file,target_column,on_delete,on_update
+card_effects.csv,card_id,cards.csv,card_id,cascade,cascade
+enemy_skills.csv,enemy_id,enemies.csv,enemy_id,cascade,cascade
+profession_starting_deck.csv,profession_id,professions.csv,profession_id,cascade,cascade
+profession_starting_deck.csv,card_id,cards.csv,card_id,restrict,cascade
+races.csv,fixed_skill,skills.csv,skill_id,set_null,restrict
+crew_members.csv,role,crew_slots.csv,slot_id,restrict,restrict
+feats_legendary.csv,required_pl,legendary_path.csv,pl,restrict,restrict

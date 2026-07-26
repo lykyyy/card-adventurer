@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>角色创建 - 卡牌冒险者 v2.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1a2e;color:#e0e0e0;font-family:'Segoe UI','Microsoft YaHei',sans-serif;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:12px}
+#app{width:100%;max-width:780px;min-width:360px;background:linear-gradient(180deg,#16213e 0%,#1a1a2e 40%);border:1px solid #333;border-radius:12px;overflow:hidden;box-shadow:0 0 40px rgba(233,69,96,0.15)}
+#header{text-align:center;padding:14px 0 8px;border-bottom:1px solid #2a2a4a}
+#header h1{font-size:20px;color:#e94560;letter-spacing:2px}
+#header .phase{font-size:11px;color:#888;margin-top:2px}
+#progress-bar{display:flex;align-items:center;padding:12px 20px 8px;gap:0}
+.step-dot{width:24px;height:24px;border-radius:50%;background:#222;border:2px solid #444;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;color:#666;transition:all .3s;flex-shrink:0}
+.step-dot.active{background:#e94560;border-color:#e94560;color:#fff;box-shadow:0 0 10px rgba(233,69,96,0.5)}
+.step-dot.done{background:#2e7d32;border-color:#2e7d32;color:#fff}
+.step-dot.phase-sep{background:#ffd700;border-color:#ffd700;color:#111;width:8px;height:8px}
+.step-line{flex:1;height:2px;background:#333}
+.step-line.done{background:#2e7d32}
+#step-label{text-align:center;font-size:13px;color:#aaa;padding:2px 0 4px}
+#step-narrative{text-align:center;font-size:12px;color:#a29bfe;font-style:italic;padding:0 20px 6px;min-height:18px}
+#step-content{min-height:380px;padding:16px 20px}
+.step-pane{display:none;animation:slideIn .35s ease}
+.step-pane.active{display:block}
+@keyframes slideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+.section-title{font-size:16px;color:#ffd700;margin-bottom:12px;text-align:center;letter-spacing:1px}
+.card-grid{display:grid;gap:10px}
+.grid-4{grid-template-columns:repeat(2,1fr)}
+.grid-6{grid-template-columns:repeat(3,1fr)}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:600px){.grid-4{grid-template-columns:1fr}.grid-6{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:1fr}}
+.card-option{background:#1e1e3a;border:2px solid #333;border-radius:8px;padding:12px;cursor:pointer;transition:all .25s}
+.card-option:hover{transform:translateY(-2px);border-color:#e94560;box-shadow:0 4px 16px rgba(233,69,96,0.25)}
+.card-option.selected{border-color:#ffd700;box-shadow:0 0 20px rgba(255,215,0,0.5);background:#261630}
+.card-option .emoji{font-size:26px;margin-bottom:4px;display:block}
+.card-option .name{font-size:14px;font-weight:bold;color:#fff;margin-bottom:3px}
+.card-option .stats-row{display:flex;flex-wrap:wrap;gap:3px;margin:4px 0;font-size:10px}
+.card-option .stat-tag{background:#252545;padding:1px 5px;border-radius:3px;color:#ccc}
+.card-option .stat-tag.highlight{color:#ffd700;font-weight:bold}
+.card-option .desc{font-size:10px;color:#999;line-height:1.4}
+.card-option .bonus{font-size:10px;color:#2ecc71;margin-top:3px}
+.tag-badge{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;margin:2px 2px;font-weight:bold}
+.tag-warrior{background:#e94560;color:#fff}
+.tag-scholar{background:#4ecdc4;color:#111}
+.tag-default{background:#444;color:#ccc}
+#attr-panel{max-width:400px;margin:0 auto}
+.attr-row{display:flex;align-items:center;gap:10px;margin:8px 0;background:#1e1e3a;border:1px solid #333;border-radius:6px;padding:8px 14px}
+.attr-row .attr-icon{font-size:18px;width:24px;text-align:center}
+.attr-row .attr-name{font-size:13px;font-weight:bold;color:#fff;width:40px}
+.attr-row .attr-val{font-size:22px;font-weight:bold;color:#ffd700;width:30px;text-align:center}
+.attr-row .attr-mod{font-size:12px;color:#4ecdc4;width:40px}
+.attr-row .attr-bar{flex:1;height:6px;background:#222;border-radius:3px;overflow:hidden}
+.attr-row .attr-fill{height:100%;background:linear-gradient(90deg,#e94560,#ffd700);border-radius:3px;transition:width .3s}
+.attr-row button{width:28px;height:28px;border:1px solid #555;border-radius:4px;background:#252545;color:#fff;font-size:16px;cursor:pointer;line-height:26px;transition:all .15s}
+.attr-row button:hover:not(:disabled){background:#e94560;border-color:#e94560}
+.attr-row button:disabled{opacity:.3;cursor:not-allowed}
+#points-left{text-align:center;font-size:16px;color:#ffd700;margin-bottom:12px;font-weight:bold}
+.skill-list{display:flex;flex-direction:column;gap:8px;max-width:420px;margin:0 auto}
+.skill-item{display:flex;align-items:center;gap:10px;background:#1e1e3a;border:1px solid #333;border-radius:6px;padding:10px 14px;transition:all .2s}
+.skill-item:hover{border-color:#555}
+.skill-item input[type=checkbox]{width:18px;height:18px;accent-color:#e94560;cursor:pointer}
+.skill-item input[type=checkbox]:disabled{accent-color:#555;cursor:not-allowed}
+.skill-item label{flex:1;cursor:pointer;font-size:12px}
+.skill-item label .sk-name{font-weight:bold;color:#fff}
+.skill-item label .sk-attrs{font-size:10px;color:#888;margin-left:6px}
+.skill-item.locked{background:#1a1a30;border-color:#ffd700}
+#sk-counter{text-align:center;font-size:14px;color:#ffd700;margin-bottom:10px}
+#nav-bar{display:flex;justify-content:space-between;padding:12px 20px;border-top:1px solid #2a2a4a;gap:10px}
+#nav-bar button{padding:10px 24px;border:none;border-radius:6px;font-size:13px;font-weight:bold;cursor:pointer;transition:all .2s}
+#btn-prev{background:#333;color:#ccc}
+#btn-prev:hover{background:#555}
+#btn-prev:disabled{opacity:.3;cursor:not-allowed}
+#btn-next{background:#e94560;color:#fff;margin-left:auto}
+#btn-next:hover{background:#ff6b7a;box-shadow:0 0 15px rgba(233,69,96,0.5)}
+#btn-next:disabled{background:#555;cursor:not-allowed;box-shadow:none}
+.final-header{text-align:center;padding:12px 0;border-bottom:2px solid #ffd700;margin-bottom:12px}
+.final-header h2{font-size:18px;color:#ffd700;letter-spacing:2px}
+.panel-section{margin-bottom:12px}
+.panel-section h3{font-size:12px;color:#e94560;margin-bottom:6px}
+.attr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.attr-cell{background:#1e1e3a;border:1px solid #333;border-radius:6px;padding:8px;text-align:center}
+.attr-cell .attr-val{font-size:20px;font-weight:bold;color:#ffd700}
+.attr-cell .attr-mod{font-size:11px;color:#4ecdc4}
+.attr-cell .attr-label{font-size:10px;color:#888}
+.derived-row{display:flex;gap:8px;flex-wrap:wrap}
+.derived-item{flex:1;min-width:70px;background:#1e1e3a;border:1px solid #333;border-radius:6px;padding:8px;text-align:center}
+.derived-item .val{font-size:16px;font-weight:bold;color:#fff}
+.derived-item .lbl{font-size:9px;color:#888}
+.deck-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+@media(max-width:500px){.deck-grid{grid-template-columns:repeat(2,1fr)}}
+.deck-card{background:#1e1e3a;border:1px solid #444;border-radius:6px;padding:6px;cursor:pointer;text-align:center}
+.deck-card:hover{transform:scale(1.05);border-color:#e94560}
+.deck-card .card-icon{font-size:22px;display:block}
+.deck-card .card-name{font-size:10px;font-weight:bold;color:#fff;margin-top:2px}
+.deck-card .card-cost{font-size:9px;color:#ffd700;margin-top:1px}
+.type-attack{background:#e94560;color:#fff;padding:0 3px;border-radius:2px;font-size:8px}
+.type-defense{background:#4ecdc4;color:#111;padding:0 3px;border-radius:2px;font-size:8px}
+.type-support{background:#2ecc71;color:#111;padding:0 3px;border-radius:2px;font-size:8px}
+.type-skill{background:#a29bfe;color:#111;padding:0 3px;border-radius:2px;font-size:8px}
+.type-tactic{background:#ff8c00;color:#111;padding:0 3px;border-radius:2px;font-size:8px}
+#btn-launch{display:block;width:100%;max-width:300px;margin:12px auto;padding:12px 0;background:linear-gradient(135deg,#e94560,#c0392b);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:bold;cursor:pointer;letter-spacing:2px}
+#btn-launch:hover{box-shadow:0 0 20px rgba(233,69,96,0.5);transform:translateY(-2px)}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="header"><h1>角色创建</h1><div class="phase" id="phase-label"></div></div>
+<div id="progress-bar"></div>
+<div id="step-label"></div>
+<div id="step-narrative"></div>
+<div id="step-content"></div>
+<div id="nav-bar">
+<button id="btn-prev" onclick="goPrev()">上一步</button>
+<button id="btn-next" onclick="goNext()">下一步</button>
+</div>
+</div>
+<script>
+const LABELS=['','1.种族选择','2.职业选择','3.属性分配','4.技能选择','5.职业专长','6.出身背景','7.童年经历','8.青年抉择','9.觉醒使命','10.称号总览'];
+const NARRATIVES=[null,null,null,null,null,null,'你的故事始于...','在你年幼时，你的大部分时间花在了...','进入青年时期，你选择了一条...','改变你命运的那个时刻...',null];
+const PHASES=[null,'🔧 阶段一：机械创建','🔧 阶段一：机械创建','🔧 阶段一：机械创建','🔧 阶段一：机械创建','🔧 阶段一：机械创建','📜 阶段二：人生叙事','📜 阶段二：人生叙事','📜 阶段二：人生叙事','📜 阶段二：人生叙事','🏆 阶段三：终局确认'];
+
+const RACES=[
+{id:'RACE-001',name:'人类',emoji:'👤',str:10,dex:10,con:10,intel:10,wis:10,cha:10,passive:'多才多艺：额外1技能熟练+属性自由+2',fixedSkill:null},
+{id:'RACE-002',name:'精灵',emoji:'🧝',str:10,dex:12,con:10,intel:11,wis:10,cha:10,passive:'星界感知：先攻+1·夜间无惩罚',fixedSkill:'SKILL-02'},
+{id:'RACE-003',name:'矮人',emoji:'🧔',str:11,dex:10,con:12,intel:10,wis:10,cha:10,passive:'矿脉之眼：材料获取+1·毒抗+2',fixedSkill:'SKILL-01'},
+{id:'RACE-004',name:'兽人',emoji:'👹',str:12,dex:10,con:11,intel:10,wis:10,cha:10,passive:'血性狂暴：HP<50%伤害+15%',fixedSkill:'SKILL-01'}];
+
+const PROFESSIONS=[
+{id:'P-001',name:'战士',emoji:'⚔️',hp:120,ce:4,energy:'怒气 (0→10)',cards:['C-010','C-011','C-012'],desc:'近战坦克·承受伤害积攒怒气·爆发终结技'},
+{id:'P-002',name:'法师',emoji:'🔮',hp:70,ce:2,energy:'法力 (5+INT→10)',cards:['C-030','C-031','C-033'],desc:'远程AOE·每日准备法术·高智力加成'},
+{id:'P-003',name:'盗贼',emoji:'🗡️',hp:90,ce:3,energy:'连击点 (0→3)',cards:['C-020','C-021','C-022'],desc:'快速连击·叠加CP·终结技收割'},
+{id:'P-004',name:'牧师',emoji:'✝️',hp:80,ce:2,energy:'法力 (4+WIS→8)',cards:['C-050','C-051','C-052'],desc:'治疗护盾·神圣伤害·感知力加成'}];
+
+const PROF_SKILLS={
+'P-001':['SKILL-01','SKILL-02','SKILL-05','SKILL-06'],
+'P-002':['SKILL-03','SKILL-04','SKILL-05','SKILL-06'],
+'P-003':['SKILL-02','SKILL-03','SKILL-05','SKILL-06'],
+'P-004':['SKILL-01','SKILL-04','SKILL-05','SKILL-06']};
+
+const PROF_FEATS={
+'P-001':[{id:'PROF-FEAT-001',name:'狂战士',desc:'怒气获取+1·上限+2→12·衰减减半·高风险高爆发'},{id:'PROF-FEAT-002',name:'守护者',desc:'每3怒→2护盾·免伤1·安全区1-5·坦克反击'},{id:'PROF-FEAT-003',name:'战术家',desc:'消耗怒气返还25%·安全区扩大·辅助增益'}],
+'P-002':[{id:'PROF-FEAT-007',name:'塑能师',desc:'≥3法伤害+30%·≤3法CE-1·首法-1法·直伤强化'},{id:'PROF-FEAT-008',name:'奥术师',desc:'回合+1法·每5法得飞弹·≥7法CE-1·资源循环'},{id:'PROF-FEAT-009',name:'控场师',desc:'控法-1法·效果+1回合·受控返法·控制专精'}],
+'P-003':[{id:'PROF-FEAT-004',name:'刺客',desc:'CP上限+1→4·满CP暴击·单体爆发'},{id:'PROF-FEAT-005',name:'诡术师',desc:'无伤+CP·CP免伤·反伤·控制搅局'},{id:'PROF-FEAT-006',name:'斥候',desc:'标记暴露+30%·抽牌·标记循环·先手侦查'}],
+'P-004':[{id:'PROF-FEAT-010',name:'治疗者',desc:'治疗-1法·治疗回法·自愈·治愈专精'},{id:'PROF-FEAT-011',name:'审判官',desc:'无伤+法·≥5法+25%伤·击杀回法·混合输出'},{id:'PROF-FEAT-012',name:'守护者',desc:'护盾+3·护盾回血·≥4法CE-1·减伤防护'}]};
+
+const ORIGINS=[
+{id:'ORIGIN-001',name:'星舰之子',emoji:'🚀',gold:120,trait:'星图直觉：航行多1选项',strategyCard:'C-080',originSkill:'SKILL-03',story:'寻找失踪的家船'},
+{id:'ORIGIN-002',name:'学院学者',emoji:'📚',gold:100,trait:'博闻强记：知识检定优势',strategyCard:'C-082',originSkill:'SKILL-04',story:'无法打开导师给的星匣'},
+{id:'ORIGIN-003',name:'拾荒游民',emoji:'🔧',gold:80,trait:'垃圾堆宝藏：战利品多1掉落',strategyCard:'C-083',originSkill:'SKILL-02',story:'捡到了不该捡的东西'},
+{id:'ORIGIN-004',name:'商团代理',emoji:'💰',gold:150,trait:'议价术：购买9折',strategyCard:'C-081',originSkill:'SKILL-06',story:'商团被海盗袭击'},
+{id:'ORIGIN-005',name:'开拓者',emoji:'⛏️',gold:90,trait:'坚韧求生：环境伤害-1',strategyCard:'C-083',originSkill:'SKILL-01',story:'挖出了远古遗迹'},
+{id:'ORIGIN-006',name:'星界孤儿',emoji:'🌟',gold:60,trait:'星界共鸣：位面事件多1选项',strategyCard:'C-082',originSkill:'SKILL-05',story:'废弃魔法船上的神秘身世'}];
+
+const CHILDHOOD=[
+{key:'A',name:'街头求生',narrative:'在星港暗巷中摸爬滚打',tag:'好斗者',card:'C-090',bgFeat:'BG-FEAT-001',attrBonus:{dex:1}},
+{key:'B',name:'书院苦读',narrative:'在学院图书馆中埋头苦读',tag:'求学者',card:'C-072',bgFeat:'BG-FEAT-002',attrBonus:{intel:1}},
+{key:'C',name:'流浪漂泊',narrative:'跟随商队穿行星域之间',tag:'流浪者',card:'C-093',bgFeat:'BG-FEAT-003',attrBonus:{con:1}}];
+
+const YOUTH=[
+{key:'A',name:'佣兵团历练',narrative:'加入佣兵团在战场上磨砺',tag:'老兵',card:'C-091',bgFeat:'BG-FEAT-004',attrBonus:{str:1}},
+{key:'B',name:'星港学徒',narrative:'在星港工坊学习技艺',tag:'工匠',card:'C-094',bgFeat:'BG-FEAT-005',attrBonus:{con:1}},
+{key:'C',name:'神殿侍奉',narrative:'在神殿中聆听神谕',tag:'信徒',card:'C-051',bgFeat:'BG-FEAT-006',attrBonus:{wis:1}}];
+
+const AWAKENING=[
+{key:'A',name:'复仇之路',narrative:'目睹至亲被夺踏上复仇',tag:'复仇者',card:'C-092',bgFeat:'BG-FEAT-007',attrBonus:{str:1}},
+{key:'B',name:'求知之旅',narrative:'触碰星匣窥见宇宙奥秘',tag:'求道者',card:'C-033',bgFeat:'BG-FEAT-008',attrBonus:{intel:1}},
+{key:'C',name:'命运召唤',narrative:'接收到不可名状的召唤',tag:'天命者',card:'C-032',bgFeat:'BG-FEAT-009',attrBonus:{cha:1}}];
+
+const CARDS={
+'C-004':{name:'急救',type:'support',cost:1,effect:'恢复15HP+WIS_mod×1.5',emoji:'💊'},
+'C-010':{name:'蓄力斩',type:'attack',cost:1,effect:'8伤害+STR_mod·+2怒气',emoji:'⚔️'},
+'C-011':{name:'格挡反击',type:'defense',cost:1,effect:'5护盾+CON_mod×2·受击+1怒',emoji:'🛡️'},
+'C-012':{name:'怒意爆发',type:'attack',cost:1,effect:'消费怒气→怒×3伤',emoji:'💥'},
+'C-013':{name:'战斗狂热',type:'skill',cost:2,effect:'+3怒·攻击CE-1',emoji:'🔥'},
+'C-020':{name:'双重打击',type:'attack',cost:1,effect:'2次各4伤+各+1CP',emoji:'⚔️'},
+'C-021':{name:'烟雾掩护',type:'defense',cost:1,effect:'4护盾+CON_mod×2·未受伤+CP',emoji:'💨'},
+'C-022':{name:'刺骨',type:'attack',cost:2,effect:'消费CP→8+CP×6伤',emoji:'🗡️'},
+'C-030':{name:'奥术飞弹',type:'attack',cost:1,effect:'10伤害+INT_mod·法力1',emoji:'💫'},
+'C-031':{name:'魔法护盾',type:'defense',cost:1,effect:'8护盾+CON_mod×2·格挡DOT',emoji:'🔮'},
+'C-032':{name:'烈焰风暴',type:'attack',cost:3,effect:'全体12伤害+INT_mod·法力3',emoji:'🌋'},
+'C-033':{name:'魔力回流',type:'skill',cost:2,effect:'回2法力·每战1次',emoji:'♻️'},
+'C-050':{name:'圣光击',type:'attack',cost:1,effect:'10伤害+WIS_mod·自回5HP',emoji:'✨'},
+'C-051':{name:'治疗祷言',type:'skill',cost:1,effect:'恢复20HP+WIS_mod×1.5',emoji:'🙏'},
+'C-052':{name:'光耀之盾',type:'defense',cost:1,effect:'10护盾+CON_mod×2·敌攻-5',emoji:'🛡️'},
+'C-072':{name:'战备',type:'support',cost:1,effect:'抽2+ceil(INT_mod/2)张牌',emoji:'📦'},
+'C-080':{name:'星图导航',type:'tactic',cost:0,effect:'航行时多1条可选航线',emoji:'🗺️'},
+'C-081':{name:'贸易协定',type:'tactic',cost:0,effect:'商店折扣+5%+CHA_mod×0.3',emoji:'📜'},
+'C-082':{name:'情报网络',type:'tactic',cost:0,effect:'查看前方1格内容',emoji:'🔍'},
+'C-083':{name:'紧急维修',type:'tactic',cost:0,effect:'飞船恢复15+INT_mod护盾',emoji:'🔧'},
+'C-090':{name:'精准打击',type:'attack',cost:1,effect:'8伤害+STR_mod(通用基础)',emoji:'🎯'},
+'C-091':{name:'战术指挥',type:'support',cost:1,effect:'下1张攻击+3+CHA_mod×0.3',emoji:'📋'},
+'C-092':{name:'绝境反击',type:'attack',cost:3,effect:'HP<50%→×1.5·15+STR_mod',emoji:'⚡'},
+'C-093':{name:'灵活闪避',type:'defense',cost:1,effect:'5护盾+CON_mod×2·抽1',emoji:'💨'},
+'C-094':{name:'快速包扎',type:'support',cost:1,effect:'恢复8+WIS_mod×1.5HP',emoji:'🩹'}};
+
+const SKILLS=[
+{id:'SKILL-01',name:'运动',attrs:'STR/CON',card:'C-010'},
+{id:'SKILL-02',name:'灵巧',attrs:'DEX/STR',card:'C-020'},
+{id:'SKILL-03',name:'调查',attrs:'INT/WIS',card:'C-072'},
+{id:'SKILL-04',name:'学识',attrs:'INT/CHA',card:'C-030'},
+{id:'SKILL-05',name:'洞察',attrs:'WIS/INT',card:'C-073'},
+{id:'SKILL-06',name:'交涉',attrs:'CHA/WIS',card:'C-050'}];
+
+const ATTR_KEYS=['str','dex','con','intel','wis','cha'];
+const ATTR_NAMES=['力量STR','敏捷DEX','体质CON','智力INT','感知WIS','魅力CHA'];
+const ATTR_EMOJIS=['💪','🏃','🛡️','🧠','👁️','👑'];
+
+let s={step:1,race:null,prof:null,points:8,attrs:{},skills:[],feat:null,origin:null,childhood:null,youth:null,awakening:null,tags:[],deckParams:null};
+
+function init(){buildProgress();renderStep();}
+function $S(id){return document.getElementById(id);}
+function mod(v){return Math.floor((v-10)/2);}
+
+function buildProgress(){
+let b=$S('progress-bar');b.innerHTML='';
+for(let i=1;i<=10;i++){
+let d=document.createElement('div');
+d.className='step-dot';
+d.textContent=i;
+if(i===6)d.classList.add('phase-sep');
+if(i<s.step)d.classList.add('done');
+if(i===s.step)d.classList.add('active');
+b.appendChild(d);
+if(i<10){let l=document.createElement('div');l.className='step-line';if(i<s.step)l.classList.add('done');b.appendChild(l);}
+}
+$S('step-label').textContent=LABELS[s.step];
+$S('phase-label').textContent=PHASES[s.step];
+let n=NARRATIVES[s.step];$S('step-narrative').textContent=n?('"'+n+'"'):'';
+}
+
+function renderStep(){
+buildProgress();
+let ct=$S('step-content'),bp=$S('btn-prev'),bn=$S('btn-next');
+bp.disabled=(s.step===1);
+bn.disabled=false;
+bn.style.display='';
+switch(s.step){
+case 1:renderRace(ct);bn.disabled=!s.race;bn.textContent='下一步';break;
+case 2:renderProf(ct);bn.disabled=!s.prof;bn.textContent='下一步';break;
+case 3:renderAttr(ct);bn.textContent='确认分配';bn.disabled=false;break;
+case 4:renderSkills(ct);bn.textContent='下一步';bn.disabled=s.skills.length<2;break;
+case 5:renderFeat(ct);bn.textContent='下一步';bn.disabled=!s.feat;break;
+case 6:renderOrigin(ct);bn.textContent='下一步';bn.disabled=!s.origin;break;
+case 7:renderChildhood(ct);bn.textContent='下一步';bn.disabled=!s.childhood;break;
+case 8:renderYouth(ct);bn.textContent='下一步';bn.disabled=!s.youth;break;
+case 9:renderAwaken(ct);bn.textContent='下一步';bn.disabled=!s.awakening;break;
+case 10:calcFinal();renderFinal(ct);bn.style.display='none';break;
+}
+if(s.step===10){$S('nav-bar').style.display='none'}else{$S('nav-bar').style.display='flex'}
+}
+
+function goNext(){
+switch(s.step){
+case 1:if(!s.race)return;resetAttrs();break;
+case 2:if(!s.prof)return;resetAttrs();break;
+case 4:if(s.skills.length<2)return;break;
+case 5:if(!s.feat)return;break;
+case 6:if(!s.origin)return;break;
+case 7:if(!s.childhood)return;break;
+case 8:if(!s.youth)return;break;
+case 9:if(!s.awakening)return;break;
+}
+if(s.step<10)s.step++;
+renderStep();
+}
+
+function goPrev(){if(s.step>1)s.step--;renderStep();}
+
+function resetAttrs(){
+let r=RACES.find(x=>x.id===s.race);
+s.attrs={str:r.str,dex:r.dex,con:r.con,intel:r.intel,wis:r.wis,cha:r.cha};
+s.points=8;
+}
+
+// Step 1: Race
+function renderRace(ct){
+let r=RACES;
+ct.innerHTML='<div class="step-pane active"><div class="section-title">选择你的种族</div><div class="card-grid grid-4">'+r.map(x=>{
+let sel=s.race===x.id,vs=[x.str,x.dex,x.con,x.intel,x.wis,x.cha],mx=Math.max(...vs);
+return'<div class="card-option'+(sel?' selected':'')+'" onclick="s.race=\''+x.id+'\';renderStep()"><span class="emoji">'+x.emoji+'</span><div class="name">'+x.name+'</div><div class="stats-row">'+ATTR_NAMES.map((a,i)=>'<span class="stat-tag'+(vs[i]===mx?' highlight':'')+'">'+a.split(' ')[0]+':'+vs[i]+'</span>').join('')+'</div><div class="bonus">🏷 '+x.passive+(x.fixedSkill?' | 🔒 固定技能:'+SKILLS.find(s=>s.id===x.fixedSkill).name:'')+'</div></div>';
+}).join('')+'</div></div>';
+}
+
+// Step 2: Profession
+function renderProf(ct){
+let p=PROFESSIONS;
+ct.innerHTML='<div class="step-pane active"><div class="section-title">选择你的职业</div><div class="card-grid grid-4">'+p.map(x=>{
+let sel=s.prof===x.id;
+return'<div class="card-option'+(sel?' selected':'')+'" onclick="s.prof=\''+x.id+'\';s.skills=[];s.feat=null;renderStep()"><span class="emoji">'+x.emoji+'</span><div class="name">'+x.name+'</div><div class="stats-row"><span class="stat-tag">HP:'+x.hp+'</span><span class="stat-tag">CE:'+x.ce+'</span><span class="stat-tag highlight">'+x.energy+'</span></div><div class="desc">'+x.desc+'</div></div>';
+}).join('')+'</div></div>';
+}
+
+// Step 3: Attributes
+function renderAttr(ct){
+let k=ATTR_KEYS,n=ATTR_NAMES,e=ATTR_EMOJIS;
+let maxV=16,baseV=RACES.find(x=>x.id===s.race);
+ct.innerHTML='<div class="step-pane active"><div class="section-title">属性分配（点购制）</div><div id="points-left">剩余点数: <b>'+s.points+'</b> / 8</div><div id="attr-panel">'+k.map((kk,i)=>{
+let v=s.attrs[kk],m=mod(v);
+return'<div class="attr-row"><span class="attr-icon">'+e[i]+'</span><span class="attr-name">'+n[i]+'</span><button onclick="attrDec(\''+kk+'\')" '+(v<=baseV[kk]?'disabled':'')+'>-</button><span class="attr-val">'+v+'</span><button onclick="attrInc(\''+kk+'\')" '+(v>=maxV||s.points<=0?'disabled':'')+'>+</button><span class="attr-mod">'+(m>=0?'+':'')+m+'</span><div class="attr-bar"><div class="attr-fill" style="width:'+((v-6)/14*100)+'%"></div></div></div>';
+}).join('')+'</div></div>';
+}
+
+function attrInc(kk){if(s.points>0&&s.attrs[kk]<16){s.attrs[kk]++;s.points--;renderStep();}}
+function attrDec(kk){let b=RACES.find(x=>x.id===s.race)[kk];if(s.attrs[kk]>b){s.attrs[kk]--;s.points++;renderStep();}}
+
+// Step 4: Skills
+function renderSkills(ct){
+let pool=PROF_SKILLS[s.prof],rc=RACES.find(x=>x.id===s.race),fixed=rc.fixedSkill;
+let need=2,cur=s.skills.length,full=cur>=need;
+ct.innerHTML='<div class="step-pane active"><div class="section-title">选择职业技能 (4选2)</div><div id="sk-counter">已选 <b>'+cur+'</b> / '+need+(fixed?' <span style="color:#ffd700;font-size:11px">（种族固定: '+SKILLS.find(x=>x.id===fixed).name+'）</span>':'')+'</div><div class="skill-list">'+SKILLS.filter(sk=>pool.includes(sk.id)).map(sk=>{
+let checked=s.skills.includes(sk.id),disabled=!checked&&full;
+return'<div class="skill-item"><input type="checkbox" '+(checked?'checked':'')+' '+(disabled?'disabled':'')+' onchange="toggleSkill(\''+sk.id+'\')"><label><span class="sk-name">'+sk.name+'</span><span class="sk-attrs">'+sk.attrs+'</span></label></div>';
+}).join('')+'</div></div>';
+}
+function toggleSkill(id){let i=s.skills.indexOf(id);if(i>=0)s.skills.splice(i,1);else if(s.skills.length<2)s.skills.push(id);renderStep();}
+
+// Step 5: Feat
+function renderFeat(ct){
+let feats=PROF_FEATS[s.prof];
+ct.innerHTML='<div class="step-pane active"><div class="section-title">选择职业专长 (3选1)</div><div class="card-grid grid-3">'+feats.map(f=>{
+let sel=s.feat===f.id;
+return'<div class="card-option'+(sel?' selected':'')+'" onclick="s.feat=\''+f.id+'\';renderStep()"><div class="name">'+f.name+'</div><div class="desc">'+f.desc+'</div><div class="bonus" style="font-size:9px">'+f.id+'</div></div>';
+}).join('')+'</div></div>';
+}
+
+// Step 6: Origin
+function renderOrigin(ct){
+let o=ORIGINS;
+ct.innerHTML='<div class="step-pane active"><div class="section-title">出身背景</div><div class="card-grid grid-6">'+o.map(x=>{
+let sel=s.origin===x.id,sc=CARDS[x.strategyCard],sk=SKILLS.find(sk=>sk.id===x.originSkill);
+return'<div class="card-option'+(sel?' selected':'')+'" onclick="s.origin=\''+x.id+'\';renderStep()"><span class="emoji">'+x.emoji+'</span><div class="name">'+x.name+'</div><div class="desc">💰 '+x.gold+'G | '+x.trait+'</div><div class="bonus">🃏 '+sc.emoji+' '+sc.name+' | 📖 '+sk.name+'</div><div class="desc" style="color:#ffd700;font-size:9px">"'+x.story+'"</div></div>';
+}).join('')+'</div></div>';
+}
+
+// Step 7-9: Life events
+function renderChildhood(ct){renderLifeStep(ct,CHILDHOOD,s.childhood,'童年经历','childhood')}
+function renderYouth(ct){renderLifeStep(ct,YOUTH,s.youth,'青年抉择','youth')}
+function renderAwaken(ct){renderLifeStep(ct,AWAKENING,s.awakening,'觉醒使命','awakening')}
+
+function renderLifeStep(ct,opts,curSel,title,stateKey){
+ct.innerHTML='<div class="step-pane active"><div class="section-title">'+title+'</div><div class="card-grid grid-3">'+opts.map(o=>{
+let isSel=curSel===o.key,cd=CARDS[o.card];
+return'<div class="card-option'+(isSel?' selected':'')+'" onclick="s.'+stateKey+'=\''+o.key+'\';renderStep()"><div class="name">'+o.name+'</div><div class="desc">'+o.narrative+'</div><div style="margin-top:6px"><span class="tag-badge tag-warrior">🏷 '+o.tag+'</span></div><div class="bonus">🃏 '+cd.emoji+' '+cd.name+' | ✚ '+Object.entries(o.attrBonus).map(([k,v])=>k.toUpperCase()+'+'+v).join(' ')+'</div></div>';
+}).join('')+'</div></div>';
+}
+
+// Step 10: Final
+function calcFinal(){
+let rc=RACES.find(x=>x.id===s.race),or=ORIGINS.find(x=>x.id===s.origin);
+let evs=[{step:'childhood',data:CHILDHOOD,sel:s.childhood},{step:'youth',data:YOUTH,sel:s.youth},{step:'awakening',data:AWAKENING,sel:s.awakening}];
+s.tags=[];
+let bonusAttrs={str:0,dex:0,con:0,intel:0,wis:0,cha:0};
+evs.forEach(ev=>{let opt=ev.data.find(x=>x.key===ev.sel);if(opt){s.tags.push(opt.tag);Object.entries(opt.attrBonus).forEach(([k,v])=>bonusAttrs[k]+=v)}});
+let finalAttrs={};ATTR_KEYS.forEach(k=>finalAttrs[k]=s.attrs[k]+(bonusAttrs[k]||0));
+let mods={};ATTR_KEYS.forEach(k=>mods[k]=mod(finalAttrs[k]));
+let prof=PROFESSIONS.find(x=>x.id===s.prof);
+let hp=prof.hp+mods.con*5,ce=prof.ce;
+let mana=null;if(s.prof==='P-002')mana=Math.min(10,5+mods.intel);else if(s.prof==='P-004')mana=Math.min(8,4+mods.wis);
+let feats=[s.feat];
+evs.forEach(ev=>{let opt=ev.data.find(x=>x.key===ev.sel);if(opt&&opt.bgFeat)feats.push(opt.bgFeat)});
+let deck=[];
+[prof.cards[0],prof.cards[1],prof.cards[2],'C-004','C-072'].forEach(x=>deck.push(x));
+evs.forEach(ev=>{let opt=ev.data.find(x=>x.key===ev.sel);if(opt)deck.push(opt.card)});
+if(or.strategyCard)deck.push(or.strategyCard);
+let allSkills=[...new Set([...(rc.fixedSkill?[rc.fixedSkill]:[]),...s.skills,or.originSkill])];
+let tagStr=s.tags.join('/'),title=or.name+'·'+tagStr+'·'+prof.name;
+s.deckParams={title,prof:prof.name,hp,ce,mana,stats:finalAttrs,modifiers:mods,feats,deck,skills:allSkills,gold:or.gold,origin:or,race:rc,tags:s.tags,narrative:or.story+'。'+evs.map(e=>{let o=e.data.find(x=>x.key===e.sel);return o?o.narrative:'';}).join('。')+'。以"'+title+'"之名踏上星界冒险。'};
+}
+
+function renderFinal(ct){
+let p=s.deckParams,combat=[],tactic=[];
+p.deck.forEach(cid=>{let cd=CARDS[cid];if(!cd)return;if(cd.type==='tactic')tactic.push({id:cid,...cd});else combat.push({id:cid,...cd})});
+ct.innerHTML='<div class="step-pane active"><div class="final-header"><h2>'+p.title+'</h2></div><div class="panel-section"><h3>属性</h3><div class="attr-grid">'+ATTR_KEYS.map((k,i)=>'<div class="attr-cell"><div class="attr-label">'+ATTR_NAMES[i]+'</div><div class="attr-val">'+p.stats[k]+'</div><div class="attr-mod">'+(p.modifiers[k]>=0?'+':'')+p.modifiers[k]+'</div></div>').join('')+'</div></div><div class="panel-section"><h3>战斗数据</h3><div class="derived-row"><div class="derived-item"><div class="val">'+p.hp+'</div><div class="lbl">HP</div></div><div class="derived-item"><div class="val">'+p.ce+'</div><div class="lbl">CE</div></div><div class="derived-item"><div class="val">'+(p.mana||'-')+'</div><div class="lbl">法力值</div></div><div class="derived-item"><div class="val">'+p.prof+'</div><div class="lbl">职业</div></div><div class="derived-item"><div class="val">💰'+p.gold+'G</div><div class="lbl">金币</div></div></div></div><div class="panel-section"><h3>技能 ('+p.skills.length+')</h3><div style="display:flex;flex-wrap:wrap;gap:4px">'+p.skills.map(sid=>{let sk=SKILLS.find(x=>x.id===sid);if(!sk)return'';return'<span class="tag-badge tag-scholar">📖 '+sk.name+'</span>'}).filter(Boolean).join('')+'</div></div><div class="panel-section"><h3>专长 ('+p.feats.length+')</h3><div style="display:flex;flex-wrap:wrap;gap:4px">'+p.feats.map(f=>'<span class="tag-badge tag-warrior">⭐ '+f+'</span>').join('')+'</div></div><div class="panel-section"><h3>战斗牌库 ('+combat.length+'张)</h3><div class="deck-grid">'+combat.map(c=>'<div class="deck-card" title="'+c.effect+'"><span class="card-icon">'+c.emoji+'</span><div class="card-name">'+c.name+'</div><div class="card-cost">CE '+c.cost+'</div><span class="type-'+c.type+'">'+c.type+'</span></div>').join('')+'</div></div><div class="panel-section"><h3>战略牌库 ('+tactic.length+'张)</h3><div class="deck-grid">'+tactic.map(c=>'<div class="deck-card" title="'+c.effect+'"><span class="card-icon">'+c.emoji+'</span><div class="card-name">'+c.name+'</div><div class="card-cost">战略</div><span class="type-tactic">tactic</span></div>').join('')+'</div></div><div class="panel-section" style="text-align:center"><p style="font-size:12px;color:#a29bfe;line-height:1.6">"'+p.narrative+'"</p></div><button id="btn-launch" onclick="launch()">🚀 踏上冒险</button></div>';
+}
+
+function launch(){
+let p=s.deckParams;
+alert('角色创建完成！\n'+p.title+'\nHP:'+p.hp+' CE:'+p.ce+' 法力:'+(p.mana||'—')+'\n职业:'+p.prof+' 金币:'+p.gold+'\n牌库:'+p.deck.length+'张\n\nMVP阶段：请返回 root.html 继续游戏');
+window.location.href='./root.html?char='+encodeURIComponent(JSON.stringify(p));
+}
+
+init();
+</script>
+</body>
+</html>

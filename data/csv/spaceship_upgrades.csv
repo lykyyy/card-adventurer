@@ -1,0 +1,26 @@
+# 飞船组件升级路径
+# upgrade_id: 升级编号
+# component: 组件名 (hull/engine/weapon/shield/phasma_furnace)
+# level: 等级 (1-3)
+# cost_stardust: 消耗星尘
+# cost_ether: 消耗以太
+# cost_crystal: 消耗魔晶核
+# cost_gold: 消耗金币
+# stat_bonus: 属性加成描述
+# description: 升级描述
+upgrade_id,component,level,cost_stardust,cost_ether,cost_crystal,cost_gold,stat_bonus,description
+UPG-001,hull,1,5,2,0,100,船体HP+20,加固船体结构·提升耐久度
+UPG-002,hull,2,10,5,1,300,船体HP+40,安装合金装甲板·显著提升防护
+UPG-003,hull,3,15,10,3,600,船体HP+60,覆盖晶壁涂层·达到军用级防护
+UPG-004,engine,1,3,5,0,150,引擎速度+5闪避,升级燃素喷嘴·提升机动性
+UPG-005,engine,2,8,10,2,350,引擎速度+10闪避,安装双燃素涡轮·显著提升速度
+UPG-006,engine,3,12,15,5,700,引擎速度+15闪避,传说级星核引擎·瞬息穿越星域
+UPG-007,weapon,1,5,2,0,120,武器伤害+5,升级魔导炮管·提升火力
+UPG-008,weapon,2,10,5,2,300,武器伤害+10,安装双联装炮阵·火力翻倍
+UPG-009,weapon,3,15,10,5,600,武器伤害+15,搭载陨石投送器·毁灭性火力
+UPG-010,shield,1,3,5,0,150,护盾+20,强化晶壁发生器·提升护盾容量
+UPG-011,shield,2,8,10,2,350,护盾+40,多层晶壁叠加·显著提升防护
+UPG-012,shield,3,12,15,5,700,护盾+60,晶壁球级护盾·可抵御陨石撞击
+UPG-013,phasma_furnace,1,5,5,0,200,能源+20,升级燃素炉芯·提升能量输出
+UPG-014,phasma_furnace,2,10,10,3,400,能源+40,双燃素反应堆·能量充沛
+UPG-015,phasma_furnace,3,15,15,5,800,能源+60,星核反应炉·几近无限能源

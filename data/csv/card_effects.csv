@@ -1,0 +1,10 @@
+# 卡牌效果配置 | card_id:关联卡牌 | effect_type:效果类型(damage/shield/heal/shield_per_turn/damage_bonus/...) | value:数值 | target:目标(self/enemy) | timing:触发时机(on_play/turn_start/turn_end/on_hit/on_kill) | duration:持续回合(0=瞬时,-1=永久)
+card_id,effect_type,value,target,timing,duration
+C-080,damage,10,enemy,on_play,0
+C-081,shield,5,self,on_play,0
+C-082,damage,25,enemy,on_play,0
+C-083,heal,15,self,on_play,0
+C-084,shield_per_turn,3,self,turn_start,-1
+C-085,damage_bonus,5,self,on_play,-1
+C-086,damage,20,enemy,on_play,0
+C-086,heal,2,self,on_play,0

@@ -1,0 +1,7 @@
+# 敌人配置 | enemy_id:编号 | name_zh:中文名 | name_en:英文名 | hp:生命值 | atk:攻击力
+enemy_id,name_zh,name_en,hp,atk
+E-001,史莱姆,Slime,50,8
+E-002,哥布林,Goblin,70,10
+E-003,骷髅兵,Skeleton,90,12
+E-004,狼人,Werewolf,110,14
+E-005,暗影领主,Shadow Lord,150,15

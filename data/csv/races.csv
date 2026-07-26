@@ -1,0 +1,18 @@
+# 种族属性初始值
+# race_id: 种族编号 (RACE-001~RACE-004)
+# name_zh: 中文名称
+# name_en: 英文名称
+# str: 力量初始值
+# dex: 敏捷初始值
+# con: 体质初始值
+# int: 智力初始值
+# wis: 感知初始值
+# cha: 魅力初始值
+# fixed_skill: 种族固定技能 (SKILL-01~SKILL-06 / 空为自选)
+# passive_ability: 种族被动能力
+# description: 种族描述
+race_id,name_zh,name_en,str,dex,con,int,wis,cha,fixed_skill,passive_ability,description
+RACE-001,人类,Human,10,10,10,10,10,10,,多才多艺:额外1技能熟练+属性可分配+2任意,均衡全能，无初始属性路径奖励。
+RACE-002,精灵,Elf,10,12,10,11,10,10,SKILL-02,星界感知:先攻+1·夜间无惩罚,DEX优先，星界精灵海军血统。灵巧为固定技能。
+RACE-003,矮人,Dwarf,11,10,12,10,10,10,SKILL-01,矿脉之眼:材料获取+1·毒抗+2,CON优先，小行星矿业种族。运动为固定技能。
+RACE-004,兽人,Orc,12,10,11,10,10,10,SKILL-01,血性狂暴:HP<50%攻击伤害+15%,STR优先，太空佣兵/海盗。运动为固定技能。

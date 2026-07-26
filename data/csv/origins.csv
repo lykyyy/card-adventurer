@@ -1,0 +1,19 @@
+# 出身定义
+# origin_id: 出身编号 (ORIGIN-001~ORIGIN-006)
+# name_zh: 中文名称
+# name_en: 英文名称
+# starting_gold: 起始金币
+# starting_item: 起始物品描述
+# trait_name: 出身特性名称
+# trait_effect: 出身特性效果
+# faction_bonus: 初始派系好感加成
+# strategy_card: 战略起始牌 (C-080~C-083)
+# origin_skill: 出身附加技能熟练 (SKILL-01~SKILL-06)
+# story_hook: 剧情钩子
+origin_id,name_zh,name_en,starting_gold,starting_item,trait_name,trait_effect,faction_bonus,strategy_card,origin_skill,story_hook
+ORIGIN-001,星舰之子,Child of the Starship,120,1随机工具牌,星图直觉,太空航行事件中航线选择多1个选项,任意1个派系初始好感+1,C-080,SKILL-03,你家的船在一次航行中失踪了你一直在寻找它
+ORIGIN-002,学院学者,Academy Scholar,100,1随机知识卷轴,博闻强记,知识类检定优势额外理解1种古代语言,学院派系初始好感+2,C-082,SKILL-04,你的导师在你毕业那天交给你一个上锁的星匣至今无法打开
+ORIGIN-003,拾荒游民,Salvage Drifter,80,1随机废品,垃圾堆里的宝藏,战后战利品多1个随机掉落,黑市商人初始好感+1,C-083,SKILL-02,你在一次拾荒中捡到了一件不该捡的东西有人在找你
+ORIGIN-004,商团代理,Trade Agent,150,1随机贸易货物,议价术,商店购买打9折卖出价格+10%,商会派系初始好感+2,C-081,SKILL-06,你的商团被海盗袭击了你是唯一的幸存者
+ORIGIN-005,殖民地开拓者,Colony Pioneer,90,1随机建筑材料,坚韧求生,环境危害伤害-1饥饿口渴消耗减半,殖民地联盟初始好感+1,C-083,SKILL-01,你的殖民地在扩张时挖出了一个不该触碰的远古遗迹
+ORIGIN-006,星界孤儿,Astral Foundling,60,1随机神秘物品,星界共鸣,星界位面事件中额外获得1个隐秘选项,,C-082,SKILL-05,你被人在一艘废弃魔法船的残骸中发现船上只有你和一个刻着你名字的星图

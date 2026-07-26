@@ -1,0 +1,11 @@
+# 背景专长 | feat_id:编号 | name_zh:中文名 | name_en:英文名 | unlock_step:解锁步骤 | effect:效果描述 | stat_bonus:属性加成(属性:值)
+feat_id,name_zh,name_en,unlock_step,effect,stat_bonus
+BG-FEAT-001,街头智慧,Street Smarts,step7-A,偷窃成功率+20%·陷阱侦测+1,dex:1
+BG-FEAT-002,学院教育,Academy Education,step7-B,知识检定优势·额外理解1种古代语言,int:1
+BG-FEAT-003,流浪直觉,Wanderer's Intuition,step7-C,航行时多1航路选项·随机事件预知,con:1
+BG-FEAT-004,老兵韧性,Veteran's Resilience,step8-A,战斗结束后恢复5HP,str:1
+BG-FEAT-005,工匠精神,Craftsman's Spirit,step8-B,制作/修理费用-10%·鉴定免费,con:1
+BG-FEAT-006,信仰之力,Power of Faith,step8-C,每场战斗1次·免伤5点,wis:1
+BG-FEAT-007,复仇意志,Vengeful Will,step9-A,对精英/Boss敌人伤害+15%,str:1
+BG-FEAT-008,渊博学识,Profound Knowledge,step9-B,每等级额外获得1张法术牌选项,int:1
+BG-FEAT-009,命运眷顾,Fate's Favor,step9-C,战利品稀有度提升1档(上限稀有),cha:1

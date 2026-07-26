@@ -1,0 +1,5 @@
+# 状态效果配置 | status_id:编号 | name_zh:中文名 | name_en:英文名 | effect_desc_zh:中文描述 | effect_desc_en:英文描述 | duration_type:持续类型(current_turn/in_turns/permanent) | duration_value:持续回合数
+status_id,name_zh,name_en,effect_desc_zh,effect_desc_en,duration_type,duration_value
+S-001,护盾,Shield,抵消伤害,Block incoming damage,current_turn,1
+S-002,狂暴,Berserk,攻击力翻倍,ATK doubled,in_turns,1
+S-003,虚弱,Weakness,攻击力减半,ATK halved,in_turns,2

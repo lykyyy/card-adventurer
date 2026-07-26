@@ -1,0 +1,7 @@
+# 装备栏位定义 | slot_id:栏位编号 | name_zh:栏位名称 | slot_type:栏位类型(weapon/armor/accessory/universal)
+slot_id,name_zh,slot_type
+EQUIP-SLOT-001,主手武器,weapon
+EQUIP-SLOT-002,副手武器,weapon_offhand
+EQUIP-SLOT-003,护甲,armor
+EQUIP-SLOT-004,饰品,accessory
+EQUIP-SLOT-005,通用,universal

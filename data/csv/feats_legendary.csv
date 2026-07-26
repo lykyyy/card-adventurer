@@ -1,0 +1,18 @@
+# 传奇专长
+# lfeat_id: 传奇专长编号 (LFEAT-01~LFEAT-08)
+# name_zh: 中文名称
+# name_en: 英文名称
+# required_pl: 道途等级要求
+# required_attr: 属性要求 (格式: 属性>=值)
+# stackable: 是否可多次选取 (yes/no)
+# effect_desc: 效果描述
+# dnd_reference: DND参考来源
+lfeat_id,name_zh,name_en,required_pl,required_attr,stackable,effect_desc,dnd_reference
+LFEAT-01,传奇健壮,Epic Toughness,1,CON>=20,yes,HP上限+30,Epic Toughness
+LFEAT-02,传奇战技,Epic Prowess,1,STR>=20|DEX>=20,yes,所有攻击检定+1,Epic Prowess
+LFEAT-03,伤害减免,Damage Reduction,2,CON>=22,yes,获得3/-伤害减免可叠加,Damage Reduction [Epic]
+LFEAT-04,传奇施法,Epic Spellcasting,2,INT>=22|WIS>=22|CHA>=22,yes,法术效果+25%可叠加,Epic Spellcasting
+LFEAT-05,完美双持,Perfect Two-Weapon Fighting,3,DEX>=24,no,副手攻击次数等于主手,Perfect TWF [Epic]
+LFEAT-06,传奇武器专精,Epic Weapon Specialization,3,STR>=24|DEX>=24,yes,所选武器伤害+4可叠加每选不同武器,Epic Weapon Spec [Epic]
+LFEAT-07,超越极限,Beyond Limits,5,,yes,任选1属性突破当前上限+2不可重复选同属性,自定义
+LFEAT-08,不朽灵魂,Immortal Soul,7,,no,死亡后24小时自动复活复活地点为最近的安全据点,对标神格特性

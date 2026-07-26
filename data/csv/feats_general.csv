@@ -1,0 +1,19 @@
+# 通用专长
+# feat_id: 专长编号 (FEAT-G-01~FEAT-G-09)
+# name_zh: 中文名称
+# name_en: 英文名称
+# required_level: 等级要求
+# required_attr: 属性要求 (格式: 属性>=值)
+# effect_type: 效果类型 (passive/active/toggle)
+# effect_desc: 效果描述
+# dnd_reference: DND参考来源
+feat_id,name_zh,name_en,required_level,required_attr,effect_type,effect_desc,dnd_reference
+FEAT-G-01,警觉,Alert,4,WIS>=13,passive,先攻+3不被突袭,Alert
+FEAT-G-02,健壮,Tough,4,CON>=13,passive,HP上限+15,Tough
+FEAT-G-03,博学,Learned,4,INT>=13,passive,知识检定优势多1个技能熟练,Sage
+FEAT-G-04,魅力,Charming,4,CHA>=13,passive,谈判检定+2商店折扣+5%,Skilled
+FEAT-G-05,巧手,Nimble,4,DEX>=13,passive,陷阱解除优势偷窃成功率+20%,Dungeon Delver
+FEAT-G-06,猛力攻击,Power Attack,8,STR>=16,toggle,攻击时可选-2命中+5伤害,Great Weapon Master
+FEAT-G-07,战地医疗,Combat Medic,8,WIS>=16,active,战斗中1次免费治疗(3HP),Healer
+FEAT-G-08,双持客,Dual Wielder,8,DEX>=16,passive,副手武器伤害+属性调整值,Dual Wielder
+FEAT-G-09,法术反制,Counterspell,12,INT>=16,active,每战1次打断敌方施法,War Caster

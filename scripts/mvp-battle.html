@@ -1,0 +1,1013 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Card Adventurer MVP</title><style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0a1a;color:#e0e0e0;font-family:'Segoe UI',sans-serif;overflow-x:hidden;min-height:100vh}
+#game-container{max-width:1400px;margin:0 auto;padding:8px;display:flex;flex-direction:column;height:100vh}
+#title-bar{text-align:center;padding:6px 0;background:linear-gradient(90deg,#1a1a2e,#16213e,#1a1a2e);border-bottom:2px solid #e94560;margin-bottom:4px}
+#title-bar h1{font-size:20px;color:#e94560;letter-spacing:3px;text-shadow:0 0 10px rgba(233,69,96,0.5)}
+#status-bar{display:flex;justify-content:space-between;align-items:center;padding:4px 12px;background:#16213e;border:1px solid #333;border-radius:4px;margin-bottom:4px;font-size:13px;flex-shrink:0}
+#status-bar .phase-indicator{padding:3px 10px;border-radius:3px;font-weight:bold}
+.phase-start{background:#2e7d32;color:#fff}.phase-action{background:#e94560;color:#fff}.phase-enemy{background:#e65100;color:#fff}.phase-end{background:#555;color:#ccc}
+.ce-indicators{display:flex;gap:15px;font-size:12px}.ce-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 1px;background:#444}
+.ce-dot.active{background:#ffd700;box-shadow:0 0 4px #ffd700}.ce-dot.used{background:#333}
+#main-area{display:flex;flex:1;gap:6px;min-height:0}#left-panel{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0}
+#combat-log{background:#111;border:1px solid #333;border-radius:4px;padding:6px 10px;height:100px;overflow-y:auto;font-size:11px;line-height:1.5;flex-shrink:0}
+#combat-log .log-entry{padding:2px 0;border-bottom:1px solid #1a1a1a}
+.log-damage{color:#ff6b6b}.log-heal{color:#4ecdc4}.log-shield{color:#ffd93d}.log-status{color:#a29bfe}.log-system{color:#888}.log-enemy{color:#ff8c42}
+#battlefield{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:300px}
+.battle-row{display:flex;justify-content:center;gap:0}
+.grid-cell{width:120px;height:90px;border:1px solid #444;background:#1a1a2e;position:relative;cursor:pointer;transition:all .15s;overflow:hidden}
+.grid-cell:hover{background:#252545;border-color:#e94560}
+.grid-cell.selected{border:2px solid #ffd700;box-shadow:0 0 12px rgba(255,215,0,0.5);z-index:2}
+.grid-cell.target{background:#2a1a1a;border-color:#ff4444}
+.grid-cell.valid-move{background:#1a2a1a;border-color:#4ecdc4}
+.grid-cell.player-zone{border-left:3px solid #4ecdc4}
+.grid-cell.enemy-zone{border-right:3px solid #ff6b6b}
+.grid-cell.front-line{box-shadow:inset 0 0 15px rgba(233,69,96,0.15)}
+.cell-content{padding:3px 5px;height:100%;display:flex;flex-direction:column;justify-content:space-between}
+.cell-name{font-size:11px;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell-name.player{color:#4ecdc4}.cell-name.enemy{color:#ff6b6b}
+.cell-stats{font-size:9px;color:#aaa}
+.hp-bar-outer{width:100%;height:6px;background:#333;border-radius:3px;overflow:hidden;margin:2px 0}
+.hp-bar-inner{height:100%;border-radius:3px;transition:width .3s}
+.hp-bar-inner.high{background:#4ecdc4}.hp-bar-inner.mid{background:#ffd93d}.hp-bar-inner.low{background:#ff6b6b}
+.cell-status{display:flex;gap:2px;flex-wrap:wrap;position:absolute;top:2px;right:2px}
+.status-icon{font-size:9px;padding:1px 3px;border-radius:2px;background:#333;color:#fff;white-space:nowrap}
+.status-icon.shield{background:#3498db}.status-icon.bleed{background:#e74c3c}.status-icon.burn{background:#e67e22}.status-icon.mark{background:#9b59b6}.status-icon.blind{background:#7f8c8d}
+.cell-intent{position:absolute;bottom:2px;right:2px;font-size:9px;padding:1px 3px;border-radius:2px;background:#e65100;color:#fff;max-width:100px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zone-label{text-align:center;font-size:10px;color:#555;padding:2px 0}
+#hand-area{flex-shrink:0;background:#111;border:1px solid #333;border-radius:4px;padding:8px;margin-top:4px;min-height:90px}
+#hand-area h4{font-size:11px;color:#888;margin-bottom:4px}
+#hand-cards{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;min-height:60px}
+.card{min-width:100px;max-width:100px;height:70px;background:#1a1a2e;border:2px solid #555;border-radius:6px;padding:4px 6px;cursor:pointer;font-size:9px;display:flex;flex-direction:column;justify-content:space-between;transition:all .15s;flex-shrink:0;position:relative}
+.card:hover{transform:translateY(-3px);box-shadow:0 4px 12px rgba(0,0,0,0.5)}
+.card.available{cursor:pointer}
+.card.unavailable{opacity:.4;cursor:not-allowed;filter:grayscale(70%)}
+.card.selected-card{border-color:#ffd700;box-shadow:0 0 15px rgba(255,215,0,0.6);transform:translateY(-5px)}
+.card.shared{border-color:#fff}.card.team{border-color:#ffd700}.card.warrior{border-color:#e94560}.card.rogue{border-color:#4ecdc4}.card.mage{border-color:#a29bfe}.card.priest{border-color:#ffd93d}
+.card-name{font-weight:bold;font-size:10px;line-height:1.2}
+.card-cost{position:absolute;top:2px;right:4px;background:#333;color:#ffd700;padding:0 3px;border-radius:2px;font-size:9px;font-weight:bold}
+.card-info{font-size:8px;color:#aaa;line-height:1.3;overflow:hidden}
+.card-owner-tag{position:absolute;bottom:2px;left:4px;font-size:7px;opacity:.7}
+#action-bar{flex-shrink:0;display:flex;justify-content:center;gap:10px;padding:8px 0}
+#action-bar button{padding:8px 24px;border:none;border-radius:4px;font-size:14px;font-weight:bold;cursor:pointer;transition:all .2s}
+#btn-end-turn{background:#e94560;color:#fff}
+#btn-end-turn:hover{background:#ff6b7a;box-shadow:0 0 15px rgba(233,69,96,0.5)}
+#btn-end-turn:disabled{background:#555;cursor:not-allowed;box-shadow:none}
+#btn-cancel{background:#333;color:#ccc;display:none}
+#btn-cancel:hover{background:#555}
+#btn-reset{background:#555;color:#ccc;font-size:11px;padding:6px 12px}
+#btn-reset:hover{background:#777}
+#info-tip{text-align:center;font-size:10px;color:#666;padding:2px}
+.character-panel{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1a1a2e;border:2px solid #e94560;border-radius:8px;padding:16px;z-index:100;min-width:250px;display:none;box-shadow:0 0 30px rgba(0,0,0,0.8)}
+.character-panel.show{display:block}
+.character-panel h3{margin-bottom:8px;color:#e94560}
+.character-panel .stat-row{display:flex;justify-content:space-between;padding:3px 0;font-size:12px;border-bottom:1px solid #222}
+.panel-close{position:absolute;top:4px;right:8px;cursor:pointer;color:#888;font-size:16px}.panel-close:hover{color:#fff}
+#overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:99}
+#overlay.show{display:block}
+#win-lose-overlay{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:200;text-align:center}
+#win-lose-overlay.show{display:block}
+#win-lose-overlay .result-text{font-size:48px;font-weight:bold;margin-bottom:16px}
+#win-lose-overlay .result-text.win{color:#ffd700;text-shadow:0 0 20px rgba(255,215,0,0.7)}
+#win-lose-overlay .result-text.lose{color:#e94560;text-shadow:0 0 20px rgba(233,69,96,0.7)}
+.card-tags{display:flex;gap:2px;padding:2px 4px;font-size:9px}
+.tag{padding:1px 4px;border-radius:2px;font-weight:bold}
+.tag-attack{background:#e94560;color:#fff}
+.tag-defense{background:#4ecdc4;color:#fff}
+.tag-support{background:#2ecc71;color:#fff}
+.tag-control{background:#a29bfe;color:#fff}
+.tag-single{background:#555;color:#ccc}
+.tag-aoe{background:#e67e22;color:#fff}
+.tag-self{background:#555;color:#ccc}
+.tag-basic{background:#555;color:#ccc}
+.tag-finisher{background:#f39c12;color:#fff}
+.tag-combo{background:#9b59b6;color:#fff}
+@keyframes pulse-ally{0%,100%{box-shadow:0 0 5px #2ecc71}50%{box-shadow:0 0 15px #2ecc71,0 0 25px #2ecc71}}
+.cell.target-ally{animation:pulse-ally 0.8s infinite}
+
+/* === MAIN MENU === */
+#main-menu{position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at center,#1a1a2e 0%,#0a0a1a 70%);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s,visibility .5s}
+#main-menu.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.menu-stars{position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;pointer-events:none}
+.menu-star{position:absolute;background:#fff;border-radius:50%;animation:twinkle 2s infinite alternate}
+@keyframes twinkle{0%{opacity:0.3;transform:scale(0.8)}100%{opacity:1;transform:scale(1.2)}}
+.menu-content{position:relative;z-index:1;text-align:center}
+.menu-title{font-size:48px;font-weight:bold;color:#e94560;letter-spacing:6px;text-shadow:0 0 20px rgba(233,69,96,0.5),0 0 40px rgba(233,69,96,0.2);margin-bottom:8px}
+.menu-subtitle{font-size:16px;color:#a29bfe;letter-spacing:4px;margin-bottom:48px;text-shadow:0 0 10px rgba(162,155,254,0.3)}
+.menu-btn{display:block;width:260px;padding:14px 0;margin:10px auto;background:transparent;border:2px solid #e94560;color:#e0e0e0;font-size:16px;letter-spacing:2px;cursor:pointer;position:relative;overflow:hidden;transition:all .3s;border-radius:4px}
+.menu-btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(233,69,96,0.2),transparent);transition:left .5s}
+.menu-btn:hover::before,.menu-btn:focus::before{left:100%}
+.menu-btn:hover,.menu-btn:focus{color:#fff;border-color:#ff6b7a;box-shadow:0 0 20px rgba(233,69,96,0.3);transform:scale(1.03);outline:none}
+.menu-btn.selected{background:rgba(233,69,96,0.15);border-color:#ff6b7a;box-shadow:0 0 25px rgba(233,69,96,0.4)}
+.menu-version{position:absolute;bottom:20px;color:#555;font-size:12px;letter-spacing:2px}
+
+/* === MODAL === */
+.modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:400;align-items:center;justify-content:center}
+.modal.show{display:flex}
+.modal-box{background:#1a1a2e;border:2px solid #e94560;border-radius:8px;padding:24px 32px;min-width:300px;max-width:500px;text-align:center;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+.modal-box h3{color:#e94560;margin-bottom:16px;font-size:20px}
+.modal-box p,.modal-box label{color:#ccc;font-size:14px;margin:8px 0;line-height:1.6}
+.modal-box select{padding:6px 12px;background:#111;color:#fff;border:1px solid #555;border-radius:4px;font-size:14px}
+.modal-close{margin-top:16px;padding:8px 24px;background:#e94560;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px}
+.modal-close:hover{background:#ff6b7a}
+.help-table{margin:12px auto;border-collapse:collapse;width:100%}
+.help-table td{padding:6px 10px;font-size:13px;border-bottom:1px solid #333;text-align:left}
+.help-table td:first-child{color:#ffd700;font-weight:bold;white-space:nowrap}
+</style></head><body>
+<div id="main-menu"><div class="menu-stars" id="menu-stars"></div><div class="menu-content"><div class="menu-title">CARD ADVENTURER</div><div class="menu-subtitle">魔法船 · 星界冒险</div><button class="menu-btn selected" data-action="start" id="btn-start">▶ 开始战斗</button><button class="menu-btn" data-action="settings" id="btn-settings">⚙️ 难度设置</button><button class="menu-btn" data-action="help" id="btn-help">📖 操作帮助</button></div><div class="menu-version">MVP v1.0</div></div>
+<div id="modal-settings" class="modal"><div class="modal-box"><h3>⚙️ 难度设置</h3><p>选择敌人强度系数</p><label for="diff-select">当前难度: </label><select id="diff-select"><option value="0.8">简单 (敌HP×0.8)</option><option value="1.0" selected>普通 (敌HP×1.0)</option><option value="1.3">困难 (敌HP×1.3)</option></select><br><button class="modal-close" onclick="closeModal('modal-settings')">确认</button></div></div>
+<div id="modal-help" class="modal"><div class="modal-box"><h3>📖 操作帮助</h3><table class="help-table"><tr><td>点击角色</td><td>选中角色</td></tr><tr><td>点击卡牌 + 目标</td><td>出牌</td></tr><tr><td>点击空格</td><td>移动 (1CE)</td></tr><tr><td>Ctrl + 点击友方</td><td>换位 (0CE, 1次/回合)</td></tr><tr><td>右键</td><td>查看角色/敌人详情</td></tr><tr><td>ESC</td><td>取消选择/关闭面板</td></tr><tr><td>R</td><td>重置战斗</td></tr></table><button class="modal-close" onclick="closeModal('modal-help')">关闭</button></div></div>
+<div id="game-container">
+<div id="title-bar"><h1>CARD ADVENTURER MVP</h1></div>
+<div id="status-bar"><span>回合: <b id="turn-num">1</b></span><span class="phase-indicator phase-start" id="phase-indicator">&#9654; 开始阶段</span><div class="ce-indicators" id="ce-indicators"></div><button id="btn-reset" onclick="resetGame()">&#8634; 重置</button></div>
+<div id="main-area"><div id="left-panel"><div id="combat-log"><div class="log-entry log-system">=== 战斗开始 ===</div></div><div id="battlefield"></div></div></div>
+<div id="hand-area"><h4>&#x1F0CF; 手牌区</h4><div id="hand-cards"></div></div>
+<div id="action-bar"><button id="btn-cancel" onclick="cancelSelection()">&#10005; 取消选择</button><button id="btn-end-turn" onclick="endTurn()">&#9654; 结束回合</button></div>
+<div id="info-tip">提示:点击角色→点击卡牌出牌 | 点击角色→点击格子移动(1CE) | Ctrl+点击角色换位(0CE,每回合1次)</div>
+</div>
+<div id="overlay" onclick="closePanel()"></div><div id="character-panel" class="character-panel"></div><div id="win-lose-overlay"><div class="result-text"></div><button onclick="resetGame()" style="padding:10px 30px;font-size:16px;background:#e94560;color:#fff;border:none;border-radius:4px;cursor:pointer">&#8634; 重新开始</button></div>
+<script>
+
+// === GAME STATE ===
+let S = { turn:0, phase:'', selChar:null, selCard:null, swapUsed:false, focused:false,
+  chars:[], enemies:[], hand:[], deck:[], discard:[], teamDeck:[], teamDiscard:[],
+  onceUsed:{}, turnUsed:{}, log:[], pendingCard:null, win:null, targetingMode:null, difficulty:1.0 };
+
+// === CARD DATA ===
+const CARDS = {
+'C-010':{tags:'攻击·单体·基础',id:'C-010',n:'蓄力斩',t:'attack',o:'warrior',ce:1,d:8,sp:'+2怒气'},
+'C-011':{tags:'防御·自身·联动',id:'C-011',n:'格挡反击',t:'defense',o:'warrior',ce:1,sh:5,sp:'受击+1怒+3反伤'},
+'C-012':{tags:'攻击·单体·终结',id:'C-012',n:'怒意爆发',t:'attack',o:'warrior',ce:1,d:0,sp:'消耗怒气,怒x3伤害,>=5怒+6'},
+'C-013':{tags:'辅助·自身·基础',id:'C-013',n:'战斗狂热',t:'buff',o:'warrior',ce:2,sp:'+3怒,本回攻击CE-1'},
+'C-014':{tags:'攻击·单体·终结',id:'C-014',n:'毁灭之握',t:'attack',o:'warrior',ce:4,d:30,ig:true,sp:'>=8怒+15,怒减半'},
+'C-020':{tags:'攻击·单体·基础',id:'C-020',n:'双重打击',t:'attack',o:'rogue',ce:1,d:4,sp:'2次各4伤,各+1CP'},
+'C-021':{tags:'防御·自身·联动',id:'C-021',n:'烟雾掩护',t:'defense',o:'rogue',ce:1,sh:4,sp:'未受伤回合末+1CP'},
+'C-022':{tags:'攻击·单体·终结',id:'C-022',n:'刺骨',t:'attack',o:'rogue',ce:2,d:8,sp:'消耗CP,8+CPx6伤,CP>=3附5流血'},
+'C-023':{tags:'辅助·自身·基础',id:'C-023',n:'暗影预备',t:'buff',o:'rogue',ce:0,sp:'+2CP,受伤禁用'},
+'C-024':{tags:'攻击·单体·终结',id:'C-024',n:'死亡莲华',t:'attack',o:'rogue',ce:3,d:5,ig:true,sp:'消耗CP,(CP+2)次x5'},
+'C-030':{tags:'攻击·单体·基础',id:'C-030',n:'奥术飞弹',t:'attack',o:'mage',ce:1,d:10,mp:1},
+'C-031':{tags:'防御·自身·基础',id:'C-031',n:'魔法护盾',t:'defense',o:'mage',ce:1,sh:8,mp:1,sp:'格挡下次DOT'},
+'C-032':{tags:'攻击·全体·基础',id:'C-032',n:'烈焰风暴',t:'attack',o:'mage',ce:3,d:12,aoe:true,mp:3},
+'C-033':{tags:'辅助·自身·基础',id:'C-033',n:'魔力回流',t:'buff',o:'mage',ce:2,mp:0,sp:'恢复2法力,1次/战'},
+'C-034':{tags:'攻击·全体·终结',id:'C-034',n:'星辰陨落',t:'attack',o:'mage',ce:4,d:30,aoe:true,ig:true,mp:5,sp:'>=8法=40伤'},
+'C-050':{tags:'攻击·单体·基础',id:'C-050',n:'圣光击',t:'attack',o:'priest',ce:1,d:10,mp:1,sp:'自愈5'},
+'C-051':{tags:'辅助·单体·基础',id:'C-051',n:'治疗祷言',t:'heal',o:'priest',ce:1,hl:20,mp:2},
+'C-052':{tags:'防御·单体·基础',id:'C-052',n:'光耀之盾',t:'defense',o:'priest',ce:1,sh:10,mp:2,sp:'敌ATK-5'},
+'C-053':{tags:'攻击·单体·联动',id:'C-053',n:'公正审判',t:'attack',o:'priest',ce:2,d:20,mp:3,sp:'施加标记'},
+'C-054':{tags:'辅助·单体·基础',id:'C-054',n:'净化',t:'defense',o:'priest',ce:1,sh:5,mp:1,sp:'移除1负面'},
+'C-004':{tags:'辅助·单体·基础',id:'C-004',n:'急救',t:'heal',o:'shared',ce:1,hl:15},
+'C-072':{tags:'辅助·自身·基础',id:'C-072',n:'战备',t:'buff',o:'shared',ce:1,sp:'抽2牌'},
+'C-073':{tags:'辅助·自身·基础',id:'C-073',n:'专注',t:'buff',o:'shared',ce:0,sp:'自身CE+1,1次/战'},
+'C-076':{tags:'控制·单体·联动',id:'C-076',n:'战术集火',t:'buff',o:'team',ce:1,sp:'全队对目标+50%伤害,1次/回合'},
+'C-077':{tags:'防御·全体·基础',id:'C-077',n:'防御阵型',t:'defense',o:'team',ce:1,sh:5,aoe:true,team:true,sp:'全队获得5护盾,1次/回合'},
+'C-078':{tags:'辅助·全体·基础',id:'C-078',n:'战术撤退',t:'buff',o:'team',ce:0,sp:'全员后撤1列,每战2次'},
+'C-079':{tags:'辅助·单体·基础',id:'C-079',n:'集中火力',t:'buff',o:'team',ce:2,sp:'目标角色CE+2,每战1次'}
+};
+
+const OWNER_COLORS = {warrior:'e94560',rogue:'4ecdc4',mage:'a29bfe',priest:'ffd93d',shared:'fff',team:'ffd700'};
+const OWNER_ZH = {warrior:'战士',rogue:'盗贼',mage:'法师',priest:'牧师',shared:'共享',team:'团队'};
+
+// === INIT ===
+var isEmbed=false;
+function init() {
+  S.turn=1; S.phase='start'; S.selChar=null; S.selCard=null; S.swapUsed=false; S.win=null;
+  S.onceUsed={}; S.turnUsed={}; S.log=[]; S.focused=false; S.pendingCard=null; S.targetingMode=null;
+  S.chars=[]; S.enemies=[]; S.hand=[]; S.deck=[]; S.discard=[]; S.teamDeck=[]; S.teamDiscard=[];
+  S.customDeck=null;
+  
+  // Parse URL params
+  var urlParams=new URLSearchParams(window.location.search);
+  if(urlParams.get('embed')==='1')isEmbed=true;
+  if(isEmbed)document.getElementById('main-menu').classList.add('hidden');
+  if(isEmbed)document.getElementById('game-container').style.display='';
+  var d=S.difficulty=parseFloat(urlParams.get('diff'))||1.0;
+  
+  // Parse custom characters from URL
+  var crewData=null, enemyData=null;
+  try{
+    var rawC=urlParams.get('crewData');
+    if(rawC)crewData=JSON.parse(decodeURIComponent(rawC));
+    var rawE=urlParams.get('enemyData');
+    if(rawE)enemyData=JSON.parse(decodeURIComponent(rawE));
+  }catch(e){}
+  
+  if(crewData){
+    crewData.forEach(function(c,i){
+      var prMap={warrior:'warrior',rogue:'rogue',mage:'mage',priest:'priest',captain:'warrior'};
+      var enMap={rage:'rage',cp:'cp',mana:'mana'};
+      var posMap=[{pc:2,row:2},{pc:2,row:1},{pc:0,row:2},{pc:1,row:1}];
+      var pos=posMap[i]||{pc:1,row:i+0};
+      S.chars.push({
+        id:'CRW-'+i,n:c.name||('船员'+i),hp:c.hp,mh:c.mh||c.hp,
+        ce:c.ce||4,cm:c.cm||c.ce||4,
+        pr:prMap[c.prof]||'warrior',en:enMap[c.energy]||'rage',
+        ev:c.ev||0,em:c.em||10,
+        pc:pos.pc,row:pos.row,
+        st:[],dk:[],di:[],isHurt:false,unharmed:true,vigorUsed:false
+      });
+    });
+    // Populate decks
+    if(urlParams.get('deck'))S.customDeck=JSON.parse(decodeURIComponent(urlParams.get('deck')));
+  }
+  if(S.chars.length===0){
+    // Default characters (fallback)
+    var defaultChars = [
+      {id:'P-001',n:'战士',hp:120,mh:120,ce:5,cm:5,pr:'warrior',en:'rage',ev:0,em:10,pc:2,row:2,st:[],dk:[],di:[],isHurt:false,unharmed:true,vigorUsed:false},
+      {id:'P-003',n:'盗贼',hp:90,mh:90,ce:4,cm:4,pr:'rogue',en:'cp',ev:0,em:3,pc:2,row:1,st:[],dk:[],di:[],isHurt:false,unharmed:true},
+      {id:'P-002',n:'法师',hp:70,mh:70,ce:3,cm:3,pr:'mage',en:'mana',ev:7,em:7,pc:0,row:2,st:[],dk:[],di:[],isHurt:false,unharmed:true},
+      {id:'P-004',n:'牧师',hp:80,mh:80,ce:3,cm:3,pr:'priest',en:'mana',ev:6,em:6,pc:1,row:1,st:[],dk:[],di:[],isHurt:false,unharmed:true}
+    ];
+    S.chars=defaultChars;
+  }
+  // Enemies
+  if(enemyData){
+    enemyData.forEach(function(e,i){
+      var epc=[3,3,4,4,5][i]||3, er=[0,1,2,0,0][i]||0;
+      S.enemies.push({
+        id:'E-EMB-'+(i+1),n:e.name,hp:e.hp,mh:e.mh||e.hp,
+        tp:'mob',d:e.atk||8,
+        pc:epc,row:er,sk:[],st:[],intent:null
+      });
+    });
+  }else{
+    S.enemies = [
+      {id:'E-001',n:'史莱姆',hp:Math.floor(40*d),mh:Math.floor(40*d),tp:'mob',d:8,pc:3,row:0,sk:[{n:'分裂',cd:0,used:false}],st:[],intent:null},
+      {id:'E-003',n:'兽人',hp:Math.floor(80*d),mh:Math.floor(80*d),tp:'elite',d:18,pc:3,row:1,sk:[{n:'咆哮',cd:0,used:false,dmgBuff:5}],st:[],intent:null},
+      {id:'E-002',n:'哥布林',hp:Math.floor(30*d),mh:Math.floor(30*d),tp:'mob',d:12,pc:3,row:2,sk:[],st:[],intent:null},
+      {id:'E-004',n:'骷髅射手',hp:Math.floor(45*d),mh:Math.floor(45*d),tp:'ranged',d:15,pc:4,row:0,sk:[{n:'毒箭',cd:0,used:false,bleed:2}],st:[],intent:null},
+      {id:'E-005',n:'暗影术士',hp:Math.floor(50*d),mh:Math.floor(50*d),tp:'caster',d:20,pc:5,row:0,sk:[{n:'暗影护盾',cd:0,used:false,sh:15},{n:'暗影弹',cd:0,used:true,bolt:20}],st:[],intent:null,cycle:0}
+    ];
+  }
+  // Starting decks
+  if(S.customDeck){
+    S.customDeck.forEach(cid=>addToDeck(cid,1));
+    S.customDeck=null;
+  }else{
+    addToDeck('C-010',2); addToDeck('C-011',1); addToDeck('C-020',2); addToDeck('C-021',1);
+    addToDeck('C-030',1); addToDeck('C-031',1); addToDeck('C-050',1); addToDeck('C-051',1);
+    addToDeck('C-004',4); addToDeck('C-072',2); addToDeck('C-073',1);
+  }
+  S.teamDeck=['C-076','C-077','C-078','C-079'].map(id=>({...CARDS[id]}));
+  shuffle(S.deck); shuffle(S.teamDeck);
+  for(let i=0;i<3;i++) drawCard();
+  if(S.teamDeck.length>0){let c=S.teamDeck.pop();S.hand.push(c);}
+  else if(S.teamDiscard.length>0){shuffle(S.teamDiscard);S.teamDeck=S.teamDiscard;S.teamDiscard=[];let c=S.teamDeck.pop();S.hand.push(c);}
+  startPhase();
+}
+function addToDeck(id,n){for(let i=0;i<n;i++)S.deck.push({...CARDS[id]})}
+function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}}
+function drawCard(){if(S.deck.length===0){if(S.discard.length===0)return null;S.deck=S.discard;S.discard=[];shuffle(S.deck)};let c=S.deck.pop();S.hand.push(c);return c}
+function log(msg,cls){S.log.push({msg,cls:cls||''});if(S.log.length>30)S.log.shift();renderLog()}
+function getCharAt(col,row){return S.chars.find(c=>c.pc===col&&c.row===row&&c.hp>0)}
+function getEnemyAt(col,row){return S.enemies.find(e=>e.pc===col&&e.row===row&&e.hp>0)}
+function getOccupant(col,row){return getCharAt(col,row)||getEnemyAt(col,row)||null}
+function isPlayerCol(col){return col>=0&&col<=2}
+function isEnemyCol(col){return col>=3&&col<=5}
+function getCharById(id){return S.chars.find(c=>c.id===id)}
+function getEnemyById(id){return S.enemies.find(e=>e.id===id&&e.hp>0)}
+function hpRatio(u){return u.hp/u.mh}
+function hpClass(u){let r=hpRatio(u);return r>0.6?'high':r>0.3?'mid':'low'}
+function getFrontLineCols(){return[2,3]} // player col2 (front) and enemy col3 (front)
+function canMelee(col){return col===2||col===3} // can reach enemy front when at these cols
+function isCardPlayable(card,char){
+  if(!char||char.hp<=0)return false;
+  if(card.ce>char.ce)return false;
+  if(card.mp&&card.mp>0&&char.ev<card.mp)return false;
+  if(card.o==='shared'||card.o==='team')return true;
+  if(card.o!==char.pr)return false;
+  if(card.id==='C-023'&&char.isHurt)return false;
+  if(card.id==='C-033'&&S.onceUsed['C-033'])return false;
+  if(card.id==='C-073'&&S.onceUsed['C-073'])return false;
+  if(card.id==='C-076'&&S.turnUsed['C-076'])return false;
+  if(card.id==='C-077'&&S.turnUsed['C-077'])return false;
+  if(card.id==='C-078'&&(S.onceUsed['C-078']||0)>=2)return false;
+  if(card.id==='C-079'&&S.onceUsed['C-079'])return false;
+  return true;
+}
+function getAllLivingChars(){return S.chars.filter(c=>c.hp>0)}
+function getAllLivingEnemies(){return S.enemies.filter(e=>e.hp>0)}
+
+// === STATUS EFFECTS ===
+function addStatus(target,id,stacks,duration){
+  let exist=target.st.find(s=>s.id===id);
+  if(exist){exist.stacks+=stacks;if(duration>exist.dur)exist.dur=duration}
+  else target.st.push({id,stacks,stacks,dur:duration||1})
+}
+function removeStatus(target,id){target.st=target.st.filter(s=>s.id!==id)}
+function getShield(target){let s=target.st.find(s=>s.id==='S-001');return s?s.stacks:0}
+function addShield(target,val){if(val<=0)return;let s=target.st.find(s=>s.id==='S-001');if(s)s.stacks+=val;else target.st.push({id:'S-001',stacks:val,dur:1})}
+
+// === DAMAGE CALCULATION ===
+function calcDamage(baseDmg,attacker,target,options={}){
+  let dmg=baseDmg;
+  let shield=getShield(target);
+  if(!options.ignoreShield&&shield>0){
+    let absorbed=Math.min(dmg,shield);
+    dmg-=absorbed;
+    let s=target.st.find(s=>s.id==='S-001');s.stacks-=absorbed;if(s.stacks<=0)removeStatus(target,'S-001');
+  }
+  if(target.st.find(s=>s.id==='S-008')){
+    dmg=Math.floor(dmg*1.5);
+    removeStatus(target,'S-008');
+    log(target.n+'的标记触发:伤害+50%!','log-status');
+  }
+  if(S.turnUsed['C-076']&&options.isFocused){
+    dmg=Math.floor(dmg*1.5);
+  }
+  dmg=Math.max(1,dmg);
+  return dmg;
+}
+function dealDamage(attacker,target,baseDmg,options={}){
+  let dmg=calcDamage(baseDmg,attacker,target,options);
+  target.hp-=dmg;
+  log((attacker.n||attacker.id)+'对'+target.n+'造成'+dmg+'点伤害','log-damage');
+  if(target.hp<=0){target.hp=0;log(target.n+'被击败!','log-damage')}
+  return dmg;
+}
+function healTarget(target,amount){
+  target.hp=Math.min(target.mh,target.hp+amount);
+  log(target.n+'恢复'+amount+'HP','log-heal');
+}
+function applyBleed(target,stacks){addStatus(target,'S-004',stacks,3);log(target.n+'获得'+stacks+'层流血','log-status')}
+function applyBurn(target,stacks){addStatus(target,'S-005',stacks,3);log(target.n+'获得'+stacks+'层灼烧','log-status')}
+function applyMark(target){addStatus(target,'S-008',1,3);log(target.n+'被标记','log-status')}
+function applyBlind(target){addStatus(target,'S-007',1,2);log(target.n+'被致盲','log-status')}
+function applyWeak(target){addStatus(target,'S-003',1,2);log(target.n+'被虚弱','log-status')}
+
+
+// === PLAY CARD ===
+function playCard(cardIdx,targetCol,targetRow){
+  let card=S.hand[cardIdx];if(!card)return;
+  let char=S.selChar;if(!char||!isCardPlayable(card,char)){
+    log('无法使用此卡牌(CE不足/职业不匹配)','log-system');renderAll();return;
+  }
+  // Spend CE
+  char.ce-=card.ce;
+  // Spend mana
+  if(card.mp&&card.mp>0)char.ev-=card.mp;
+  // Remove from hand
+  S.hand.splice(cardIdx,1);
+  
+  let targets=[];
+  if(card.aoe&&card.team){
+    targets=getAllLivingChars();
+  }else if(card.aoe){
+    targets=getAllLivingEnemies();
+  }else if(targetCol!==undefined&&targetRow!==undefined){
+    let t=getEnemyAt(targetCol,targetRow);
+    if(t)targets=[t];
+    else{let ally=getCharAt(targetCol,targetRow);if(ally)targets=[ally]}
+  }
+  if(targets.length===0&&(card.t==='attack'||card.t==='heal'||card.sh)){
+    // Auto-target nearest enemy for attacks, self for heals
+    if(card.t==='attack'){let e=findNearestEnemy(char);if(e)targets=[e]}
+    else if(card.t==='heal')targets=[char];
+  }
+  
+  let cardName=card.n;
+  log('['+S.turn+'] '+char.n+'使用'+cardName,'log-system');
+  
+  // Special card effects first
+  if(card.id==='C-010'){char.ev=Math.min(char.em,char.ev+2);log(char.n+'怒气+2('+char.ev+'/'+char.em+')','log-system')}
+  if(card.id==='C-012'){let r=char.ev;char.ev=0;let dmg=r*3;if(r>=5)dmg+=6;for(let t of targets)dealDamage(char,t,dmg);log(char.n+'消耗怒气造成'+dmg+'伤害','log-damage')}
+  else if(card.id==='C-013'){char.ev=Math.min(char.em,char.ev+3);S.turnUsed['vigor']=true;log(char.n+'怒气+3,本回合攻击CE-1','log-system')}
+  else if(card.id==='C-014'){let bonus=char.ev>=8?15:0;let dmg=30+bonus;for(let t of targets)dealDamage(char,t,dmg,{ignoreShield:true});char.ev=Math.floor(char.ev/2);log(char.n+'毁灭之握!怒气减半('+char.ev+')','log-damage')}
+  else if(card.id==='C-020'){for(let t of targets){dealDamage(char,t,4);char.ev=Math.min(char.em,char.ev+1);dealDamage(char,t,4);char.ev=Math.min(char.em,char.ev+1)}log(char.n+'CP='+char.ev,'log-system')}
+  else if(card.id==='C-021'){addShield(char,4);if(char.unharmed)S.onceUsed['smokeCP']=true;log(char.n+'获得4护盾','log-shield')}
+  else if(card.id==='C-022'){let cp=char.ev;char.ev=0;let dmg=8+cp*6;for(let t of targets){dealDamage(char,t,dmg);if(cp>=3)applyBleed(t,5)}log(char.n+'刺骨!','log-damage')}
+  else if(card.id==='C-023'){char.ev=Math.min(char.em,char.ev+2);log(char.n+'CP+2('+char.ev+')','log-system')}
+  else if(card.id==='C-024'){let cp=char.ev;char.ev=0;let hits=cp+2;for(let i=0;i<hits;i++)for(let t of targets)dealDamage(char,t,5,{ignoreShield:true});log(char.n+'死亡莲华'+hits+'连击!','log-damage')}
+  else if(card.id==='C-030'){for(let t of targets)dealDamage(char,t,10)}
+  else if(card.id==='C-031'){addShield(char,8);char.st.push({id:'S-031',stacks:1,dur:99});log(char.n+'获得8护盾+格挡DOT','log-shield')}
+  else if(card.id==='C-032'){for(let t of targets)dealDamage(char,t,12)}
+  else if(card.id==='C-033'){char.ev=Math.min(char.em,char.ev+2);S.onceUsed['C-033']=true;log(char.n+'法力+2('+char.ev+')','log-system')}
+  else if(card.id==='C-034'){let bonusDmg=char.ev>=8?40:30;for(let t of targets)dealDamage(char,t,bonusDmg,{ignoreShield:true});log(char.n+'星辰陨落!','log-damage')}
+  else if(card.id==='C-050'){for(let t of targets)dealDamage(char,t,10);healTarget(char,5)}
+  else if(card.id==='C-051'){for(let t of targets)healTarget(t,20)}
+  else if(card.id==='C-052'){for(let t of targets)addShield(t,10);S.turnUsed['weakEnemy']=true;log('敌方ATK-5本回合','log-status')}
+  else if(card.id==='C-053'){for(let t of targets){dealDamage(char,t,20);applyMark(t)}}
+  else if(card.id==='C-054'){for(let t of targets){let neg=t.st.filter(s=>s.id!=='S-001'&&s.id!=='S-008');if(neg.length>0){let r=neg[0];removeStatus(t,r.id);log(t.n+'移除'+r.id,'log-status')}addShield(t,5)}}
+  else if(card.id==='C-004'){for(let t of targets)healTarget(t,15)}
+  else if(card.id==='C-072'){drawCard();drawCard();log('抽2张牌','log-system')}
+  else if(card.id==='C-073'){char.ce=Math.min(char.cm,char.ce+1);S.onceUsed['C-073']=true;log(char.n+'CE+1','log-system')}
+  else if(card.id==='C-076'){S.turnUsed['C-076']=true;S.focused=true;log('战术集火:本回合全队伤害+50%','log-system')}
+  else if(card.id==='C-077'){getAllLivingChars().forEach(c=>addShield(c,5));S.turnUsed['C-077']=true;log('全队获得5护盾','log-shield')}
+  else if(card.id==='C-078'){getAllLivingChars().forEach(c=>{if(c.pc>0){c.pc--;log(c.n+'后撤至列'+c.pc,'log-system')}});S.onceUsed['C-078']=(S.onceUsed['C-078']||0)+1}
+  else if(card.id==='C-079'){for(let t of targets){t.ce=Math.min(t.cm,t.ce+2);log(t.n+'CE+2','log-system')}S.onceUsed['C-079']=true}
+  else {
+    // Generic attack/heal/shield
+    if(card.d&&card.d>0){for(let t of targets)dealDamage(char,t,card.d,{ignoreShield:card.ig})}
+    if(card.hl&&card.hl>0){for(let t of targets)healTarget(t,card.hl)}
+    if(card.sh&&card.sh>0){for(let t of targets)addShield(t,card.sh)}
+  }
+  
+  // Discard
+  S.discard.push(card);
+  S.selCard=null;
+  checkWinLose();
+  renderAll();
+}
+
+// === FIND NEAREST ENEMY ===
+function findNearestEnemy(char){
+  let enemies=getAllLivingEnemies();
+  if(enemies.length===0)return null;
+  enemies.sort((a,b)=>{let da=Math.abs(a.pc-char.pc)+Math.abs(a.row-char.row);let db=Math.abs(b.pc-char.pc)+Math.abs(b.row-char.row);return da-db});
+  return enemies[0];
+}
+
+// === MOVEMENT ===
+function moveCharacter(col,row){
+  let char=S.selChar;if(!char||char.hp<=0)return;
+  // Check if occupant at target
+  if(getOccupant(col,row)){log('目标格已被占据','log-system');renderAll();return;}
+  // Check adjacent (no diagonal)
+  let dc=Math.abs(col-char.pc),dr=Math.abs(row-char.row);
+  if(dc+dr!==1){log('只能上下左右移动','log-system');renderAll();return;}
+  // CE cost
+  if(char.ce<1){log('CE不足','log-system');renderAll();return;}
+  char.ce-=1; char.pc=col; char.row=row;
+  log(char.n+'移动到('+col+','+row+')','log-system');
+  S.selChar=char; // keep selected
+  renderAll();
+}
+
+// === SWAP ===
+function swapWith(char,targetChar){
+  if(S.swapUsed){log('本回合已换位','log-system');renderAll();return;}
+  let dc=Math.abs(char.pc-targetChar.pc),dr=Math.abs(char.row-targetChar.row);
+  if(dc+dr!==1){log('只能相邻换位','log-system');renderAll();return;}
+  [char.pc,targetChar.pc]=[targetChar.pc,char.pc];
+  [char.row,targetChar.row]=[targetChar.row,char.row];
+  S.swapUsed=true;
+  log(char.n+'与'+targetChar.n+'换位','log-system');
+  renderAll();
+}
+
+
+// === TURN FLOW ===
+function startPhase(){
+  S.phase='start';
+  updatePhaseUI();
+  // CE restore
+  S.chars.forEach(c=>{if(c.hp>0)c.ce=Math.min(c.cm,c.ce+2)});
+  // Resolve DOT
+  resolveDOT();
+  // Clear shields
+  S.chars.forEach(c=>removeStatus(c,'S-001'));
+  S.enemies.forEach(e=>removeStatus(e,'S-001'));
+  // Reduce status durations, tick statuses
+  tickAllStatuses();
+  // Draw cards: +2 shared, +1 per char (handled by draw)
+  for(let i=0;i<2+S.chars.filter(c=>c.hp>0).length;i++)drawCard();
+  if(S.teamDeck.length>0){let c=S.teamDeck.pop();S.hand.push(c)}
+  else if(S.teamDiscard.length>0){shuffle(S.teamDiscard);S.teamDeck=S.teamDiscard;S.teamDiscard=[];let c=S.teamDeck.pop();S.hand.push(c)}
+  // Reveal intents
+  generateEnemyIntents();
+  // Reset turn-used flags
+  S.swapUsed=false;
+  S.turnUsed={};
+  S.focused=false;
+  // Character resets
+  S.chars.forEach(c=>{c.isHurt=false;c.unharmed=true;c.vigorUsed=false});
+  // Enter action phase
+  S.phase='action';
+  updatePhaseUI();
+  checkWinLose();
+  renderAll();
+}
+
+function resolveDOT(){
+  [...S.chars,...S.enemies].forEach(u=>{
+    if(u.hp<=0)return;
+    // Bleed S-004
+    let bleed=u.st.find(s=>s.id==='S-004');
+    let burn=u.st.find(s=>s.id==='S-005');
+    if(bleed&&bleed.stacks>0){
+      let dmg=bleed.stacks;
+      if(burn&&burn.stacks>0)dmg*=2; // Burn+Bleed synergy
+      u.hp-=dmg; log(u.n+'受到'+dmg+'点流血伤害','log-damage');
+    }
+    if(burn&&burn.stacks>0){
+      let sdmg=burn.stacks;
+      let sh=getShield(u);if(sh>0)sdmg*=2;
+      u.hp-=sdmg; log(u.n+'受到'+sdmg+'点灼烧伤害','log-damage');
+    }
+    if(u.hp<=0){u.hp=0;log(u.n+'被DOT击杀!','log-damage')}
+    if(bleed&&bleed.stacks>0){bleed.stacks--;if(bleed.stacks<=0)removeStatus(u,'S-004')}
+    if(burn&&burn.stacks>0){burn.stacks--;if(burn.stacks<=0)removeStatus(u,'S-005')}
+  });
+}
+function tickAllStatuses(){
+  [...S.chars,...S.enemies].forEach(u=>{
+    if(u.hp<=0)return;
+    u.st.forEach(s=>{if(s.dur>0&&s.id!=='S-004'&&s.id!=='S-005')s.dur--});
+    u.st=u.st.filter(s=>s.dur>0||s.id==='S-004'||s.id==='S-005'||s.id==='S-031');
+    // Smoke CP check
+    if(S.onceUsed['smokeCP']&&u.unharmed&&u.pr==='rogue'){u.ev=Math.min(u.em,u.ev+1);S.onceUsed['smokeCP']=false;log(u.n+'烟雾掩护:回合末+1CP','log-system')}
+  });
+}
+
+function endTurn(){
+  if(S.phase!=='action')return;
+  S.phase='enemy';updatePhaseUI();renderAll();
+  executeEnemyPhase();
+  S.phase='end';updatePhaseUI();renderAll();
+  // Cleanup
+  S.chars.forEach(c=>{if(c.hp>0){c.ce=0;/* discard remaining CE */}});
+  // Discard unused team cards (end of turn)
+  let teamCards=S.hand.filter(c=>c.s==='team');
+  teamCards.forEach(c=>{S.teamDiscard.push(c);log('团队牌 '+c.n+' 未使用·弃牌','log-system')});
+  S.hand=S.hand.filter(c=>c.s!=='team');
+  // Death check and win/lose
+  checkWinLose();
+  if(S.win!==null){renderAll();return;}
+  // Remove expired statuses (end of turn)
+  [...S.chars,...S.enemies].forEach(u=>{u.st=u.st.filter(s=>s.id==='S-004'||s.id==='S-005'||s.id==='S-031'||s.dur>0)});
+  S.turn++;
+  renderAll();
+  if(S.win===null)startPhase();
+}
+
+function checkWinLose(){
+  let livingEnemies=getAllLivingEnemies();
+  let livingChars=getAllLivingChars();
+  if(livingEnemies.length===0){S.win=true;showWinLose(true);return}
+  if(livingChars.length===0){S.win=false;showWinLose(false);return}
+}
+
+// === ENEMY AI ===
+function generateEnemyIntents(){
+  S.enemies.forEach(e=>{
+    if(e.hp<=0){e.intent=null;return;}
+    if(e.tp==='mob')e.intent={type:'attack',dmg:e.d,desc:'攻击(最近目标)'};
+    else if(e.tp==='elite'){
+      if(e.sk[0]&&!e.sk[0].used){e.intent={type:'skill',name:'咆哮',desc:'咆哮(+5伤害)'};}
+      else e.intent={type:'attack',dmg:e.d+(e.sk[0]&&e.sk[0].used?e.sk[0].dmgBuff:0),desc:'攻击(最低HP)'};
+    }else if(e.tp==='ranged'){
+      if(e.sk[0]&&!e.sk[0].used){e.intent={type:'skill',name:'毒箭',bleed:e.sk[0].bleed,desc:'毒箭(+'+e.sk[0].bleed+'流血)'};}
+      else e.intent={type:'attack',dmg:e.d,desc:'射击(后排优先)'};
+    }else if(e.tp==='caster'){
+      if(e.cycle===0){e.intent={type:'skill',name:'暗影护盾',desc:'暗影护盾(15)'};e.cycle=1}
+      else if(e.cycle===1){e.intent={type:'attack',dmg:e.d,aoe:true,desc:'暗影冲击(AOE 20)'};e.cycle=2}
+      else{e.intent={type:'attack',dmg:e.d,desc:'暗影弹(单体20)'};e.cycle=0}
+    }
+  });
+}
+
+function executeEnemyPhase(){
+  S.enemies.forEach(e=>{
+    if(e.hp<=0||!e.intent)return;
+    let intent=e.intent;
+    let targets=getAllLivingChars();
+    if(targets.length===0)return;
+    
+    let target=null;
+    if(e.tp==='mob'){
+      // Attack nearest (front row first)
+      let front=targets.filter(c=>c.pc===2);
+      if(front.length>0)target=front[Math.floor(Math.random()*front.length)];
+      else target=targets.reduce((a,b)=>a.pc>b.pc?a:b);
+    }else if(e.tp==='elite'){
+      // Attack lowest HP
+      target=targets.reduce((a,b)=>a.hp<b.hp?a:b);
+    }else if(e.tp==='ranged'){
+      // Prioritize back row
+      let back=targets.filter(c=>c.pc===0);
+      if(back.length>0)target=back[Math.floor(Math.random()*back.length)];
+      else{let mid=targets.filter(c=>c.pc===1);if(mid.length>0)target=mid[Math.floor(Math.random()*mid.length)];else target=targets[Math.floor(Math.random()*targets.length)]}
+    }else if(e.tp==='caster'){
+      target=targets[Math.floor(Math.random()*targets.length)];
+    }
+    if(!target)return;
+    
+    if(intent.type==='attack'){
+      let dmg=intent.dmg||e.d;
+      if(S.turnUsed['weakEnemy'])dmg=Math.max(1,dmg-5);
+      if(intent.aoe){targets.forEach(t=>dealDamage(e,t,dmg))}
+      else dealDamage(e,target,dmg);
+      // Apply bleed from poison arrow
+      if(intent.bleed)applyBleed(target,intent.bleed);
+    }else if(intent.type==='skill'){
+      if(intent.name==='咆哮'){e.d+=5;e.sk[0].used=true;log('兽人咆哮:攻击力+5','log-enemy')}
+      else if(intent.name==='暗影护盾'){addShield(e,15);log('暗影术士获得15护盾','log-enemy')}
+      else if(intent.name==='毒箭'){dealDamage(e,target,e.d);applyBleed(target,intent.bleed||2);e.sk[0].used=true}
+    }
+    e.intent=null;
+  });
+  // Reset enemy skill cooldowns for next turn
+  S.enemies.forEach(e=>{e.sk.forEach(s=>s.used=false)});
+}
+
+// === RENDERING ===
+function renderBattlefield(){
+  let bf=document.getElementById('battlefield');
+  let html='';
+  // Zone labels
+  html+='<div class="battle-row" style="gap:0;margin-bottom:2px">';
+  html+='<div style="width:120px;text-align:center;font-size:9px;color:#4ecdc4">后排</div>';
+  html+='<div style="width:120px;text-align:center;font-size:9px;color:#4ecdc4">中排</div>';
+  html+='<div style="width:120px;text-align:center;font-size:9px;color:#4ecdc4">前排</div>';
+  html+='<div style="width:120px;text-align:center;font-size:9px;color:#ff6b6b">前排</div>';
+  html+='<div style="width:120px;text-align:center;font-size:9px;color:#ff6b6b">中排</div>';
+  html+='<div style="width:120px;text-align:center;font-size:9px;color:#ff6b6b">后排</div>';
+  html+='</div>';
+  
+  for(let row=0;row<3;row++){
+    html+='<div class="battle-row">';
+    for(let col=0;col<6;col++){
+      let occ=getOccupant(col,row);
+      let isPlayer=isPlayerCol(col);
+      let isFrontLine=(col===2||col===3);
+      let cls='grid-cell';
+      if(isPlayer)cls+=' player-zone';else cls+=' enemy-zone';
+      if(isFrontLine)cls+=' front-line';
+      if(S.selChar&&S.selChar.pc===col&&S.selChar.row===row)cls+=' selected';
+      // Target highlighting for pending card
+      if(S.pendingCard&&S.selChar&&isEnemyCol(col)&&occ){
+        if(S.pendingCard.aoe||S.pendingCard.t==='attack')cls+=' target';
+      }
+      // Ally targeting highlight
+      if(S.targetingMode&&S.targetingMode.startsWith('ally')&&isPlayer&&occ){
+        cls+=' target-ally';
+      }
+      // Valid move
+      if(S.selChar&&!S.pendingCard&&S.phase==='action'&&!occ&&S.selChar.hp>0){
+        let dc=Math.abs(col-S.selChar.pc),dr=Math.abs(row-S.selChar.row);
+        if(dc+dr===1)cls+=' valid-move';
+      }
+      
+      html+='<div class="'+cls+'" onclick="onCellClick('+col+','+row+',event)" data-col="'+col+'" data-row="'+row+'">';
+      if(occ){
+        let hpPct=occ.hp/occ.mh*100;
+        let hCls=hpClass(occ);
+        let isChar=S.chars.includes(occ);
+        html+='<div class="cell-content">';
+        html+='<div class="cell-name '+(isChar?'player':'enemy')+'">'+(isChar?'':'')+occ.n+'</div>';
+        html+='<div class="hp-bar-outer"><div class="hp-bar-inner '+hCls+'" style="width:'+hpPct+'%"></div></div>';
+        html+='<div class="cell-stats">HP:'+occ.hp+'/'+occ.mh;
+        if(isChar){html+=' CE:'+occ.ce+'/'+occ.cm;if(occ.pr==='warrior')html+=' 怒:'+occ.ev;else if(occ.pr==='rogue')html+=' CP:'+occ.ev;else html+=' 法:'+occ.ev}
+        html+='</div>';
+        // Status icons
+        if(occ.st.length>0){
+          html+='<div class="cell-status">';
+          occ.st.forEach(s=>{
+            let sname='';let scls='';
+            if(s.id==='S-001'){sname='护盾'+s.stacks;scls='shield'}
+            else if(s.id==='S-004'){sname='流血'+s.stacks;scls='bleed'}
+            else if(s.id==='S-005'){sname='灼烧'+s.stacks;scls='burn'}
+            else if(s.id==='S-008'){sname='标记';scls='mark'}
+            else if(s.id==='S-007'){sname='致盲';scls='blind'}
+            else if(s.id==='S-003'){sname='虚弱';scls='blind'}
+            else sname=s.id;
+            html+='<span class="status-icon '+scls+'">'+sname+'</span>';
+          });
+          html+='</div>';
+        }
+        if(!isChar&&occ.intent){html+='<div class="cell-intent">'+occ.intent.desc+'</div>'}
+        html+='</div>';
+      }
+      html+='</div>';
+    }
+    html+='</div>';
+  }
+  bf.innerHTML=html;
+}
+
+function renderHand(){
+  let hc=document.getElementById('hand-cards');
+  let html='';
+  S.hand.forEach((card,i)=>{
+    let playable=false;
+    if(S.phase==='action'&&S.selChar){playable=isCardPlayable(card,S.selChar)}
+    let cls='card '+card.o;
+    if(S.selCard===i)cls+=' selected-card';
+    if(!playable&&S.phase==='action')cls+=' unavailable';else cls+=' available';
+    let info='';
+    if(card.d)info+='伤害:'+card.d+' ';
+    if(card.sh)info+='护盾:'+card.sh+' ';
+    if(card.hl)info+='治疗:'+card.hl+' ';
+    if(card.mp&&card.mp>0)info+='法力:'+card.mp+' ';
+    if(card.aoe)info+='AOE ';
+    if(card.ig)info+='破盾 ';
+    if(card.sp)info+=card.sp;
+    html+='<div class="'+cls+'" onclick="onCardClick('+i+','+playable+')">';
+    // Card tags
+    if(card.tags){
+      let tagList=card.tags.split('·');
+      let tagMap={攻击:'tag-attack',防御:'tag-defense',辅助:'tag-support',控制:'tag-control',单体:'tag-single',全体:'tag-aoe',自身:'tag-self',基础:'tag-basic',终结:'tag-finisher',联动:'tag-combo'};
+      html+='<div class="card-tags">';
+      tagList.forEach(t=>{html+='<span class="tag '+(tagMap[t]||'')+'">'+t+'</span>'});
+      html+='</div>';
+    }
+    html+='<div class="card-cost">CE:'+card.ce+'</div>';
+    html+='<div class="card-name">'+card.n+'</div>';
+    html+='<div class="card-info">'+info+'</div>';
+    html+='<div class="card-owner-tag">'+OWNER_ZH[card.o]+'</div>';
+    html+='</div>';
+  });
+  hc.innerHTML=html;
+}
+
+function renderLog(){
+  let cl=document.getElementById('combat-log');
+  let html='';
+  S.log.forEach(l=>{html+='<div class="log-entry '+l.cls+'">'+l.msg+'</div>'});
+  cl.innerHTML=html;
+  cl.scrollTop=cl.scrollHeight;
+}
+
+function renderCE(){
+  let el=document.getElementById('ce-indicators');
+  let html='';
+  S.chars.forEach(c=>{
+    if(c.hp<=0){html+='<span style="color:#666;font-size:11px">'+c.n+':阵亡</span>';return}
+    let color='#e94560';if(c.pr==='rogue')color='#4ecdc4';else if(c.pr==='mage')color='#a29bfe';else if(c.pr==='priest')color='#ffd93d';
+    html+='<span style="color:'+color+';font-size:11px">'+c.n+':';
+    for(let i=0;i<c.cm;i++){
+      html+='<span class="ce-dot'+(i<c.ce?' active':' used')+'"></span>';
+    }
+    html+='('+c.ce+'/'+c.cm+')';
+    if(c.pr==='warrior')html+=' 怒:'+c.ev;
+    else if(c.pr==='rogue')html+=' CP:'+c.ev;
+    else html+=' 法:'+c.ev;
+    html+='</span>';
+  });
+  el.innerHTML=html;
+}
+
+function updatePhaseUI(){
+  let el=document.getElementById('phase-indicator');
+  let btn=document.getElementById('btn-end-turn');
+  el.className='phase-indicator phase-'+S.phase;
+  if(S.phase==='start')el.innerHTML='&#9654; 开始阶段';
+  else if(S.phase==='action'){el.innerHTML='&#9876; 行动阶段';btn.disabled=false;}
+  else if(S.phase==='enemy'){el.innerHTML='&#9889; 敌方阶段';btn.disabled=true;}
+  else if(S.phase==='end'){el.innerHTML='&#9203; 结束阶段';btn.disabled=true;}
+  document.getElementById('turn-num').textContent=S.turn;
+}
+
+function renderAll(){
+  renderBattlefield();
+  renderHand();
+  renderLog();
+  renderCE();
+  updatePhaseUI();
+  let cancelBtn=document.getElementById('btn-cancel');
+  cancelBtn.style.display=S.selChar?'inline-block':'none';
+}
+
+function showPanel(u){
+  let ov=document.getElementById('overlay');
+  let pn=document.getElementById('character-panel');
+  let isChar=S.chars.includes(u);
+  let html='<span class="panel-close" onclick="closePanel()">&times;</span>';
+  html+='<h3>'+u.n+' ('+u.id+')</h3>';
+  html+='<div class="stat-row"><span>HP</span><span>'+u.hp+'/'+u.mh+'</span></div>';
+  if(isChar){
+    html+='<div class="stat-row"><span>CE</span><span>'+u.ce+'/'+u.cm+'</span></div>';
+    html+='<div class="stat-row"><span>职业</span><span>'+OWNER_ZH[u.pr]+'</span></div>';
+    if(u.pr==='warrior')html+='<div class="stat-row"><span>怒气</span><span>'+u.ev+'/'+u.em+'</span></div>';
+    else if(u.pr==='rogue')html+='<div class="stat-row"><span>连击点</span><span>'+u.ev+'/'+u.em+'</span></div>';
+    else html+='<div class="stat-row"><span>法力值</span><span>'+u.ev+'/'+u.em+'</span></div>';
+  } else {
+    html+='<div class="stat-row"><span>类型</span><span>'+u.tp+'</span></div>';
+    html+='<div class="stat-row"><span>伤害</span><span>'+u.d+'</span></div>';
+  }
+  html+='<div class="stat-row"><span>位置</span><span>列'+u.pc+' 行'+u.row+'</span></div>';
+  if(u.st.length>0){
+    html+='<div class="stat-row"><span>状态</span><span>';
+    u.st.forEach(s=>{html+=s.id+'('+s.stacks+') '});
+    html+='</span></div>';
+  }
+  pn.innerHTML=html;
+  pn.classList.add('show');
+  ov.classList.add('show');
+}
+function closePanel(){
+  document.getElementById('character-panel').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// === EVENT HANDLERS ===
+function onCellClick(col,row,event){
+  if(S.win!==null)return;
+  if(S.phase!=='action'){log('当前不在行动阶段','log-system');renderAll();return;}
+  let occ=getOccupant(col,row);
+  let clickedEnemy=S.enemies.find(e=>e.pc===col&&e.row===row&&e.hp>0);
+  let clickedChar=S.chars.find(c=>c.pc===col&&c.row===row&&c.hp>0);
+  
+  // Right-click or long press = show panel
+  if(event&&event.type==='contextmenu'){if(clickedChar)showPanel(clickedChar);else if(clickedEnemy)showPanel(clickedEnemy);renderAll();return;}
+  
+  // Ally targeting mode: click on character to heal/shield
+  if(S.targetingMode&&S.targetingMode.startsWith('ally')){
+    if(clickedChar){
+      let cardIdx=parseInt(S.targetingMode.slice(4));
+      if(cardIdx>=0&&S.hand[cardIdx]&&S.selChar){
+        S.targetingMode=null;
+        playCard(cardIdx,col,row);return;
+      }
+    }
+    // Click elsewhere cancels
+    S.targetingMode=null;
+    log('已取消目标选择','log-system');
+    renderAll();return;
+  }
+  
+  // If we have a pending card and click an enemy -> play it
+  if(S.pendingCard&&clickedEnemy){
+    let cardIdx=S.hand.findIndex(c=>c===S.pendingCard);
+    if(cardIdx>=0&&S.selChar){playCard(cardIdx,col,row);S.pendingCard=null;return}
+  }
+  S.pendingCard=null;
+  
+  // Ctrl+click for swap
+  if(event&&event.ctrlKey&&S.selChar&&clickedChar&&clickedChar!==S.selChar){
+    swapWith(S.selChar,clickedChar);return;
+  }
+  
+  // Click on own character -> select
+  if(clickedChar){
+    S.selChar=clickedChar;
+    S.pendingCard=null;
+    log('选中'+clickedChar.n+'(HP:'+clickedChar.hp+' CE:'+clickedChar.ce+')','log-system');
+    renderAll();return;
+  }
+  
+  // Click on enemy -> select it as target (if a character is selected and we want to show info)
+  if(clickedEnemy&&S.selChar){
+    // If we have pending card -> play on enemy
+    // Otherwise show enemy info
+    showPanel(clickedEnemy);renderAll();return;
+  }
+  
+  // Click on empty cell while character selected -> move
+  if(S.selChar&&S.selChar.hp>0&&!occ){
+    moveCharacter(col,row);return;
+  }
+}
+
+function onCardClick(idx,playable){
+  if(S.win!==null)return;
+  if(S.phase!=='action'){log('当前不在行动阶段','log-system');renderAll();return;}
+  if(!playable){log('无法使用此卡牌','log-system');renderAll();return;}
+  if(!S.selChar){log('请先选择一个角色','log-system');renderAll();return;}
+  
+  let card=S.hand[idx];
+  // For heal/shield cards that need ally targeting (non-AOE)
+  if((card.t==='heal'||(card.sh&&!card.aoe))&&!card.team){
+    let allies=getAllLivingChars();
+    if(allies.length===0){log('没有可治疗的目标','log-system');renderAll();return;}
+    // If only self (1 ally = the caster), auto-target
+    if(allies.length===1&&allies[0]===S.selChar&&card.t==='heal'){
+      playCard(idx,S.selChar.pc,S.selChar.row);return;
+    }
+    if(allies.length===1){
+      playCard(idx,allies[0].pc,allies[0].row);return;
+    }
+    // Need ally selection
+    S.targetingMode='ally'+idx;
+    S.selCard=idx;
+    log('请点击友军目标(Esc取消)','log-system');
+    renderAll();return;
+  }
+  // For cards that need targeting enemies
+  if((card.t==='attack'||card.aoe||card.id==='C-053'||card.id==='C-052')&&!card.team){
+    // Check if there are enemies to target
+    let enemies=getAllLivingEnemies();
+    if(enemies.length===0){log('没有可攻击的目标','log-system');renderAll();return;}
+    if(card.aoe){
+      playCard(idx);return;
+    }
+    // For single target: if only 1 enemy, auto-target
+    if(enemies.length===1&&card.t==='attack'){
+      playCard(idx,enemies[0].pc,enemies[0].row);return;
+    }
+    // Need target selection
+    S.pendingCard=card;
+    S.selCard=idx;
+    log('请点击目标敌人','log-system');
+    renderAll();return;
+  }
+  // For heal/defense/team -> play immediately
+  if(card.t==='heal'||card.t==='defense'||card.t==='buff'){
+    playCard(idx);return;
+  }
+  // Default: play card
+  playCard(idx);
+}
+
+function cancelSelection(){
+  S.selChar=null;S.selCard=null;S.pendingCard=null;S.targetingMode=null;
+  renderAll();
+}
+
+function showWinLose(win){
+  var ov=document.getElementById('win-lose-overlay');
+  var txt=ov.querySelector('.result-text');
+  if(win){txt.textContent='胜利!';txt.className='result-text win'}
+  else{txt.textContent='战败...';txt.className='result-text lose'}
+  ov.classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+  // Send result to parent if embedded
+  if(isEmbed&&window.parent!==window){
+    var chars=S.chars.filter(function(c){return c.hp>0}).map(function(c){return{name:c.n,hp:c.hp,mh:c.mh,ce:c.ce,pr:c.pr}});
+    window.parent.postMessage({type:'battleResult',win:win,crew:chars},'*');
+  }
+  // In embed mode, replace the button
+  if(isEmbed){
+    ov.querySelector('button').textContent=win?'返回游戏':'撤退';
+    ov.querySelector('button').onclick=function(){
+      ov.classList.remove('show');
+      document.getElementById('overlay').classList.remove('show');
+      window.parent.postMessage({type:'battleClose',win:win,crew:S.chars.filter(function(c){return c.hp>0}).map(function(c){return{name:c.n,hp:c.hp,mh:c.mh,ce:c.ce,pr:c.pr}})},'*');
+    };
+  }
+}
+
+function resetGame(){
+  document.getElementById('win-lose-overlay').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+  closePanel();
+  if(isEmbed){init();return}
+  showMenu();
+}
+// === MENU FUNCTIONS ===
+var menuIdx=0;
+const menuBtns=()=>document.querySelectorAll('#main-menu .menu-btn');
+
+function showMenu(){
+  document.getElementById('main-menu').classList.remove('hidden');
+  document.getElementById('game-container').style.display='none';
+  menuIdx=0; updateMenuSelection();
+  // Generate stars
+  let stars=document.getElementById('menu-stars');
+  stars.innerHTML='';
+  for(let i=0;i<60;i++){
+    let s=document.createElement('div');
+    s.className='menu-star';
+    s.style.left=Math.random()*100+'%';
+    s.style.top=Math.random()*100+'%';
+    let sz=1+Math.random()*2;
+    s.style.width=sz+'px'; s.style.height=sz+'px';
+    s.style.animationDelay=Math.random()*3+'s';
+    s.style.animationDuration=(1.5+Math.random()*2)+'s';
+    stars.appendChild(s);
+  }
+  // Menu button click handlers
+  menuBtns().forEach((btn,i)=>{
+    btn.onclick=function(){
+      let action=btn.dataset.action;
+      if(action==='start')startGame();
+      else if(action==='settings')openModal('modal-settings');
+      else if(action==='help')openModal('modal-help');
+    };
+    btn.onmouseenter=function(){menuIdx=i;updateMenuSelection()};
+  });
+  // Difficulty change
+  document.getElementById('diff-select').onchange=function(){
+    S.difficulty=parseFloat(this.value);
+  };
+}
+
+function updateMenuSelection(){
+  menuBtns().forEach((b,i)=>{b.classList.toggle('selected',i===menuIdx)});
+}
+
+function startGame(){
+  document.getElementById('main-menu').classList.add('hidden');
+  document.getElementById('game-container').style.display='';
+  init();
+}
+
+function openModal(id){
+  document.getElementById(id).classList.add('show');
+}
+
+function closeModal(id){
+  document.getElementById(id).classList.remove('show');
+}
+
+// === STARTUP ===
+document.addEventListener('contextmenu',function(e){e.preventDefault()});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    if(S.targetingMode){
+      S.targetingMode=null;S.selCard=null;log('已取消目标选择','log-system');renderAll();
+      return;
+    }
+    // Close any open modal
+    document.querySelectorAll('.modal.show').forEach(m=>m.classList.remove('show'));
+  }
+  // Menu keyboard navigation
+  if(!document.getElementById('main-menu').classList.contains('hidden')){
+    if(e.key==='ArrowDown'){e.preventDefault();menuIdx=(menuIdx+1)%menuBtns().length;updateMenuSelection()}
+    else if(e.key==='ArrowUp'){e.preventDefault();menuIdx=(menuIdx-1+menuBtns().length)%menuBtns().length;updateMenuSelection()}
+    else if(e.key==='Enter'){e.preventDefault();let action=menuBtns()[menuIdx].dataset.action;
+      if(action==='start')startGame();else if(action==='settings')openModal('modal-settings');else if(action==='help')openModal('modal-help');
+    }
+  }
+});
+showMenu();
+</script></body></html>

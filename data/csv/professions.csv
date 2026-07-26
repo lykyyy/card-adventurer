@@ -1,0 +1,3 @@
+# 职业配置 | profession_id:编号 | name_zh:中文名 | name_en:英文名 | hp:生命值 | mana:法力上限
+profession_id,name_zh,name_en,hp,mana
+P-001,战士,Warrior,200,1

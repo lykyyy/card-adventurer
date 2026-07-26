@@ -1,0 +1,28 @@
+# 等级成长表
+# level: 角色等级 (1-20)
+# attr_points: 本等级获得的属性点
+# skill_points: 本等级获得的技能点
+# feat_slot: 本等级是否获得专长 (yes/no)
+# phase: 成长阶段 (startup/growth/acceleration/wrapup/legendary)
+# notes: 备注
+level,attr_points,skill_points,feat_slot,phase,notes
+1,0,0,no,startup,初始创建：种族属性+出身+成长事件+身份卡+初始技能
+2,1,1,no,growth,
+3,1,1,no,growth,
+4,1,1,yes,growth,通用专长3选1
+5,1,1,no,growth,
+6,1,1,no,growth,
+7,1,1,no,growth,
+8,1,1,yes,growth,通用专长3选1
+9,1,1,no,growth,
+10,1,1,no,growth,
+11,2,1,no,acceleration,
+12,2,1,yes,acceleration,通用专长3选1
+13,2,1,no,acceleration,属性路径阶段1触发(属性≥13)
+14,2,1,no,acceleration,
+15,1,1,no,wrapup,
+16,1,1,yes,wrapup,通用专长3选1; 属性路径阶段2触发(属性≥16)
+17,0,1,no,legendary,
+18,0,1,no,legendary,
+19,0,1,yes,legendary,通用专长3选1; 属性路径阶段3触发(属性≥19)
+20,0,1,no,legendary,传奇任务触发

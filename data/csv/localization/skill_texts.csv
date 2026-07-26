@@ -1,0 +1,8 @@
+# 技能文本模板 | skill_id:元素编号 | text_zh:中文文本模板 | text_en:英文文本模板
+skill_id,text_zh,text_en
+C-080,造成{value}点伤害,Deal {value} damage
+C-081,获得{value}点护盾,Gain {value} shield
+C-082,造成{value}点伤害,Deal {value} damage
+C-083,恢复{value}点生命值,Restore {value} HP
+C-084,回合开始获得{value}点护盾,Gain {value} shield at turn start
+C-085,每回合攻击伤害+{value},+{value} ATK per turn

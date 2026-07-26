@@ -1,0 +1,35 @@
+# 5×5网格卡牌定义
+# card_id: 卡牌编号 (GC-001~GC-030)
+# type: 卡牌类型 (combat/shop/event/story/trap/resource/rest/locked)
+# name: 卡牌名称
+# effect: 触发效果描述
+# reward: 奖励描述(格式: type:value)
+# rarity: 稀有度(common/uncommon/rare)
+# condition: 特殊条件(锁定牌需要·空=无)
+# ep_cost: 翻牌消耗EP(剧情牌=0)
+card_id,type,name,effect,reward,rarity,condition,ep_cost
+GC-001,combat,星盗伏击,进入战斗(3个普通敌人),gold:50|card:random,common,,1
+GC-002,combat,矿兽巢穴,进入战斗(2个精英敌人),gold:80|card:random,uncommon,,1
+GC-003,combat,佣兵遭遇,进入战斗(2个普通+1精英),gold:60|card:random,common,,1
+GC-004,combat,走私者,进入战斗(4个普通敌人),gold:70|card:random,common,,1
+GC-005,combat,深渊生物,进入战斗(1个Boss级敌人),gold:120|card:rare,rare,,1
+GC-006,combat,裂隙守卫,进入战斗(3个精英敌人),gold:100|card:uncommon,uncommon,,1
+GC-007,shop,星港补给站,商店(可购买卡牌/消耗品),,common,,1
+GC-008,shop,流浪商人,商店(随机折扣),,uncommon,,1
+GC-009,event,求救信号,随机事件:救援→奖励/陷阱→埋伏,gold:40|ep:1,common,,1
+GC-010,event,残骸搜索,随机事件:搜索→获资源/失败→扣HP,hp:-10|card:random,common,,1
+GC-011,event,星界异象,随机事件:研究→获卡牌/忽略→平安,card:uncommon,uncommon,,1
+GC-012,event,走私暗号,随机事件:接头→折扣商店/无视→无,gold:30,common,,1
+GC-013,story,远古星图碎片,主线任务:收集星图碎片1/3,card:unique,rare,,0
+GC-014,trap,重力陷阱,陷阱:被困→HP-15%或EP-1规避,hp:-15%,common,,1
+GC-015,trap,能量泄露,陷阱:EP-2或金币-50规避,ep:-2,common,,1
+GC-016,trap,辐射区,陷阱:HP-10%+EP-1,hp:-10%|ep:-1,common,,1
+GC-017,resource,能量电池,资源:获得EP+2,ep:2,common,,1
+GC-018,resource,星尘矿脉,资源:获得金币+80,gold:80,common,,1
+GC-019,resource,废弃物资,资源:获得随机卡牌,card:random,common,,1
+GC-020,resource,急救包,资源:恢复HP20%,hp:20%,uncommon,,1
+GC-021,resource,补给箱,资源:金币+50+EP+1,gold:50|ep:1,common,,1
+GC-022,rest,安全避难所,休息:恢复HP15%+AP+1,hp:15%|ap:1,common,,1
+GC-023,rest,冥想室,休息:恢复法力值全满,mana:full,uncommon,,1
+GC-024,locked,加密宝箱,锁定:消耗2EP开启→稀有奖励,card:rare|gold:100,rare,ep>=2,2
+GC-025,locked,传送门,锁定:消耗3EP或HP20%→传送至奖励格,card:uncommon|ep:2,uncommon,ep>=3|hp>=20%,3

@@ -1,0 +1,17 @@
+# 元素名称多语言 | element_id:元素编号 | name_zh:中文名称 | name_en:英文名称
+element_id,name_zh,name_en
+C-080,攻击,Attack
+C-081,防御,Defend
+C-082,重击,Heavy Strike
+C-083,治疗,Heal
+C-084,护甲,Armor
+C-085,武器,Weapon
+E-001,史莱姆,Slime
+E-002,哥布林,Goblin
+E-003,骷髅兵,Skeleton
+E-004,狼人,Werewolf
+E-005,暗影领主,Shadow Lord
+P-001,战士,Warrior
+S-001,护盾,Shield
+S-002,狂暴,Berserk
+S-003,虚弱,Weakness

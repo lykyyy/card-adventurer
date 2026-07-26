@@ -1,0 +1,6 @@
+slot_id,name,icon,desc,bonus_key
+star_bridge,星桥,🎮,控制飞船航向与战斗策略,energy
+phasma_furnace,燃素炉,🔥,为飞船系统提供核心能量,energy
+magic_cannon,魔导炮阵,⚔️,操控舰载武器的火力输出,weapon
+crystal_shield,晶壁护盾,🔮,维持飞船防御护盾的完整,shield
+star_chart,星图仪,🌟,解读星图·揭示隐藏信息,energy
